@@ -55,7 +55,7 @@ Note that you will need to setup the deployed machine with appropriate
 authentication.
 
 
-   $ python manage.py pushapp
+    $ python manage.py pushapp
 
 Sometimes you are trying to test a hotfix directly in production. To that
 purpose *pushapp* will rsync the webapp directly from your dev system
