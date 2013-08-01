@@ -16,11 +16,11 @@ Install
 
 3. Configure the DEPLOYUTILS variables in the project settings
 
-DRY_RUN                   Do not execute, just show the commands
-DEPLOYED_WEBAPP_ROOT      Directory on DEPLOYED_SERVERS where to find webapps
-DEPLOYED_SERVERS          List of Hostname/IP webapps are deployed to
-RESOURCES_MACHINE         URL to the resources not under source control
-                          (ex: git@example.com)
+* DRY_RUN                   Do not execute, just show the commands
+* DEPLOYED_WEBAPP_ROOT      Directory on DEPLOYED_SERVERS where to find webapps
+* DEPLOYED_SERVERS          List of Hostname/IP webapps are deployed to
+* RESOURCES_MACHINE         URL to the resources not under source control
+                            (ex: git@example.com)
 
 
 Commands to upload/download resources
