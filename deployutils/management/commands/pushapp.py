@@ -55,7 +55,7 @@ class Command(DeployCommand):
 def pushapp(webapp, webapp_path, sha1):
     shell_command([
             '/usr/bin/rsync',
-            '--copy-links', '--exclude', '.git',
+            '--copy-links', '--exclude', '.git', '--exclude', '.DS_Store',
             '--exclude', '*~', '--exclude', 'htdocs/', '-pthrRvz',
             '--rsync-path', '/usr/bin/rsync', '--delete',
             # css and js directories are under source control

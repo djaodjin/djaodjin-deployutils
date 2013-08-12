@@ -86,11 +86,11 @@ def shell_command(cmd):
     """Run a shell command."""
     if cmd[0] == '/usr/bin/rsync':
         if settings.DRY_RUN:
-            cmd = cmd[0] + [ '-n' ] + cmd[1:]
-        LOGGER.info('run: %s', cmd)
+            cmd = [ cmd[0], '-n' ] + cmd[1:]
+        LOGGER.info('run: %s', ' '.join(cmd))
         subprocess.check_call(cmd)
     else:
-        LOGGER.info('run: %s', cmd)
+        LOGGER.info('run: %s', ' '.join(cmd))
         if not settings.DRY_RUN:
             subprocess.check_call(cmd)
 
@@ -100,7 +100,7 @@ def upload(host, path):
     # -O omit to set mod times on directories to avoid permissions error.
     shell_command([
             '/usr/bin/rsync',
-            '--exclude', '.git', '--exclude', '*~',
+            '--exclude', '.git', '--exclude', '*~', '--exclude', '.DS_Store',
             '--exclude', 'static/css', '--exclude', 'static/js',
             '-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
             'htdocs', '%s:%s' % (host, path) ])
