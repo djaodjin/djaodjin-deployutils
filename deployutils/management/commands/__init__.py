@@ -73,6 +73,17 @@ class DeployCommand(ResourceCommand):
         else:
             fab.env.hosts = settings.DEPLOYED_SERVERS
 
+def build_assets():
+    """Call django_assets ./manage.py assets build if the app is present."""
+    try:
+        from webassets.script import GenericArgparseImplementation
+        from django_assets.env import get_env
+        prog = "%s assets" % os.path.basename(sys.argv[0])
+        impl = GenericArgparseImplementation(
+            env=get_env(), log=LOGGER, no_global_options=True, prog=prog)
+        impl.run_with_argv(["build"])
+    except ImportError:
+        pass
 
 def download(host, path):
     """download resources from a stage server."""

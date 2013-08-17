@@ -28,7 +28,7 @@ import logging, subprocess
 import fabric.api as fab
 
 from deployutils.management.commands import (
-    DeployCommand, upload, shell_command)
+    DeployCommand, build_assets, shell_command, upload)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -39,6 +39,7 @@ class Command(DeployCommand):
 
     def handle(self, *args, **options):
         DeployCommand.handle(self, *args, **options)
+        build_assets()
         status = subprocess.check_output(['git', 'status', '--porcelain'])
         if len(status) == 0:
             sha1 = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
@@ -53,13 +54,16 @@ class Command(DeployCommand):
 
 @fab.task
 def pushapp(webapp, webapp_path, sha1):
+    # Not all directories under htdocs/ are under source control
+    # but all directories under htdocs/static/
+    # except for img/ directories should be.
     shell_command([
             '/usr/bin/rsync',
-            '--copy-links', '--exclude', '.git', '--exclude', '.DS_Store',
-            '--exclude', '*~', '--exclude', 'htdocs/', '-pthrRvz',
-            '--rsync-path', '/usr/bin/rsync', '--delete',
-            # css and js directories are under source control
-            '.', './htdocs/static/css', './htdocs/static/js',
+            '--copy-links', '--exclude', '.git', '--exclude', 'htdocs/*',
+            '--exclude', 'img/', #'--exclude', '*.pyc',
+            '--exclude', '.DS_Store', '--exclude', '*~',
+            '-pthrRvz', '--rsync-path', '/usr/bin/rsync', '--delete',
+            '.', './htdocs/static/*',
             '%s:%s' % (fab.env.host_string, webapp_path) ])
     upload(fab.env.host_string, webapp_path)
     LOGGER.info("pushapp %s %s %s", webapp, fab.env.host_string, sha1)
