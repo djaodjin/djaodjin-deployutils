@@ -41,7 +41,7 @@ class Command(ResourceCommand):
         else:
             up_commit = 'master'
         try:
-            last_up_commit, up_commit = fetch_changes(up_commit)
+            last_up_commit, up_commit = fetch_changes(self.path, up_commit)
             # Fetch resources which are not stored under source control
             download(settings.RESOURCES_MACHINE, self.path)
             build_assets()
@@ -67,7 +67,7 @@ def sources_latest_timestamp(root_dir, file_pat='*.py'):
     return latest_timestamp
 
 
-def fetch_changes(up_commit='master'):
+def fetch_changes(repo_path, up_commit='master'):
     """
     Fetch latest changes from stage and touch .timestamp
     if any python sources have been modified.
@@ -76,7 +76,7 @@ def fetch_changes(up_commit='master'):
     prevcwd = os.getcwd()
     try:
         gitexe = 'git'
-        os.chdir(settings.DEPLOYED_WEBAPP_ROOT)
+        os.chdir(repo_path)
         old_sources_timestamp = sources_latest_timestamp('.')
         shell_command([ gitexe, 'fetch', 'origin', 'master' ])
         last_up_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])

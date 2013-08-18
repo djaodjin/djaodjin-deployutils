@@ -54,16 +54,15 @@ class Command(DeployCommand):
 
 @fab.task
 def pushapp(webapp, webapp_path, sha1):
-    # Not all directories under htdocs/ are under source control
-    # but all directories under htdocs/static/
-    # except for img/ directories should be.
+    # Directories under htdocs/ are not under source control
+    # except for static/css and static/js.
     shell_command([
             '/usr/bin/rsync',
             '--copy-links', '--exclude', '.git', '--exclude', 'htdocs/*',
             '--exclude', 'img/', #'--exclude', '*.pyc',
             '--exclude', '.DS_Store', '--exclude', '*~',
             '-pthrRvz', '--rsync-path', '/usr/bin/rsync', '--delete',
-            '.', './htdocs/static/*',
+            '.', './htdocs/static/css', './htdocs/static/js',
             '%s:%s' % (fab.env.host_string, webapp_path) ])
     upload(fab.env.host_string, webapp_path)
     LOGGER.info("pushapp %s %s %s", webapp, fab.env.host_string, sha1)
