@@ -1,11 +1,13 @@
 from distutils.core import setup
 
 setup(
-    name='djaodjin-deployutils',
+    name='deployutils',
     version='0.1',
     author='The DjaoDjin Team',
     author_email='support@djaodjin.com',
-    packages=['deployutils'],
+    packages=['deployutils',
+              'deployutils.management',
+              'deployutils.management.commands' ],
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     license='BSD',
     description='Management commands to deploy Django webapps',
