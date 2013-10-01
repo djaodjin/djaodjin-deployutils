@@ -28,17 +28,22 @@ Function to load site and credentials config files
 """
 
 # Read environment variable first
-def load_config(confname, module=None):
+def load_config(confname, module=None, verbose=False):
     """
     Given a path to a file, parse its lines in ini-like format, and then
     set them in the current namespace.
+
+    Quiet by default. Set verbose to True to see the absolute path to the config
+    files printed on stderr.
     """
     # todo: consider using something like ConfigObj for this:
     # http://www.voidspace.org.uk/python/configobj.html
-    import os, re, sys
+    import os, re
     confpath = os.path.join(module.CONFIG_DIR, confname)
     if os.path.isfile(confpath):
-        sys.stderr.write('config loaded from %s\n' % confpath)
+        if verbose:
+            import sys
+            sys.stderr.write('config loaded from %s\n' % confpath)
         with open(confpath) as conffile:
             line = conffile.readline()
             while line != '':
@@ -70,5 +75,6 @@ def load_config(confname, module=None):
                     os.makedirs(os.path.dirname(pathname))
                 with open(pathname, 'w') as filedesc:
                     pass    # touch file
-    else:
+    elif verbose:
+        import sys
         sys.stderr.write('warning: config file %s does not exist.\n' % confpath)
