@@ -78,7 +78,7 @@ def fetch_changes(repo_path, up_commit='master'):
         gitexe = 'git'
         os.chdir(repo_path)
         old_sources_timestamp = sources_latest_timestamp('.')
-        shell_command([ gitexe, 'fetch', 'origin', 'master' ])
+        shell_command([ gitexe, 'pull', 'origin', 'master' ])
         last_up_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         shell_command([ gitexe, 'checkout', up_commit ])
         up_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
