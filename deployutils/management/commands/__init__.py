@@ -113,6 +113,7 @@ def upload(host, path):
             '/usr/bin/rsync',
             '--exclude', '.git', '--exclude', '*~', '--exclude', '.DS_Store',
             '--exclude', 'static/css', '--exclude', 'static/js',
+            '--exclude', 'static/vendor',
             '-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
             'htdocs', '%s:%s' % (host, path) ])
 

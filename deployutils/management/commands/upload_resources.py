@@ -26,7 +26,9 @@
 import logging, subprocess
 
 import deployutils.settings as settings
-from deployutils.management.commands import ResourceCommand, upload
+from deployutils.management.commands import (
+    ResourceCommand, build_assets, upload)
+
 
 class Command(ResourceCommand):
     help = "Upload resouces to stage."
@@ -34,6 +36,7 @@ class Command(ResourceCommand):
     def handle(self, *args, **options):
         ResourceCommand.handle(self, *args, **options)
         try:
+            build_assets()
             upload(settings.RESOURCES_MACHINE, self.path)
             logging.info("upload resources for %s", self.webapp)
         except subprocess.CalledProcessError, err:

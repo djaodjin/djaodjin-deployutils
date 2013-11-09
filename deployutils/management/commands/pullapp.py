@@ -27,7 +27,7 @@ import datetime, fnmatch, logging, os, subprocess
 
 import deployutils.settings as settings
 from deployutils.management.commands import (
-    ResourceCommand, build_assets, download, shell_command)
+    ResourceCommand, download, shell_command)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class Command(ResourceCommand):
             last_up_commit, up_commit = fetch_changes(self.path, up_commit)
             # Fetch resources which are not stored under source control
             download(settings.RESOURCES_MACHINE, self.path)
-            build_assets()
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
         except subprocess.CalledProcessError, err:
@@ -78,7 +77,7 @@ def fetch_changes(repo_path, up_commit='master'):
         gitexe = 'git'
         os.chdir(repo_path)
         old_sources_timestamp = sources_latest_timestamp('.')
-        shell_command([ gitexe, 'pull', 'origin', 'master' ])
+        shell_command([ gitexe, 'pull' ])
         last_up_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         shell_command([ gitexe, 'checkout', up_commit ])
         up_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
