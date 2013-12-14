@@ -109,11 +109,18 @@ def shell_command(cmd):
 def upload(host, path):
     """upload resources to a stage server."""
     # -O omit to set mod times on directories to avoid permissions error.
-    shell_command([
-            '/usr/bin/rsync',
-            '--exclude', '.git', '--exclude', '*~', '--exclude', '.DS_Store',
-            '--exclude', 'static/css', '--exclude', 'static/js',
-            '--exclude', 'static/vendor',
-            '-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
+    ignores = [ '.git',
+               '*~',
+               '.DS_Store',
+               '.webassets-cache',
+               'static/css',
+               'static/js',
+               'static/vendor' ]
+    excludes = []
+    for ignore in ignores:
+        excludes += [ '--exclude', ignore ]
+    shell_command([ '/usr/bin/rsync' ]
+        + excludes
+        + [ '-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
             'htdocs', '%s:%s' % (host, path) ])
 
