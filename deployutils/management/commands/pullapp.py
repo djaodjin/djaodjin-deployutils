@@ -25,8 +25,9 @@
 import datetime, fnmatch, logging, os, subprocess
 
 import deployutils.settings as settings
-from deployutils.management.commands import (
-    ResourceCommand, download, shell_command)
+from deployutils.management.commands import ResourceCommand, shell_command
+from deployutils.management.commands.install_theme import install_theme
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +42,7 @@ class Command(ResourceCommand):
             up_commit = 'master'
         try:
             last_up_commit, up_commit = fetch_changes(self.path, up_commit)
-            # Fetch resources which are not stored under source control
-            download(settings.RESOURCES_MACHINE, self.path)
+            install_theme(settings.INSTALLED_TEMPLATES_ROOT, self.path)
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
         except subprocess.CalledProcessError, err:

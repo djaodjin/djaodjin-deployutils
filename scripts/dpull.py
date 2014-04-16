@@ -27,6 +27,8 @@
 
 import os, sys
 
+__version__ = None
+
 if __name__ == '__main__':
     webapp_path = sys.argv[1]
     os.chdir(webapp_path)

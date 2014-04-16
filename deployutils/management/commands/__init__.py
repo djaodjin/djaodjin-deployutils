@@ -72,8 +72,10 @@ class DeployCommand(ResourceCommand):
         else:
             fab.env.hosts = settings.DEPLOYED_SERVERS
 
+
 def build_assets():
     """Call django_assets ./manage.py assets build if the app is present."""
+    cwd = os.getcwd()
     try:
         from webassets.script import GenericArgparseImplementation
         from django_assets.env import get_env
@@ -83,13 +85,16 @@ def build_assets():
         impl.run_with_argv(["build"])
     except ImportError:
         pass
+    os.chdir(cwd)
+
 
 def download(host, path):
     """download resources from a stage server."""
+    dest_root = settings.INSTALLED_STATIC_ROOT
     shell_command([
             '/usr/bin/rsync',
             '-thrRvz', '--rsync-path', '/usr/bin/rsync',
-            '%s:%s/./htdocs' % (host, path), '.'])
+            '%s:%s/htdocs/./' % (host, path), dest_root])
 
 
 def shell_command(cmd):
