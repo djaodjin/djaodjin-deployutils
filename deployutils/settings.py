@@ -46,11 +46,12 @@ DEPLOYED_SERVERS = getattr(settings, 'DEPLOYUTILS_DEPLOYED_SERVERS',
                            (settings.ALLOWED_HOSTS[0], ))
 
 INSTALLED_STATIC_ROOT = getattr(
-    settings, 'DEPLOYUTILS_INSTALLED_STATIC_ROOT', './htdocs')
+    settings, 'DEPLOYUTILS_INSTALLED_STATIC_ROOT',
+    settings.APP_ROOT + '/htdocs')
 
 INSTALLED_TEMPLATES_ROOT = getattr(
     settings, 'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
-    '/var/www/%s' % settings.ALLOWED_HOSTS[0])
+    settings.TEMPLATE_DIRS[0])
 
 RESOURCES_MACHINE = getattr(settings, 'DEPLOYUTILS_RESOURCES_SERVER',
                            'git@' + settings.ALLOWED_HOSTS[0])

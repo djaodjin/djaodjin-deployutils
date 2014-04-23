@@ -48,7 +48,8 @@ class ResourceCommand(BaseCommand):
         BaseCommand.__init__(self)
         self.webapp = os.path.basename(
             os.path.dirname(os.path.abspath(sys.argv[0])))
-        self.path = os.path.join(settings.DEPLOYED_WEBAPP_ROOT, self.webapp)
+        self.deployed_path = os.path.join(
+            settings.DEPLOYED_WEBAPP_ROOT, self.webapp)
 
     def handle(self, *args, **options):
         settings.DRY_RUN = options['no_execute']
@@ -90,7 +91,7 @@ def build_assets():
 
 def download(host, path):
     """download resources from a stage server."""
-    dest_root = settings.INSTALLED_STATIC_ROOT
+    dest_root = './htdocs'
     shell_command([
             '/usr/bin/rsync',
             '-thrRvz', '--rsync-path', '/usr/bin/rsync',
@@ -124,8 +125,12 @@ def upload(host, path):
     excludes = []
     for ignore in ignores:
         excludes += ['--exclude', ignore]
+    if host:
+        dest_root = '%s:%s' % (host, path)
+    else:
+        dest_root = path
     shell_command(['/usr/bin/rsync']
         + excludes
         + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
-            'htdocs', '%s:%s' % (host, path)])
+            'htdocs/./', dest_root])
 

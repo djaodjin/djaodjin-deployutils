@@ -48,7 +48,7 @@ class Command(DeployCommand):
             timestamp_file.write(sha1)
         for host in fab.env.hosts:
             fab.env.host_string = host
-            pushapp(self.webapp, self.path, sha1)
+            pushapp(self.webapp, self.deployed_path, sha1)
 
 
 @fab.task

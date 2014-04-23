@@ -36,7 +36,7 @@ class Command(ResourceCommand):
         ResourceCommand.handle(self, *args, **options)
         try:
             build_assets()
-            upload(settings.RESOURCES_MACHINE, self.path)
+            upload(settings.RESOURCES_MACHINE, self.deployed_path)
             logging.info("upload resources for %s", self.webapp)
         except subprocess.CalledProcessError, err:
             logging.exception(

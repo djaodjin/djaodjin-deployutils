@@ -33,7 +33,7 @@ class Command(DeployCommand):
         DeployCommand.handle(self, *args, **options)
         for host in fab.env.hosts:
             fab.env.host_string = host
-            syncapp(self.path)
+            syncapp(self.deployed_path)
 
 @fab.task
 def syncapp(webapp_path):

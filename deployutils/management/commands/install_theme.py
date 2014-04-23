@@ -33,7 +33,7 @@ from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
 from deployutils import settings
-from deployutils.management.commands import ResourceCommand, download, LOGGER
+from deployutils.management.commands import ResourceCommand, upload, LOGGER
 
 
 class AssetsParser(Parser):
@@ -85,16 +85,17 @@ class Command(ResourceCommand):
     """
 
     def handle(self, *args, **options):
-        install_theme(settings.INSTALLED_TEMPLATES_ROOT, self.path)
+        install_theme(settings.INSTALLED_TEMPLATES_ROOT,
+            settings.INSTALLED_STATIC_ROOT)
 
 
 def install_theme(templates_dest, resources_dest):
     for template_dir in django_settings.TEMPLATE_DIRS:
         if (templates_dest
-            and not os.path.samefile(templates_dest, template_dir)):
+            and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest)
-    # Fetch resources which are not stored under source control
-    download(settings.RESOURCES_MACHINE, resources_dest)
+    # Copy local resources (not under source control) to resources_dest.
+    upload(host=None, path=resources_dest)
 
 
 def install_templates(srcroot, destroot):
