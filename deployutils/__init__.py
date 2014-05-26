@@ -26,7 +26,7 @@
 Function to load site and credentials config files
 """
 
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 # Read environment variable first
 def load_config(confname, module=None, verbose=False):
