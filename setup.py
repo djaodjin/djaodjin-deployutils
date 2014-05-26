@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Djaodjin Inc.
+# Copyright (c) 2014, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@ from distutils.core import setup
 import deployutils
 
 setup(
-    name='deployutils',
+    name='djaodjin-deployutils',
     version=deployutils.__version__,
     author='The DjaoDjin Team',
     author_email='support@djaodjin.com',
@@ -35,6 +35,8 @@ setup(
               'deployutils.management',
               'deployutils.management.commands' ],
     url='https://github.com/djaodjin/djaodjin-deployutils/',
+    download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
+        % deployutils.__version__,
     license='BSD',
     description='Management commands to deploy Django webapps',
     long_description=open('README.md').read(),

@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Djaodjin Inc.
+# Copyright (c) 2014, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 Function to load site and credentials config files
 """
 
-__version__ = '0.1dev'
+__version__ = '0.1'
 
 # Read environment variable first
 def load_config(confname, module=None, verbose=False):
