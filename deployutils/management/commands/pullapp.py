@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, fnmatch, inspect, logging, os, subprocess, sys
+import datetime, fnmatch, inspect, logging, os, re, subprocess
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
@@ -120,11 +120,11 @@ def migrate_all():
     if not 'south' in settings.INSTALLED_APPS:
         print "'south' is not in INSTALLED_APPS, no migration done."
         return
-    schemamigration = SchemaMigration()
+    schema_cmd = SchemaMigration()
     migrate_cmd = migrate.Command()
     initial_apps = []
-    auto_apps = []
-    for app in [ app for app in settings.INSTALLED_APPS if app != 'south']:
+    auto_apps = [] #pylint: disable=unused-variable
+    for app in [app for app in settings.INSTALLED_APPS if app != 'south']:
         try:
             app_module = models.get_app(app)
             clsmembers = inspect.getmembers(app_module, is_model_class)
@@ -132,7 +132,7 @@ def migrate_all():
                 migrations_dir = os.path.join(
                     os.path.dirname(app_module.__file__), 'migrations')
                 if os.path.isdir(migrations_dir):
-                    schemamigration.handle(app, auto=True)
+                    schema_cmd.handle(app, auto=True)
                     found = False
                     for migration_file in os.listdir(migrations_dir):
                         if (re.match(r'^\d\d\d\d', migration_file)
@@ -144,7 +144,7 @@ def migrate_all():
                     else:
                         initial_apps += [app]
                 else:
-                    schemamigration.handle(app, initial=True)
+                    schema_cmd.handle(app, initial=True)
                     initial_apps += [app]
             else:
                 print("warning: App %s does not seem to contain any Model" %
