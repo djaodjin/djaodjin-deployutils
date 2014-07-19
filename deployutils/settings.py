@@ -45,6 +45,9 @@ DEPLOYED_WEBAPP_ROOT = getattr(settings, 'DEPLOYUTILS_DEPLOYED_WEBAPP_ROOT',
 DEPLOYED_SERVERS = getattr(settings, 'DEPLOYUTILS_DEPLOYED_SERVERS',
                            (settings.ALLOWED_HOSTS[0], ))
 
+INSTALLED_APPS = getattr(settings, 'DEPLOYUTILS_INSTALLED_APPS',
+                         settings.INSTALLED_APPS)
+
 INSTALLED_STATIC_ROOT = getattr(
     settings, 'DEPLOYUTILS_INSTALLED_STATIC_ROOT',
     settings.APP_ROOT + '/htdocs')

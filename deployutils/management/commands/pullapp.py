@@ -22,7 +22,11 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, fnmatch, logging, os, subprocess
+import datetime, fnmatch, inspect, logging, os, subprocess, sys
+
+from django.db import models
+from django.core.exceptions import ImproperlyConfigured
+from south.management.commands import schemamigration, migrate
 
 import deployutils.settings as settings
 from deployutils.management.commands import (
@@ -31,6 +35,15 @@ from deployutils.management.commands.install_theme import install_theme
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class SchemaMigration(schemamigration.Command):
+
+    def error(self, message, code=1):
+        """
+        Override the error method to avoid a brutal sys.exit
+        """
+        raise RuntimeError(message)
 
 
 class Command(ResourceCommand):
@@ -48,6 +61,7 @@ class Command(ResourceCommand):
             download(settings.RESOURCES_MACHINE, self.deployed_path)
             install_theme(settings.INSTALLED_TEMPLATES_ROOT,
                 settings.INSTALLED_STATIC_ROOT)
+            migrate_all()
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
         except subprocess.CalledProcessError, err:
@@ -92,3 +106,56 @@ def fetch_changes(repo_path, up_commit='master'):
     finally:
         os.chdir(prevcwd)
     return last_up_commit, up_commit
+
+
+def is_model_class(cls):
+    return inspect.isclass(cls) and issubclass(cls, models.Model)
+
+
+def migrate_all():
+    """
+    Create schema migrations for all apps specified in INSTALLED_APPS,
+    then run a migrate command.
+    """
+    if not 'south' in settings.INSTALLED_APPS:
+        print "'south' is not in INSTALLED_APPS, no migration done."
+        return
+    schemamigration = SchemaMigration()
+    migrate_cmd = migrate.Command()
+    initial_apps = []
+    auto_apps = []
+    for app in [ app for app in settings.INSTALLED_APPS if app != 'south']:
+        try:
+            app_module = models.get_app(app)
+            clsmembers = inspect.getmembers(app_module, is_model_class)
+            if len(clsmembers) > 0:
+                migrations_dir = os.path.join(
+                    os.path.dirname(app_module.__file__), 'migrations')
+                if os.path.isdir(migrations_dir):
+                    schemamigration.handle(app, auto=True)
+                    found = False
+                    for migration_file in os.listdir(migrations_dir):
+                        if (re.match(r'^\d\d\d\d', migration_file)
+                            and not migration_file.startswith('0001_initial')):
+                            found = True
+                            break
+                    if found:
+                        auto_apps += [app]
+                    else:
+                        initial_apps += [app]
+                else:
+                    schemamigration.handle(app, initial=True)
+                    initial_apps += [app]
+            else:
+                print("warning: App %s does not seem to contain any Model" %
+                    app)
+        except RuntimeError, err:
+            print "warning: App %s, %s" % (app, err)
+        except ImproperlyConfigured:
+            print "warning: App %s does not seem to contain a models.py" % app
+    for app in initial_apps:
+        print "initial migrate for %s" % app
+        migrate_cmd.handle(app, fake=True)
+    print "MIGRATE!"
+    migrate_cmd.handle()
+
