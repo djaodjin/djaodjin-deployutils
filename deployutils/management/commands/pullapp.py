@@ -149,13 +149,15 @@ def migrate_all():
             else:
                 print("warning: App %s does not seem to contain any Model" %
                     app)
+        except OSError, err:
+            print("error: App %s, %s" % (app, err))
         except RuntimeError, err:
-            print "warning: App %s, %s" % (app, err)
+            print("warning: App %s, %s" % (app, err))
         except ImproperlyConfigured:
-            print "warning: App %s does not seem to contain a models.py" % app
+            print("warning: App %s does not seem to contain a models.py" % app)
     for app in initial_apps:
-        print "initial migrate for %s" % app
+        print("initial migrate for %s" % app)
         migrate_cmd.handle(app, fake=True)
-    print "MIGRATE!"
+    print("MIGRATE!")
     migrate_cmd.handle()
 
