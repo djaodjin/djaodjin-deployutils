@@ -32,8 +32,8 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         try:
-            download(settings.RESOURCES_MACHINE, self.deployed_path)
-            logging.info("download resources for %s", self.webapp)
+            download(settings.RESOURCES_REMOTE_LOCATION)
+            logging.info("downloaded resources for %s", self.webapp)
         except subprocess.CalledProcessError, err:
             logging.exception(
                 "download_resources %s caught exception: %s", self.webapp, err)

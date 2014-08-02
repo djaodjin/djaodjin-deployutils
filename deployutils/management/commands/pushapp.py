@@ -53,6 +53,7 @@ class Command(DeployCommand):
 
 @fab.task
 def pushapp(webapp, webapp_path, sha1):
+    remote_location = '%s:%s' % (fab.env.host_string, webapp_path)
     # Directories under htdocs/ are not under source control
     # except for static/css and static/js.
     shell_command([
@@ -62,6 +63,6 @@ def pushapp(webapp, webapp_path, sha1):
             '--exclude', '.DS_Store', '--exclude', '*~',
             '-pthrRvz', '--rsync-path', '/usr/bin/rsync', '--delete',
             '.', './htdocs/static/css', './htdocs/static/js',
-            '%s:%s' % (fab.env.host_string, webapp_path)])
-    upload(fab.env.host_string, webapp_path)
+            remote_location])
+    upload(remote_location)
     LOGGER.info("pushapp %s %s %s", webapp, fab.env.host_string, sha1)

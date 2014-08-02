@@ -28,7 +28,7 @@ default settings when the main settings module does not contain
 the appropriate settings.
 
 In a production environment, the static resources (images, css, js) are served
-directly by nginx from INSTALLED_STATIC_ROOT. Furthermore the CMS pages are
+directly by nginx from RESOURCES_ROOT. Furthermore the CMS pages are
 served by one process while the app is served by another process. This requires
 to install the templates from the app repo into the CMS template directory
 (INSTALLED_TEMPLATES_ROOT) after the TemplateNodes related to the assets
@@ -36,26 +36,30 @@ pipeline have been resolved.
 """
 from django.conf import settings
 
-
 DRY_RUN = getattr(settings, 'DEPLOYUTILS_DRY_RUN', False)
 
 DEPLOYED_WEBAPP_ROOT = getattr(settings, 'DEPLOYUTILS_DEPLOYED_WEBAPP_ROOT',
-                               '/var/www/%s' % settings.ALLOWED_HOSTS[0])
+    '/var/www/%s' % settings.ALLOWED_HOSTS[0])
 
 DEPLOYED_SERVERS = getattr(settings, 'DEPLOYUTILS_DEPLOYED_SERVERS',
-                           (settings.ALLOWED_HOSTS[0], ))
+    (settings.ALLOWED_HOSTS[0], ))
 
 INSTALLED_APPS = getattr(settings, 'DEPLOYUTILS_INSTALLED_APPS',
-                         settings.INSTALLED_APPS)
+    settings.INSTALLED_APPS)
 
-INSTALLED_STATIC_ROOT = getattr(
-    settings, 'DEPLOYUTILS_INSTALLED_STATIC_ROOT',
-    settings.APP_ROOT + '/htdocs')
+RESOURCES_ROOT = getattr(settings, 'DEPLOYUTILS_RESOURCES_ROOT',
+    settings.APP_ROOT + '/htdocs/')
 
-INSTALLED_TEMPLATES_ROOT = getattr(
-    settings, 'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
+if not RESOURCES_ROOT.endswith('/'):
+    RESOURCES_ROOT = RESOURCES_ROOT + '/'
+
+
+INSTALLED_TEMPLATES_ROOT = getattr(settings,
+    'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
     settings.TEMPLATE_DIRS[0])
 
-RESOURCES_MACHINE = getattr(settings, 'DEPLOYUTILS_RESOURCES_SERVER',
-                           'git@' + settings.ALLOWED_HOSTS[0])
+RESOURCES_REMOTE_LOCATION = getattr(settings,
+    'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION',
+    'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
+
 

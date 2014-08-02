@@ -1,4 +1,4 @@
-# Copyright (c) 2014, DjaoDjin Inc.
+# Copyright (c) 2014, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,27 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from distutils.core import setup
+import datetime, os
+from django.utils.timezone import utc
 
-import deployutils
-
-setup(
-    name='djaodjin-deployutils',
-    version=deployutils.__version__,
-    author='The DjaoDjin Team',
-    author_email='support@djaodjin.com',
-    packages=['deployutils',
-              'deployutils.backends',
-              'deployutils.management',
-              'deployutils.management.commands' ],
-    url='https://github.com/djaodjin/djaodjin-deployutils/',
-    download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
-        % deployutils.__version__,
-    license='BSD',
-    description='Management commands to deploy Django webapps',
-    long_description=open('README.md').read(),
-)
+def list_local(dirnames, prefix=None):
+    """
+    Returns a list of all files (recursively) present in a directory
+    with their timestamp.
+    """
+    results = []
+    for dirname in dirnames:
+        for filename in os.listdir(dirname):
+            pathname = os.path.join(dirname, filename)
+            if os.path.isdir(pathname):
+                results += list_local([pathname], prefix)
+            else:
+                fullname = pathname
+                if prefix and fullname.startswith(prefix):
+                    fullname = fullname[len(prefix):]
+                mtime = datetime.datetime.fromtimestamp(
+                    os.path.getmtime(pathname), tz=utc)
+                results += [{"Key": fullname,
+                    "LastModified": mtime.strftime(
+                            '%a, %d %b %Y %H:%M:%S %Z')}]
+    return results

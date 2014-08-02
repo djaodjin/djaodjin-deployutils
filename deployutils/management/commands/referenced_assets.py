@@ -1,4 +1,4 @@
-# Copyright (c) 2014, DjaoDjin Inc.
+# Copyright (c) 2014, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,30 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from distutils.core import setup
+import os, subprocess, sys
 
-import deployutils
+from django.conf import settings as django_settings
+import deployutils.settings as settings
+from deployutils.management.commands import (
+    ResourceCommand, list_local, shell_command)
 
-setup(
-    name='djaodjin-deployutils',
-    version=deployutils.__version__,
-    author='The DjaoDjin Team',
-    author_email='support@djaodjin.com',
-    packages=['deployutils',
-              'deployutils.backends',
-              'deployutils.management',
-              'deployutils.management.commands' ],
-    url='https://github.com/djaodjin/djaodjin-deployutils/',
-    download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
-        % deployutils.__version__,
-    license='BSD',
-    description='Management commands to deploy Django webapps',
-    long_description=open('README.md').read(),
-)
+
+class Command(ResourceCommand):
+    help = "For each asset, indicates if it can safely be said to be"\
+" referenced in the code or not."
+
+    def handle(self, *args, **options):
+        ResourceCommand.handle(self, *args, **options)
+        excludes = ['--exclude=%s' % item for item in ['.git']]
+        prefix = settings.RESOURCES_ROOT
+        for key in list_local([django_settings.APP_STATIC_ROOT], prefix):
+            filename = key['Key']
+            mtime = key['LastModified']
+            basename = os.path.basename(filename)
+            try:
+                shell_command(
+                  ['grep', '-rq'] + excludes + [basename, '.'])
+                found = 'Y'
+            except subprocess.CalledProcessError:
+                found = 'N'
+            sys.stdout.write('%s %s %s\n' % (found, mtime, filename))

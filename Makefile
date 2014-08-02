@@ -10,3 +10,7 @@ PYTHON        := $(binDir)/python
 
 install::
 	cd $(srcDir) && $(PYTHON) ./setup.py install --quiet
+
+# prerequisite: pip install Sphinx
+doc:
+	cd $(srcDir) && sphinx-build -b html ./docs $(PWD)/docs

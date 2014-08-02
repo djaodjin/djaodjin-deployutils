@@ -86,7 +86,7 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         install_theme(settings.INSTALLED_TEMPLATES_ROOT,
-            settings.INSTALLED_STATIC_ROOT)
+            settings.RESOURCES_ROOT)
 
 
 def install_theme(templates_dest, resources_dest):
@@ -95,7 +95,7 @@ def install_theme(templates_dest, resources_dest):
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest)
     # Copy local resources (not under source control) to resources_dest.
-    upload(host=None, path=resources_dest)
+    upload(resources_dest)
 
 
 def install_templates(srcroot, destroot):

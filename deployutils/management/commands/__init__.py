@@ -22,13 +22,14 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging, os, subprocess, sys
+import datetime, logging, os, subprocess, sys
 
 import fabric.api as fab
 from optparse import make_option
 from django.core.management.base import BaseCommand
 
 import deployutils.settings as settings
+from deployutils.backends import list_local
 
 LOGGER = logging.getLogger(__name__)
 
@@ -89,13 +90,13 @@ def build_assets():
     os.chdir(cwd)
 
 
-def download(host, path):
+def download(remote_location):
     """download resources from a stage server."""
     dest_root = './htdocs'
     shell_command([
             '/usr/bin/rsync',
             '-thrRvz', '--rsync-path', '/usr/bin/rsync',
-            '%s:%s/htdocs/./' % (host, path), dest_root])
+            '%s/htdocs/./' % remote_location, dest_root])
 
 
 def shell_command(cmd):
@@ -111,26 +112,33 @@ def shell_command(cmd):
             subprocess.check_call(cmd)
 
 
-def upload(host, path):
-    """upload resources to a stage server."""
-    # -O omit to set mod times on directories to avoid permissions error.
-    ignores = ['.git',
-               '*~',
-               '.DS_Store',
-               '.webassets-cache',
-               'static/css',
-               'static/js',
-               'static/vendor',
-               'media']
-    excludes = []
-    for ignore in ignores:
-        excludes += ['--exclude', ignore]
-    if host:
-        dest_root = '%s:%s' % (host, path)
+def upload(remote_location):
+    """
+    Upload resources to a stage server.
+    """
+    uploads = []
+    with open('.gitignore') as gitignore:
+        for line in gitignore.readlines():
+            pathname = line.strip()
+            if pathname.endswith(os.sep):
+                # os.path.basename will not work as expected if pathname
+                # ends with a '/'.
+                pathname = pathname[:-1]
+            if (os.path.isdir(pathname)
+                and not os.path.basename(pathname).startswith('.')):
+                uploads += [pathname]
+    if remote_location.startswith('s3://'):
+        from deployutils.backends.s3 import S3Backend
+        prefix = settings.RESOURCES_ROOT
+        backend = S3Backend(remote_location, dry_run=True)
+        backend.upload(list_local(uploads, prefix), prefix)
     else:
-        dest_root = path
-    shell_command(['/usr/bin/rsync']
-        + excludes
-        + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync',
-            'htdocs/./', dest_root])
+        ignores = ['*~', '.DS_Store']
+        excludes = []
+        for ignore in ignores:
+            excludes += ['--exclude', ignore]
+        # -O omit to set mod times on directories to avoid permissions error.
+        shell_command(['/usr/bin/rsync']
+            + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
+            + uploads + [remote_location])
 

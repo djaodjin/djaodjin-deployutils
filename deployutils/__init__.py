@@ -45,6 +45,13 @@ def load_config(confname, module=None, verbose=False):
         if verbose:
             import sys
             sys.stderr.write('config loaded from %s\n' % confpath)
+            # We used to parse the file line by line. Once Django 1.5
+            # introduced ALLOWED_HOSTS (a tuple that definitely belongs
+            # to the site.conf set), we had no choice other than resort
+            # to eval(value, {}, {}).
+            # We are not resorting to import conf module yet but that
+            # might be necessary once we use dictionary configs for some
+            # of the apps...
         with open(confpath) as conffile:
             line = conffile.readline()
             while line != '':
@@ -57,10 +64,6 @@ def load_config(confname, module=None, verbose=False):
                         else:
                             value = look.group(2)
                         try:
-                            # Once Django 1.5 introduced ALLOWED_HOSTS (a tuple
-                            # definitely in the site.conf set), we had no choice
-                            # other than using eval. The {} are here to restrict
-                            # the globals and locals context eval has access to.
                             setattr(module,
                                     look.group(1).upper(), eval(value, {}, {}))
                         except StandardError:
