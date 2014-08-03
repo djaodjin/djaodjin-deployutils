@@ -25,11 +25,16 @@
 """
 Function to load site and credentials config files
 """
+import os, re, sys
 
-__version__ = '0.1.1'
+__version__ = '0.1.2-beta'
+
+from deployutils import crypt
 
 # Read environment variable first
-def load_config(confname, module=None, verbose=False):
+#pylint: disable=too-many-arguments,too-many-locals,too-many-statements
+def load_config(confname, module, app_name,
+                prefix='etc', verbose=False, passphrase=None):
     """
     Given a path to a file, parse its lines in ini-like format, and then
     set them in the current namespace.
@@ -37,48 +42,88 @@ def load_config(confname, module=None, verbose=False):
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
-    # todo: consider using something like ConfigObj for this:
-    # http://www.voidspace.org.uk/python/configobj.html
-    import os, re
-    confpath = os.path.join(module.CONFIG_DIR, confname)
-    if os.path.isfile(confpath):
-        if verbose:
-            import sys
-            sys.stderr.write('config loaded from %s\n' % confpath)
-            # We used to parse the file line by line. Once Django 1.5
-            # introduced ALLOWED_HOSTS (a tuple that definitely belongs
-            # to the site.conf set), we had no choice other than resort
-            # to eval(value, {}, {}).
-            # We are not resorting to import conf module yet but that
-            # might be necessary once we use dictionary configs for some
-            # of the apps...
-        with open(confpath) as conffile:
-            line = conffile.readline()
-            while line != '':
-                if not line.startswith('#'):
-                    look = re.match(r'(\w+)\s*=\s*(.*)', line)
-                    if look:
-                        if 'LOCALSTATEDIR' in look.group(2):
-                            value = look.group(2) \
-                                % {'LOCALSTATEDIR': module.APP_ROOT + '/var'}
-                        else:
-                            value = look.group(2)
-                        try:
-                            setattr(module,
-                                    look.group(1).upper(), eval(value, {}, {}))
-                        except StandardError:
-                            raise
-                line = conffile.readline()
-        if module.DB_ENGINE.endswith('sqlite3'):
-            module.DB_PATH = module.DB_FILENAME
+    try:
+        import boto
+        conn = boto.connect_s3()
+        bucket_name = '%s-deployutils' % app_name
+        try:
+            bucket = conn.get_bucket(bucket_name)
+            key = bucket.get_key(confname)
+            content = key.get_contents_as_string()
+            if verbose:
+                sys.stderr.write('config loaded from %s in S3 bucket %s\n'
+                    % (confname, bucket_name))
+        except boto.exception.S3ResponseError:
+            content = None
+    except ImportError:
+        content = None
+
+    # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
+    if not content:
+        candidates = []
+        app_config_dir = ('%s_CONFIG_DIR' % app_name).upper()
+        if app_config_dir in os.environ:
+            candidate = os.path.join(os.environ[app_config_dir], confname)
+            if os.path.isfile(candidate):
+                candidates += [candidate]
+        if 'VIRTUAL_ENV' in os.environ:
+            candidate = os.path.join(
+                    os.environ['VIRTUAL_ENV'], prefix, app_name, confname)
+            if os.path.isfile(candidate):
+                candidates += [candidate]
+        candidate = os.path.join(
+            os.path.dirname(os.path.dirname(sys.executable)),
+            prefix, app_name, confname)
+        if os.path.isfile(candidate):
+            candidates += [candidate]
+        candidate = '/%s/%s/%s' % (prefix, app_name, confname)
+        if os.path.isfile(candidate):
+            candidates += [candidate]
+        if len(candidates) > 0:
+            confpath = candidates[0]
+            if verbose:
+                sys.stderr.write('config loaded from %s\n' % confpath)
+            with open(confpath, 'rb') as conffile:
+                content = conffile.read()
         else:
-            module.DB_PATH = module.DB_NAME
-        for pathname in [module.LOG_FILE]:
-            if not os.path.exists(pathname):
-                if not os.path.exists(os.path.dirname(pathname)):
-                    os.makedirs(os.path.dirname(pathname))
-                with open(pathname, 'w') as _:
-                    pass    # touch file
-    elif verbose:
-        import sys
-        sys.stderr.write('warning: config file %s does not exist.\n' % confpath)
+            content = None
+            sys.stderr.write(
+                'warning: config %s was not found.\n' % confname)
+
+    if content:
+        if passphrase:
+            lines = crypt.decrypt(content, passphrase).split('\n')
+        else:
+            lines = content.split('\n')
+
+        # We used to parse the file line by line. Once Django 1.5
+        # introduced ALLOWED_HOSTS (a tuple that definitely belongs
+        # to the site.conf set), we had no choice other than resort
+        # to eval(value, {}, {}).
+        # We are not resorting to import conf module yet but that
+        # might be necessary once we use dictionary configs for some
+        # of the apps...
+        # todo: consider using something like ConfigObj for this:
+        # http://www.voidspace.org.uk/python/configobj.html
+        for line in lines:
+            if not line.startswith('#'):
+                look = re.match(r'(\w+)\s*=\s*(.*)', line)
+                if look:
+                    if 'LOCALSTATEDIR' in look.group(2):
+                        value = look.group(2) \
+                            % {'LOCALSTATEDIR': module.APP_ROOT + '/var'}
+                    else:
+                        value = look.group(2)
+                    try:
+                        setattr(module,
+                                look.group(1).upper(), eval(value, {}, {}))
+                    except StandardError:
+                        raise
+        if hasattr(module, 'LOG_FILE'):
+            for pathname in [module.LOG_FILE]:
+                if not os.path.exists(pathname):
+                    if not os.path.exists(os.path.dirname(pathname)):
+                        os.makedirs(os.path.dirname(pathname))
+                    with open(pathname, 'w') as _:
+                        pass    # touch file
+                sys.stderr.write('logging app messages in %s\n' % pathname)

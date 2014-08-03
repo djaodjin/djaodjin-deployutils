@@ -62,4 +62,5 @@ RESOURCES_REMOTE_LOCATION = getattr(settings,
     'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION',
     'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
 
-
+DJAODJIN_SECRET_KEY = getattr(settings,
+    'DJAODJIN_SECRET_KEY', None)
