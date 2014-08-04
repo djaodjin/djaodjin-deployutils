@@ -54,8 +54,7 @@ def load_config(confname, module, app_name,
                 sys.stderr.write('config loaded from %s in S3 bucket %s\n'
                     % (confname, bucket_name))
         except (boto.exception.NoAuthHandlerFound,
-                boto.exception.S3ResponseError) as err:
-            sys.stderr.write("error: boto exception - %s\n" % err)
+                boto.exception.S3ResponseError) as _:
             content = None
     except ImportError:
         content = None
