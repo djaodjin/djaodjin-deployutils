@@ -33,7 +33,8 @@ from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
 from deployutils import settings
-from deployutils.management.commands import ResourceCommand, upload, LOGGER
+from deployutils.management.commands import shell_command
+from deployutils.management.commands import ResourceCommand, LOGGER
 
 
 class AssetsParser(Parser):
@@ -81,7 +82,9 @@ class AssetsParser(Parser):
 class Command(ResourceCommand):
     """
     Install templates with URLs to compiled assets, as well as
-    resources and compiled assets.
+    static assets.
+    The cached assets must have been built before this command
+    is invoked. They won't be rebuilt here.
     """
 
     def handle(self, *args, **options):
@@ -95,7 +98,10 @@ def install_theme(templates_dest, resources_dest):
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest)
     # Copy local resources (not under source control) to resources_dest.
-    upload(resources_dest)
+    excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
+    shell_command(['/usr/bin/rsync']
+        + excludes + ['-az', '--rsync-path', '/usr/bin/rsync']
+        + ['%s/' % django_settings.APP_STATIC_ROOT, resources_dest])
 
 
 def install_templates(srcroot, destroot):
@@ -104,14 +110,12 @@ def install_templates(srcroot, destroot):
     and its subdirectories.
     """
     #pylint: disable=too-many-locals
-    for root, dirs, files in os.walk(srcroot):
-        destdir = root.replace(srcroot, destroot)
-        if not os.path.exists(destdir):
-            os.makedirs(destdir)
-        for filename in files:
-            source_name = os.path.join(root, filename)
-            dest_name = os.path.join(destdir, filename)
-#            print "XXX from %s to %s" % (source_name, dest_name)
+    if not os.path.exists(destroot):
+        os.makedirs(destroot)
+    for pathname in os.listdir(srcroot):
+        source_name = os.path.join(srcroot, pathname)
+        dest_name = os.path.join(destroot, pathname)
+        if os.path.isfile(source_name):
             with open(source_name) as source:
                 template_string = source.read()
             try:
@@ -121,19 +125,18 @@ def install_templates(srcroot, destroot):
                 with open(dest_name, 'w') as dest:
                     parser = AssetsParser(tokens, dest)
                     parser.parse_through()
-                cmd = subprocess.Popen(['diff', '-u', source_name, dest_name],
-                    stdout=subprocess.PIPE)
+                cmdline = ['diff', '-u', source_name, dest_name]
+                cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
                 lines = cmd.stdout.readlines()
                 cmd.wait()
                 # Non-zero error codes are ok here. That's how diff
                 # indicates the files are different.
                 if len(lines) > 0:
                     print "modified %s" % dest_name
-#                    print '\n'.join(lines)
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
                     "from unicode or UTF-8 strings.", source_name)
-        for dirname in dirs:
-            install_templates(
-                os.path.join(root, dirname),
-                os.path.join(destdir, dirname))
+        elif os.path.isdir(source_name):
+            install_templates(source_name, dest_name)
+        else:
+            print "skip %s" % source_name
