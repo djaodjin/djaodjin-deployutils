@@ -44,16 +44,18 @@ def load_config(confname, module, app_name,
     """
     try:
         import boto
-        conn = boto.connect_s3()
         bucket_name = '%s-deployutils' % app_name
         try:
+            conn = boto.connect_s3()
             bucket = conn.get_bucket(bucket_name)
             key = bucket.get_key(confname)
             content = key.get_contents_as_string()
             if verbose:
                 sys.stderr.write('config loaded from %s in S3 bucket %s\n'
                     % (confname, bucket_name))
-        except boto.exception.S3ResponseError:
+        except (boto.exception.NoAuthHandlerFound,
+                boto.exception.S3ResponseError) as err:
+            sys.stderr.write("error: boto exception - %s\n" % err)
             content = None
     except ImportError:
         content = None
