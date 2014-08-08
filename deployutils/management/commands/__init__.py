@@ -119,7 +119,7 @@ def upload(remote_location):
     uploads = []
     with open('.gitignore') as gitignore:
         for line in gitignore.readlines():
-            pathname = line.strip()
+            pathname = os.path.join(os.getcwd(), line.strip())
             if pathname.endswith(os.sep):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
@@ -130,7 +130,7 @@ def upload(remote_location):
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         prefix = settings.RESOURCES_ROOT
-        backend = S3Backend(remote_location, dry_run=True)
+        backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
         backend.upload(list_local(uploads, prefix), prefix)
     else:
         ignores = ['*~', '.DS_Store']

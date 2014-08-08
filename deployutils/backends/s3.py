@@ -22,9 +22,11 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, time, mimetypes
+import datetime, logging, time, mimetypes
 
 import boto
+
+LOGGER = logging.getLogger(__name__)
 
 
 class S3Backend(object):
@@ -69,6 +71,11 @@ class S3Backend(object):
             content_type = mimetypes.guess_type(pathname)[0]
             if content_type:
                 headers['Content-Type'] = content_type
+            if self.dry_run:
+                dry_run = "(dry run) "
+            else:
+                dry_run = ""
+            LOGGER.info("%supload %s to %s", dry_run, pathname, filename)
             if not self.dry_run:
                 with open(pathname, 'rb') as file_obj:
                     s3_key = boto.s3.key.Key(self.bucket)
