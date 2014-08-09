@@ -62,6 +62,8 @@ RESOURCES_REMOTE_LOCATION = getattr(settings,
     'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION',
     'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
 
+DENY_NO_SESSION = getattr(settings, 'DEPLOYUTILS_DENY_NO_SESSION', False)
+
 SESSION_COOKIE_NAME = 'sessionid'
 
 DJAODJIN_SECRET_KEY = getattr(settings,

@@ -31,6 +31,8 @@ import logging, json
 from django.conf import settings
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
+from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
+from django.contrib.auth.backends import RemoteUserBackend
 
 from deployutils import settings
 from deployutils import crypt
@@ -44,7 +46,8 @@ class SessionStore(SessionBase):
         super(SessionStore, self).__init__(session_key=session_key)
 
     @staticmethod
-    def prepare(session_data={}): #pylint: disable=dangerous-default-value
+    def prepare(session_data={}, #pylint: disable=dangerous-default-value
+                passphrase=None):
         """
         Returns *session_dict* as a base64 encrypted json string.
 
@@ -57,8 +60,10 @@ class SessionStore(SessionBase):
           iv=...
           _json_formatted_
         """
+        if passphrase is None:
+            passphrase = settings.DJAODJIN_SECRET_KEY
         return crypt.encrypt(bytes(json.dumps(session_data)),
-            passphrase=settings.DJAODJIN_SECRET_KEY)
+            passphrase=passphrase)
 
     def load(self):
         """
@@ -76,6 +81,15 @@ class SessionStore(SessionBase):
         try:
             session_data = json.loads(crypt.decrypt(self.session_key,
                 passphrase=settings.DJAODJIN_SECRET_KEY))
+            # We have been able to decode the session data, let's
+            # create Users and session keys expected by Django
+            # contrib.auth backend.
+            if 'username' in session_data:
+                remote_backend = RemoteUserBackend()
+                user = remote_backend.authenticate(session_data['username'])
+                session_data[SESSION_KEY] = user.id
+                session_data[BACKEND_SESSION_KEY] \
+                    = 'django.contrib.auth.backends.RemoteUserBackend'
         except (IndexError, TypeError, ValueError) as _:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
@@ -91,6 +105,3 @@ class SessionStore(SessionBase):
         """
         session_cache = getattr(self, '_session_cache', {})
         return self.prepare(session_cache)
-
-
-

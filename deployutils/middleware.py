@@ -26,11 +26,21 @@
 Session Store for encrypted cookies.
 """
 
+from django.conf import settings as django_settings
+from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.middleware import SessionMiddleware \
     as BaseMiddleware
+from django.utils.importlib import import_module
+
+from deployutils import settings
+
 
 class SessionMiddleware(BaseMiddleware):
 
     def process_request(self, request):
-        super(SessionMiddleware, self).process_request(request)
-        # XXX raise 403 if no cookie.
+        engine = import_module(django_settings.SESSION_ENGINE)
+        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
+        if not session_key and settings.DENY_NO_SESSION:
+            raise PermissionDenied
+        request.session = engine.SessionStore(session_key)
+

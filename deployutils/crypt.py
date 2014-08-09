@@ -54,11 +54,17 @@ def _openssl_key_iv(passphrase, salt):
     from a passphrase and salt.
     """
     def _openssl_kdf(req):
+        if isinstance(passphrase, unicode):
+            passwd = passphrase.encode('ascii', 'ignore')
+        else:
+            passwd = passphrase
         prev = ''
         while req > 0:
-            prev = MD5.new(prev + passphrase + salt).digest()
+            prev = MD5.new(prev + passwd + salt).digest()
             req -= 16
             yield prev
+    assert passphrase is not None
+    assert salt is not None
     # AES key: 32 bytes, IV: 16 bytes
     mat = ''.join([x for x in _openssl_kdf(32 + 16)])
     return mat[0:32], mat[32:48]
