@@ -119,7 +119,10 @@ def upload(remote_location):
     uploads = []
     with open('.gitignore') as gitignore:
         for line in gitignore.readlines():
-            pathname = os.path.join(os.getcwd(), line.strip())
+            if remote_location.startswith('s3://'):
+                pathname = os.path.join(os.getcwd(), line.strip())
+            else:
+                pathname = line.strip()
             if pathname.endswith(os.sep):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
