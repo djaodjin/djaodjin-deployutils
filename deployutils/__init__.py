@@ -27,7 +27,7 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.1.2-beta'
+__version__ = '0.2'
 
 from deployutils import crypt
 

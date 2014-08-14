@@ -1,0 +1,13 @@
+0.2.0
+
+  * Create and apply schema migrations on _pullapp_ command
+  * Encrypt communications with front-end firewall
+  * Upload resources to S3
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 13 Aug 2014 22:16:18 -0700
+
+0.1.1
+
+  * Initial Release.
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Mon, 26 May 2014 00:14:19 -0700
