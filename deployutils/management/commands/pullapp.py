@@ -26,6 +26,7 @@ import datetime, fnmatch, inspect, logging, os, re, subprocess
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
+from south.migration import Migrations
 from south.management.commands import schemamigration, migrate
 
 import deployutils.settings as settings
@@ -121,7 +122,6 @@ def migrate_all():
         print "'south' is not in INSTALLED_APPS, no migration done."
         return
     schema_cmd = SchemaMigration()
-    migrate_cmd = migrate.Command()
     initial_apps = []
     auto_apps = [] #pylint: disable=unused-variable
     for app in [app for app in settings.INSTALLED_APPS if app != 'south']:
@@ -155,9 +155,13 @@ def migrate_all():
             print "warning: App %s, %s" % (app, err)
         except ImproperlyConfigured:
             print "warning: App %s does not seem to contain a models.py" % app
+
+    # Clear the cached Migrations instances now that we have more of them.
+    Migrations._clear_cache() #pylint: disable=no-member,protected-access
+    migrate_cmd = migrate.Command()
     for app in initial_apps:
         print "initial migrate for %s" % app
         migrate_cmd.handle(app, fake=True)
-    print "MIGRATE!"
+    print "MIGRATE ALL!"
     migrate_cmd.handle()
 
