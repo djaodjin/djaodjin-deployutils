@@ -117,6 +117,7 @@ def load_config(confname, module, app_name,
                     else:
                         value = look.group(2)
                     try:
+                        #pylint:disable=eval-used
                         setattr(module,
                                 look.group(1).upper(), eval(value, {}, {}))
                     except StandardError:
