@@ -27,9 +27,7 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.2'
-
-from deployutils import crypt
+__version__ = '0.2.1'
 
 # Read environment variable first
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
@@ -42,6 +40,7 @@ def load_config(confname, module, app_name,
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
+    from deployutils import crypt # prevent pip install to break.
     content = None
     if not skip_s3:
         try:
