@@ -29,13 +29,14 @@ Session Store for encrypted cookies.
 import logging, json
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
-from django.contrib.auth.backends import RemoteUserBackend
 
 from deployutils import settings
 from deployutils import crypt
+from deployutils.backends.auth import ProxyUserBackend
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,15 +86,14 @@ class SessionStore(SessionBase):
             # create Users and session keys expected by Django
             # contrib.auth backend.
             if 'username' in session_data:
-                remote_backend = RemoteUserBackend()
-                user = remote_backend.authenticate(session_data['username'])
+                user = ProxyUserBackend().authenticate(session_data['username'])
                 session_data[SESSION_KEY] = user.id
                 session_data[BACKEND_SESSION_KEY] \
-                    = 'django.contrib.auth.backends.RemoteUserBackend'
+                    = 'deployutils.backends.auth.ProxyUserBackend'
         except (IndexError, TypeError, ValueError) as _:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
-            self.create()
+            raise PermissionDenied("Cannot decode session")
         return session_data
 
     def _get_session_key(self):
