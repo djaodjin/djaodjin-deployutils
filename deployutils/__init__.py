@@ -27,7 +27,40 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.2.1'
+__version__ = '0.2.2-beta'
+
+def locate_config(confname, app_name, prefix='etc', verbose=False):
+    """
+    Returns absolute path on the filesystem to a config file named *confname*.
+    """
+    candidates = []
+    app_config_dir = ('%s_CONFIG_DIR' % app_name).upper()
+    if app_config_dir in os.environ:
+        candidate = os.path.join(os.environ[app_config_dir], confname)
+        if os.path.isfile(candidate):
+            candidates += [candidate]
+    if 'VIRTUAL_ENV' in os.environ:
+        candidate = os.path.join(
+                os.environ['VIRTUAL_ENV'], prefix, app_name, confname)
+        if os.path.isfile(candidate):
+            candidates += [candidate]
+    candidate = os.path.join(
+        os.path.dirname(os.path.dirname(sys.executable)),
+        prefix, app_name, confname)
+    if os.path.isfile(candidate):
+        candidates += [candidate]
+    candidate = '/%s/%s/%s' % (prefix, app_name, confname)
+    if os.path.isfile(candidate):
+        candidates += [candidate]
+    if len(candidates) > 0:
+        if verbose:
+            sys.stderr.write('config loaded from %s\n' % candidates[0])
+        return candidates[0]
+    else:
+        sys.stderr.write(
+            'warning: config %s was not found.\n' % confname)
+    return None
+
 
 # Read environment variable first
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
@@ -62,35 +95,11 @@ def load_config(confname, module, app_name,
 
     # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
     if not content:
-        candidates = []
-        app_config_dir = ('%s_CONFIG_DIR' % app_name).upper()
-        if app_config_dir in os.environ:
-            candidate = os.path.join(os.environ[app_config_dir], confname)
-            if os.path.isfile(candidate):
-                candidates += [candidate]
-        if 'VIRTUAL_ENV' in os.environ:
-            candidate = os.path.join(
-                    os.environ['VIRTUAL_ENV'], prefix, app_name, confname)
-            if os.path.isfile(candidate):
-                candidates += [candidate]
-        candidate = os.path.join(
-            os.path.dirname(os.path.dirname(sys.executable)),
-            prefix, app_name, confname)
-        if os.path.isfile(candidate):
-            candidates += [candidate]
-        candidate = '/%s/%s/%s' % (prefix, app_name, confname)
-        if os.path.isfile(candidate):
-            candidates += [candidate]
-        if len(candidates) > 0:
-            confpath = candidates[0]
-            if verbose:
-                sys.stderr.write('config loaded from %s\n' % confpath)
+        confpath = locate_config(
+            confname, app_name, prefix=prefix, verbose=verbose)
+        if confpath:
             with open(confpath, 'rb') as conffile:
                 content = conffile.read()
-        else:
-            content = None
-            sys.stderr.write(
-                'warning: config %s was not found.\n' % confname)
 
     if content:
         if passphrase:
