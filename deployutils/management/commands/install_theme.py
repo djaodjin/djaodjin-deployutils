@@ -93,7 +93,9 @@ class Command(ResourceCommand):
 
 
 def install_theme(templates_dest, resources_dest):
-    for template_dir in django_settings.TEMPLATE_DIRS:
+    for template_dir in [django_settings.TEMPLATE_DIRS[0]]:
+        # The first TEMPLATE_DIRS usually contains the most specialized
+        # templates (ie. the ones we truely want to install).
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest)
