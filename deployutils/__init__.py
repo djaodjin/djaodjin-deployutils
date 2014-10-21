@@ -39,11 +39,6 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
         candidate = os.path.join(os.environ[app_config_dir], confname)
         if os.path.isfile(candidate):
             candidates += [candidate]
-    if 'VIRTUAL_ENV' in os.environ:
-        candidate = os.path.join(
-                os.environ['VIRTUAL_ENV'], prefix, app_name, confname)
-        if os.path.isfile(candidate):
-            candidates += [candidate]
     candidate = os.path.join(
         os.path.dirname(os.path.dirname(sys.executable)),
         prefix, app_name, confname)
