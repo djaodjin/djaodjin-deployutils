@@ -93,6 +93,10 @@ class Command(ResourceCommand):
 
 
 def install_theme(templates_dest, resources_dest):
+    if (not os.path.exists(templates_dest)
+        and os.path.isdir(os.path.dirname(templates_dest))):
+        # subdirectory in a directory already present. We are OK with that.
+        os.makedirs(templates_dest)
     for template_dir in [django_settings.TEMPLATE_DIRS[0]]:
         # The first TEMPLATE_DIRS usually contains the most specialized
         # templates (ie. the ones we truely want to install).
