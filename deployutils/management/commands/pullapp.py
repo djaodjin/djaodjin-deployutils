@@ -163,5 +163,5 @@ def migrate_all():
         print "initial migrate for %s" % app
         migrate_cmd.handle(app, fake=True)
     print "MIGRATE ALL!"
-    migrate_cmd.handle()
+    migrate_cmd.handle(no_initial_data=True)
 
