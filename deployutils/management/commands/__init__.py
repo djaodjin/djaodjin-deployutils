@@ -127,7 +127,7 @@ def upload(remote_location):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
                 pathname = pathname[:-1]
-            if (os.path.isdir(pathname)
+            if (os.path.exists(pathname)
                 and not os.path.basename(pathname).startswith('.')):
                 uploads += [pathname]
     if remote_location.startswith('s3://'):
