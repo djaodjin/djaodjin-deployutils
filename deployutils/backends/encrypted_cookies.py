@@ -41,6 +41,14 @@ from deployutils.backends.auth import ProxyUserBackend
 LOGGER = logging.getLogger(__name__)
 
 
+class JSONEncoder(json.JSONEncoder):
+
+    def default(self, obj): #pylint: disable=method-hidden
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        return super(JSONEncoder, self).default(obj)
+
+
 class SessionStore(SessionBase):
 
     def __init__(self, session_key=None):
@@ -63,7 +71,7 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        return crypt.encrypt(bytes(json.dumps(session_data)),
+        return crypt.encrypt(bytes(json.dumps(session_data, cls=JSONEncoder)),
             passphrase=passphrase)
 
     def load(self):
