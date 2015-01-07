@@ -25,23 +25,68 @@
 import datetime, os
 from django.utils.timezone import utc
 
-def list_local(dirnames, prefix=None):
+
+def fingerprint(dirnames, prefix=None, previous=[]):
+    #pylint:disable=dangerous-default-value
     """
-    Returns a list of all files (recursively) present in a directory
-    with their timestamp.
+    Returns a list of paths available from *dirname*. When previous
+    is specified, returns a list of additional files only.
+
+    Example:
+    [{ "Key": "abc.txt",
+       "LastModified": "Mon, 05 Jan 2015 12:00:00 UTC"},
+     { "Key": "def.txt",
+       "LastModified": "Mon, 05 Jan 2015 12:00:001 UTC"},
+    ]
     """
     results = []
     for dirname in dirnames:
         for filename in os.listdir(dirname):
-            pathname = os.path.join(dirname, filename)
-            if os.path.isdir(pathname):
-                results += list_local([pathname], prefix)
+            fullpath = os.path.join(dirname, filename)
+            if os.path.isdir(fullpath):
+                results += fingerprint(fullpath, previous, filename)
             else:
-                fullname = pathname
+                fullname = fullpath
+                if prefix and fullname.startswith(prefix):
+                    fullname = fullname[len(prefix):]
+                found = False
+                for prevpath in previous:
+                    if fullname == prevpath['Key']:
+                        found = True
+                        break
+                if not found:
+                    mtime = datetime.datetime.fromtimestamp(
+                        os.path.getmtime(fullpath), tz=utc)
+                    results += [{"Key": fullname,
+                                 "LastModified": mtime.strftime(
+                                     '%a, %d %b %Y %H:%M:%S %Z')}]
+    return results
+
+
+def list_local(dirnames, prefix=None):
+    """
+    Returns a list of all files (recursively) present in a directory
+    with their timestamp.
+
+    Example:
+    [{ "Key": "abc.txt",
+       "LastModified": "Mon, 05 Jan 2015 12:00:00 UTC"},
+     { "Key": "def.txt",
+       "LastModified": "Mon, 05 Jan 2015 12:00:001 UTC"},
+    ]
+    """
+    results = []
+    for dirname in dirnames:
+        for filename in os.listdir(dirname):
+            fullpath = os.path.join(dirname, filename)
+            if os.path.isdir(fullpath):
+                results += list_local([fullpath], prefix)
+            else:
+                fullname = fullpath
                 if prefix and fullname.startswith(prefix):
                     fullname = fullname[len(prefix):]
                 mtime = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(pathname), tz=utc)
+                    os.path.getmtime(fullpath), tz=utc)
                 results += [{"Key": fullname,
                     "LastModified": mtime.strftime(
                             '%a, %d %b %Y %H:%M:%S %Z')}]

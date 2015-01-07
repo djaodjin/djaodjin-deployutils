@@ -31,9 +31,10 @@ LOGGER = logging.getLogger(__name__)
 
 class S3Backend(object):
 
-    def __init__(self, remote_location, dry_run=False):
+    def __init__(self, remote_location,
+                 default_acl='public-read', dry_run=False):
         self.dry_run = dry_run
-        self.default_acl = 'public-read'
+        self.default_acl = default_acl
         self.conn = boto.connect_s3()
         self.bucket = self.conn.get_bucket(remote_location[5:])
 
