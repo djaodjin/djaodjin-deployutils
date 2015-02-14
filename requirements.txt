@@ -1,0 +1,2 @@
+# With native library
+pycrypto>=2.6.1
