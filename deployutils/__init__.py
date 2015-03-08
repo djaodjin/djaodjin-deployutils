@@ -1,4 +1,4 @@
-# Copyright (c) 2014, DjaoDjin Inc.
+# Copyright (c) 2015, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ def load_config(confname, module, app_name,
                 if look:
                     if 'LOCALSTATEDIR' in look.group(2):
                         value = look.group(2) \
-                            % {'LOCALSTATEDIR': module.APP_ROOT + '/var'}
+                            % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
                     else:
                         value = look.group(2)
                     try:

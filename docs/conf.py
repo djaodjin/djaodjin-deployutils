@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# saas_framework documentation build configuration file, created by
+# deployutils documentation build configuration file, created by
 # sphinx-quickstart on Sun May  5 11:18:54 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -44,8 +44,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'djaodjin-saas'
-copyright = u'2014, DjaoDjin inc.'
+project = u'djaodjin-deployutils'
+copyright = u'2015, DjaoDjin inc.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -168,7 +168,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'djaodjin-saas-doc'
+htmlhelp_basename = 'djaodjin-deployutils-doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -187,7 +187,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'djaodjin-saas.tex', u'django\\_saas Documentation',
+  ('index', 'djaodjin-deployutils.tex', u'deployutils Documentation',
    u'DjaoDjin inc.', 'manual'),
 ]
 
@@ -217,7 +217,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'djaodjin-saas', u'djaodjin-saas Documentation',
+    ('index', 'djaodjin-deployutils', u'djaodjin-deployutils Documentation',
      [u'DjaoDjin inc.'], 1)
 ]
 
@@ -231,8 +231,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'djaodjin-saas', u'djaodjin-saas Documentation',
-   u'DjaoDjin inc.', 'djaodjin-saas', 'One line description of project.',
+  ('index', 'djaodjin-deployutils', u'djaodjin-deployutils Documentation',
+   u'DjaoDjin inc.', 'djaodjin-deployutils', 'One line description of project.',
    'Miscellaneous'),
 ]
 

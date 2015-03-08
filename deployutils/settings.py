@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Djaodjin Inc.
+# Copyright (c) 2015, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,35 +36,40 @@ pipeline have been resolved.
 """
 from django.conf import settings
 
-DRY_RUN = getattr(settings, 'DEPLOYUTILS_DRY_RUN', False)
+_SETTINGS = {
+    'DRY_RUN': getattr(settings, 'DEPLOYUTILS_DRY_RUN', False),
+    'DEPLOYED_WEBAPP_ROOT':getattr(settings, 'DEPLOYUTILS_DEPLOYED_WEBAPP_ROOT',
+        '/var/www/%s' % settings.ALLOWED_HOSTS[0]),
+    'DEPLOYED_SERVERS': getattr(settings, 'DEPLOYUTILS_DEPLOYED_SERVERS',
+        (settings.ALLOWED_HOSTS[0],)),
+    'INSTALLED_APPS': getattr(settings, 'DEPLOYUTILS_INSTALLED_APPS',
+        settings.INSTALLED_APPS),
+    'RESOURCES_ROOT': getattr(settings, 'DEPLOYUTILS_RESOURCES_ROOT',
+        settings.BASE_DIR + '/htdocs/'),
+    'INSTALLED_TEMPLATES_ROOT': getattr(settings,
+        'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
+        settings.TEMPLATE_DIRS[0]),
+    'RESOURCES_REMOTE_LOCATION': getattr(settings,
+        'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION', None),
+    'DENY_NO_SESSION': getattr(settings, 'DEPLOYUTILS_DENY_NO_SESSION', False),
+    'SESSION_COOKIE_NAME': 'sessionid',
+    'DJAODJIN_SECRET_KEY': getattr(settings, 'DJAODJIN_SECRET_KEY', None)
+}
+_SETTINGS.update(getattr(settings, 'DEPLOYUTILS', {}))
 
-DEPLOYED_WEBAPP_ROOT = getattr(settings, 'DEPLOYUTILS_DEPLOYED_WEBAPP_ROOT',
-    '/var/www/%s' % settings.ALLOWED_HOSTS[0])
 
-DEPLOYED_SERVERS = getattr(settings, 'DEPLOYUTILS_DEPLOYED_SERVERS',
-    (settings.ALLOWED_HOSTS[0], ))
+DRY_RUN = _SETTINGS.get('DRY_RUN')
+DENY_NO_SESSION = _SETTINGS.get('DENY_NO_SESSION')
+DEPLOYED_WEBAPP_ROOT = _SETTINGS.get('DEPLOYED_WEBAPP_ROOT')
+DEPLOYED_SERVERS = _SETTINGS.get('DEPLOYED_SERVERS')
+INSTALLED_APPS = _SETTINGS.get('INSTALLED_APPS')
+INSTALLED_TEMPLATES_ROOT = _SETTINGS.get('INSTALLED_TEMPLATES_ROOT')
+RESOURCES_REMOTE_LOCATION = _SETTINGS.get('RESOURCES_REMOTE_LOCATION',
+    'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
 
-INSTALLED_APPS = getattr(settings, 'DEPLOYUTILS_INSTALLED_APPS',
-    settings.INSTALLED_APPS)
-
-RESOURCES_ROOT = getattr(settings, 'DEPLOYUTILS_RESOURCES_ROOT',
-    settings.APP_ROOT + '/htdocs/')
-
+RESOURCES_ROOT = _SETTINGS.get('RESOURCES_ROOT')
 if not RESOURCES_ROOT.endswith('/'):
     RESOURCES_ROOT = RESOURCES_ROOT + '/'
 
-
-INSTALLED_TEMPLATES_ROOT = getattr(settings,
-    'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
-    settings.TEMPLATE_DIRS[0])
-
-RESOURCES_REMOTE_LOCATION = getattr(settings,
-    'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION',
-    'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
-
-DENY_NO_SESSION = getattr(settings, 'DEPLOYUTILS_DENY_NO_SESSION', False)
-
-SESSION_COOKIE_NAME = 'sessionid'
-
-DJAODJIN_SECRET_KEY = getattr(settings,
-    'DJAODJIN_SECRET_KEY', None)
+SESSION_COOKIE_NAME = _SETTINGS.get('SESSION_COOKIE_NAME')
+DJAODJIN_SECRET_KEY = _SETTINGS.get('DJAODJIN_SECRET_KEY')

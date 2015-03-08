@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Djaodjin Inc.
+# Copyright (c) 2015, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,12 +22,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, fnmatch, inspect, logging, os, re, subprocess
+import datetime, fnmatch, inspect, logging, os, re, subprocess, sys
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
-from south.migration import Migrations
-from south.management.commands import schemamigration, migrate
 
 import deployutils.settings as settings
 from deployutils.management.commands import (
@@ -38,13 +36,19 @@ from deployutils.management.commands.install_theme import install_theme
 LOGGER = logging.getLogger(__name__)
 
 
-class SchemaMigration(schemamigration.Command):
+try:
+    from south.management.commands import schemamigration
 
-    def error(self, message, code=1):
-        """
-        Override the error method to avoid a brutal sys.exit
-        """
-        raise RuntimeError(message)
+    class SchemaMigration(schemamigration.Command):
+
+        def error(self, message, code=1):
+            """
+            Override the error method to avoid a brutal sys.exit
+            """
+            raise RuntimeError(message)
+
+except ImportError: # South not present in virtualenv.
+    pass
 
 
 class Command(ResourceCommand):
@@ -113,20 +117,19 @@ def is_model_class(cls):
     return inspect.isclass(cls) and issubclass(cls, models.Model)
 
 
-def migrate_all():
-    """
-    Create schema migrations for all apps specified in INSTALLED_APPS,
-    then run a migrate command.
-    """
+def _south_migrate_all():
     if not 'south' in settings.INSTALLED_APPS:
         print "'south' is not in INSTALLED_APPS, no migration done."
-        return
+        return 0
+    from south.migration import Migrations
+    from south.management.commands import migrate
     schema_cmd = SchemaMigration()
     initial_apps = []
     auto_apps = [] #pylint: disable=unused-variable
     for app in [app for app in settings.INSTALLED_APPS if app != 'south']:
         try:
-            app_module = models.get_app(app)
+            app_module = models.get_app(app) #pylint: disable=no-member
+                                             # South only used with Django < 1.7
             clsmembers = inspect.getmembers(app_module, is_model_class)
             if len(clsmembers) > 0:
                 migrations_dir = os.path.join(
@@ -164,4 +167,26 @@ def migrate_all():
         migrate_cmd.handle(app, fake=True)
     print "MIGRATE ALL!"
     migrate_cmd.handle(no_initial_data=True)
+    return 0
+
+
+def migrate_all():
+    """
+    Create schema migrations for all apps specified in INSTALLED_APPS,
+    then run a migrate command.
+    """
+    if 'south' in settings.INSTALLED_APPS:
+        return _south_migrate_all()
+    from django.core.management.commands import makemigrations, migrate
+    schema_args = [sys.executable, 'makemigrations']
+    for app in settings.INSTALLED_APPS:
+        if not app.startswith('django'):
+            schema_args += [app]
+    schema_cmd = makemigrations.Command()
+    schema_cmd.run_from_argv(schema_args)
+
+    migrate_cmd = migrate.Command()
+    print "MIGRATE ALL!"
+    migrate_cmd.run_from_argv([sys.executable, 'migrate'])
+
 
