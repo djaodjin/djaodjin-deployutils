@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getpass, json, mimetypes
+import getpass, mimetypes
 from optparse import make_option
 
 import boto
@@ -41,6 +41,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        #pylint: disable=too-many-locals
         default_acl = 'private'
         app_name = django_settings.APP_NAME
         passphrase = getpass.getpass('Passphrase:')
