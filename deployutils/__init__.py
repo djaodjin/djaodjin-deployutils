@@ -68,16 +68,16 @@ def load_config(confname, module, app_name,
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
-    from deployutils import crypt # prevent pip install to break.
+    from deployutils import crypt, settings # prevent pip install to break.
     content = None
     if not skip_s3:
         try:
             import boto
-            bucket_name = '%s-deployutils' % app_name
+            bucket_name = settings.CONFIG_BUCKET
             try:
                 conn = boto.connect_s3()
                 bucket = conn.get_bucket(bucket_name)
-                key = bucket.get_key(confname)
+                key = bucket.get_key('%s/%s' % (app_name, confname))
                 content = key.get_contents_as_string()
                 if verbose:
                     sys.stderr.write('config loaded from %s in S3 bucket %s\n'
