@@ -60,7 +60,7 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
 # Read environment variable first
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
 def load_config(confname, module, app_name,
-                prefix='etc', verbose=False, skip_s3=True, passphrase=None):
+                prefix='etc', verbose=False, s3_bucket=None, passphrase=None):
     """
     Given a path to a file, parse its lines in ini-like format, and then
     set them in the current namespace.
@@ -68,12 +68,12 @@ def load_config(confname, module, app_name,
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
-    from deployutils import crypt, settings # prevent pip install to break.
+    from deployutils import crypt # prevent pip install to break.
     content = None
-    if not skip_s3:
+    if s3_bucket:
         try:
             import boto
-            bucket_name = settings.CONFIG_BUCKET
+            bucket_name = s3_bucket
             try:
                 conn = boto.connect_s3()
                 bucket = conn.get_bucket(bucket_name)

@@ -61,4 +61,7 @@ Sometimes you are trying to test a hotfix directly in production. To that
 purpose *pushapp* will rsync the webapp directly from your dev system
 to the production servers.
 
+Using configuration files from a S3 bucket
+------------------------------------------
 
+    $ python manage.py upload_configs credentials site.conf
