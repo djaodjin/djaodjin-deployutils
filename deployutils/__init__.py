@@ -128,9 +128,14 @@ def load_config(confname, module, app_name,
                         raise
         if hasattr(module, 'LOG_FILE'):
             for pathname in [module.LOG_FILE]:
-                if not os.path.exists(pathname):
-                    if not os.path.exists(os.path.dirname(pathname)):
-                        os.makedirs(os.path.dirname(pathname))
-                    with open(pathname, 'w') as _:
-                        pass    # touch file
-                sys.stderr.write('logging app messages in %s\n' % pathname)
+                try:
+                    if not os.path.exists(pathname):
+                        if not os.path.exists(os.path.dirname(pathname)):
+                            os.makedirs(os.path.dirname(pathname))
+                        with open(pathname, 'w') as _:
+                            pass    # touch file
+                    sys.stderr.write('logging app messages in %s\n' % pathname)
+                except OSError:
+                    sys.stderr.write(
+                        'warning: permission denied on %s\n' % pathname)
+
