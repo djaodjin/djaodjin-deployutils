@@ -23,6 +23,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os, subprocess
+from optparse import make_option
 
 from django.conf import settings as django_settings
 from django.template.base import (Parser,
@@ -86,31 +87,52 @@ class Command(ResourceCommand):
     The cached assets must have been built before this command
     is invoked. They won't be rebuilt here.
     """
+    help = "install templates and resources to a separate directory."
+
+    option_list = ResourceCommand.option_list + (
+        make_option('--app_name', action='store', dest='app_name',
+            default=None, help='overrides the destination site name'),
+        make_option('--excludes', action='append', dest='excludes',
+            default=None, help='exclude specified templates directories'),
+        )
 
     def handle(self, *args, **options):
         install_theme(settings.INSTALLED_TEMPLATES_ROOT,
-            settings.RESOURCES_ROOT)
+            settings.RESOURCES_ROOT,
+            options['app_name'], options['excludes'])
 
 
-def install_theme(templates_dest, resources_dest):
+def install_theme(templates_dest, resources_dest, app_name=None, excludes=None):
+    if not app_name:
+        app_name = django_settings.APP_NAME
+    templates_dest = os.path.join(templates_dest, app_name)
     if (not os.path.exists(templates_dest)
         and os.path.isdir(os.path.dirname(templates_dest))):
         # subdirectory in a directory already present. We are OK with that.
         os.makedirs(templates_dest)
-    for template_dir in [django_settings.TEMPLATE_DIRS[0]]:
+    template_dirs = [django_settings.TEMPLATE_DIRS[0]]
+    candidate_dir = os.path.join(django_settings.TEMPLATE_DIRS[0], app_name)
+    if os.path.isdir(candidate_dir):
+        template_dirs += [candidate_dir]
+    for template_dir in template_dirs:
         # The first TEMPLATE_DIRS usually contains the most specialized
         # templates (ie. the ones we truely want to install).
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):
-            install_templates(template_dir, templates_dest)
+            install_templates(template_dir, templates_dest, excludes)
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
+    app_static_root = django_settings.APP_STATIC_ROOT
+    if app_static_root[-1] == os.sep:
+        # If we have a trailing '/', rsync will copy the content
+        # of the directory instead of the directory itself.
+        app_static_root = app_static_root[:-1]
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--rsync-path', '/usr/bin/rsync']
-        + ['%s/' % django_settings.APP_STATIC_ROOT, resources_dest])
+        + [app_static_root, os.path.join(resources_dest, app_name)])
 
 
-def install_templates(srcroot, destroot):
+def install_templates(srcroot, destroot, excludes=None):
     """
     Expand link to compiled assets all templates in *srcroot*
     and its subdirectories.
@@ -142,7 +164,8 @@ def install_templates(srcroot, destroot):
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
                     "from unicode or UTF-8 strings.", source_name)
-        elif os.path.isdir(source_name):
+        elif os.path.isdir(source_name) and (
+            excludes is None or not pathname in excludes):
             install_templates(source_name, dest_name)
         else:
             print "skip %s" % source_name
