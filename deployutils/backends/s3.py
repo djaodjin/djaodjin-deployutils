@@ -56,6 +56,7 @@ class S3Backend(object):
         return index
 
     def upload(self, local_files, prefix=''):
+        # pylint: disable=too-many-locals
         uploads = []
         s3_keys = self._index_by_key()
         for local_meta in local_files:
