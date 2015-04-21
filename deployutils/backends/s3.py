@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, logging, time, mimetypes
+import datetime, logging, time, mimetypes, socket, sys
 
 import boto
 
@@ -37,6 +37,10 @@ class S3Backend(object):
         self.default_acl = default_acl
         self.conn = boto.connect_s3()
         self.bucket = self.conn.get_bucket(remote_location[5:])
+        # self.boto_datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
+        # XXX boto seems to have changed the datetime format returned
+        #     when reading a S3 key.
+        self.boto_datetime_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def list(self):
         """
@@ -58,7 +62,7 @@ class S3Backend(object):
             if local_meta['Key'] in s3_keys:
                 s3_key = s3_keys[local_meta['Key']]
                 s3_datetime = datetime.datetime(*time.strptime(
-                        s3_key.last_modified, '%a, %d %b %Y %H:%M:%S %Z')[0:6])
+                        s3_key.last_modified, self.boto_datetime_format)[0:6])
                 local_datetime = datetime.datetime(*time.strptime(
                         local_meta['LastModified'],
                         '%a, %d %b %Y %H:%M:%S %Z')[0:6])
@@ -79,7 +83,11 @@ class S3Backend(object):
             LOGGER.info("%supload %s to %s", dry_run, pathname, filename)
             if not self.dry_run:
                 with open(pathname, 'rb') as file_obj:
-                    s3_key = boto.s3.key.Key(self.bucket)
-                    s3_key.name = filename
-                    s3_key.set_contents_from_string(file_obj.read(),
-                        headers, replace=True, policy=self.default_acl)
+                    try:
+                        s3_key = boto.s3.key.Key(self.bucket)
+                        s3_key.name = filename
+                        s3_key.set_contents_from_string(file_obj.read(),
+                            headers, replace=True, policy=self.default_acl)
+                    except socket.error, err:
+                        sys.stderr.write("error: '%s' while uploading %s\n"
+                            % (err, filename))
