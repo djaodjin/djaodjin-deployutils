@@ -123,10 +123,12 @@ def install_theme(templates_dest, resources_dest, app_name=None, excludes=None):
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.APP_STATIC_ROOT
-    if app_static_root[-1] == os.sep:
+    if app_name:
+        app_static_root = os.path.join(app_static_root, app_name)
+    if app_static_root[-1] != os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-        app_static_root = app_static_root[:-1]
+        app_static_root = app_static_root + os.sep
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, os.path.join(resources_dest, app_name)])
