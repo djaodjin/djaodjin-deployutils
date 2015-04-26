@@ -55,9 +55,11 @@ class S3Backend(object):
             index[key.name] = key
         return index
 
-    def upload(self, local_files, prefix=''):
+
+    def _updated_s3_keys(self, local_files):
         # pylint: disable=too-many-locals
         uploads = []
+        downloads = []
         s3_keys = self._index_by_key()
         for local_meta in local_files:
             if local_meta['Key'] in s3_keys:
@@ -69,8 +71,36 @@ class S3Backend(object):
                         '%a, %d %b %Y %H:%M:%S %Z')[0:6])
                 if local_datetime < s3_datetime:
                     uploads += [local_meta['Key']]
+                elif local_datetime > s3_datetime:
+                    downloads += [local_meta['Key']]
             else:
                 uploads += [local_meta['Key']]
+        for s3_meta in s3_keys:
+            if not s3_meta in local_files:
+                downloads += [s3_meta]
+        return downloads, uploads
+
+    def download(self, local_files, prefix=''):
+        downloads, _ = self._updated_s3_keys(local_files)
+        for filename in downloads:
+            headers = {}
+            pathname = prefix + filename
+            content_type = mimetypes.guess_type(pathname)[0]
+            if content_type:
+                headers['Content-Type'] = content_type
+            if self.dry_run:
+                dry_run = "(dry run) "
+            else:
+                dry_run = ""
+            LOGGER.info("%sdownload %s to %s", dry_run, pathname, filename)
+            if not self.dry_run:
+                s3_key = self.bucket.get_key(filename)
+                content = s3_key.get_contents_as_string()
+                with open(pathname, 'wb') as file_obj:
+                    file_obj.write(content)
+
+    def upload(self, local_files, prefix=''):
+        _, uploads = self._updated_s3_keys(local_files)
         for filename in uploads:
             headers = {}
             pathname = prefix + filename
