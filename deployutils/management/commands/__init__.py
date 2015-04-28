@@ -117,6 +117,7 @@ def upload(remote_location):
     Upload resources to a stage server.
     """
     uploads = []
+    ignores = ['*~', '.DS_Store']
     with open('.gitignore') as gitignore:
         for line in gitignore.readlines():
             if remote_location.startswith('s3://'):
@@ -130,13 +131,14 @@ def upload(remote_location):
             if (os.path.exists(pathname)
                 and not os.path.basename(pathname).startswith('.')):
                 uploads += [pathname]
+            else:
+                ignores += [pathname]
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         prefix = settings.RESOURCES_ROOT
         backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
         backend.upload(list_local(uploads, prefix), prefix)
     else:
-        ignores = ['*~', '.DS_Store']
         excludes = []
         for ignore in ignores:
             excludes += ['--exclude', ignore]
