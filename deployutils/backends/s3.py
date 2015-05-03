@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, logging, time, mimetypes, socket, sys
+import datetime, logging, time, mimetypes, os, socket, sys
 
 import boto
 
