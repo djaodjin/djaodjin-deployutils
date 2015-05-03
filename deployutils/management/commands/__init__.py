@@ -75,6 +75,27 @@ class DeployCommand(ResourceCommand):
             fab.env.hosts = settings.DEPLOYED_SERVERS
 
 
+def _resources_files(remote_location):
+    remotes = []
+    ignores = ['*~', '.DS_Store']
+    with open('.gitignore') as gitignore:
+        for line in gitignore.readlines():
+            if remote_location.startswith('s3://'):
+                pathname = os.path.join(os.getcwd(), line.strip())
+            else:
+                pathname = line.strip()
+            if pathname.endswith(os.sep):
+                # os.path.basename will not work as expected if pathname
+                # ends with a '/'.
+                pathname = pathname[:-1]
+            if (os.path.exists(pathname)
+                and not os.path.basename(pathname).startswith('.')):
+                remotes += [pathname]
+            else:
+                ignores += [pathname]
+    return remotes, ignores
+
+
 def build_assets():
     """Call django_assets ./manage.py assets build if the app is present."""
     cwd = os.getcwd()
@@ -92,11 +113,18 @@ def build_assets():
 
 def download(remote_location):
     """download resources from a stage server."""
-    dest_root = './htdocs'
-    shell_command([
-            '/usr/bin/rsync',
-            '-thrRvz', '--rsync-path', '/usr/bin/rsync',
-            '%s/htdocs/./' % remote_location, dest_root])
+    remotes, _ = _resources_files(remote_location)
+    if remote_location.startswith('s3://'):
+        from deployutils.backends.s3 import S3Backend
+        prefix = settings.RESOURCES_ROOT
+        backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
+        backend.download(list_local(remotes, prefix), prefix)
+    else:
+        dest_root = './htdocs'
+        shell_command([
+                '/usr/bin/rsync',
+                '-thrRvz', '--rsync-path', '/usr/bin/rsync',
+                '%s/htdocs/./' % remote_location, dest_root])
 
 
 def shell_command(cmd):
@@ -116,28 +144,12 @@ def upload(remote_location):
     """
     Upload resources to a stage server.
     """
-    uploads = []
-    ignores = ['*~', '.DS_Store']
-    with open('.gitignore') as gitignore:
-        for line in gitignore.readlines():
-            if remote_location.startswith('s3://'):
-                pathname = os.path.join(os.getcwd(), line.strip())
-            else:
-                pathname = line.strip()
-            if pathname.endswith(os.sep):
-                # os.path.basename will not work as expected if pathname
-                # ends with a '/'.
-                pathname = pathname[:-1]
-            if (os.path.exists(pathname)
-                and not os.path.basename(pathname).startswith('.')):
-                uploads += [pathname]
-            else:
-                ignores += [pathname]
+    remotes, ignores = _resources_files(remote_location)
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         prefix = settings.RESOURCES_ROOT
         backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
-        backend.upload(list_local(uploads, prefix), prefix)
+        backend.upload(list_local(remotes, prefix), prefix)
     else:
         excludes = []
         for ignore in ignores:
@@ -145,5 +157,5 @@ def upload(remote_location):
         # -O omit to set mod times on directories to avoid permissions error.
         shell_command(['/usr/bin/rsync']
             + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
-            + uploads + [remote_location])
+            + remotes + [remote_location])
 
