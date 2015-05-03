@@ -96,6 +96,8 @@ class S3Backend(object):
             if not self.dry_run:
                 s3_key = self.bucket.get_key(filename)
                 content = s3_key.get_contents_as_string()
+                if not os.path.exists(os.path.dirname(pathname)):
+                    os.makedirs(os.path.dirname(pathname))
                 with open(pathname, 'wb') as file_obj:
                     file_obj.write(content)
 
