@@ -92,7 +92,7 @@ class S3Backend(object):
                 dry_run = "(dry run) "
             else:
                 dry_run = ""
-            LOGGER.info("%sdownload %s to %s", dry_run, pathname, filename)
+            LOGGER.info("%sdownload %s to %s", dry_run, filename, pathname)
             if not self.dry_run:
                 s3_key = self.bucket.get_key(filename)
                 content = s3_key.get_contents_as_string()
