@@ -120,11 +120,11 @@ def download(remote_location):
         backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
         backend.download(list_local(remotes, prefix), prefix)
     else:
-        dest_root = './htdocs'
+        dest_root = '.'
         shell_command([
                 '/usr/bin/rsync',
                 '-thrRvz', '--rsync-path', '/usr/bin/rsync',
-                '%s/htdocs/./' % remote_location, dest_root])
+                '%s/./' % remote_location, dest_root])
 
 
 def shell_command(cmd):
