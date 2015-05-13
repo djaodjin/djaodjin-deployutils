@@ -37,11 +37,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 try:
+    #pylint: disable=import-error
     from south.management.commands import schemamigration
 
-    class SchemaMigration(schemamigration.Command):
+    class SchemaMigration(schemamigration.Command): #pylint: disable=no-init
 
         def error(self, message, code=1):
+            #pylint: disable=unused-argument,no-self-use
             """
             Override the error method to avoid a brutal sys.exit
             """
@@ -121,6 +123,7 @@ def _south_migrate_all():
     if not 'south' in settings.INSTALLED_APPS:
         print "'south' is not in INSTALLED_APPS, no migration done."
         return 0
+    #pylint: disable=import-error
     from south.migration import Migrations
     from south.management.commands import migrate
     schema_cmd = SchemaMigration()
@@ -135,7 +138,7 @@ def _south_migrate_all():
                 migrations_dir = os.path.join(
                     os.path.dirname(app_module.__file__), 'migrations')
                 if os.path.isdir(migrations_dir):
-                    schema_cmd.handle(app, auto=True)
+                    schema_cmd.handle(app, auto=True)#pylint:disable=no-member
                     found = False
                     for migration_file in os.listdir(migrations_dir):
                         if (re.match(r'^\d\d\d\d', migration_file)
@@ -147,7 +150,8 @@ def _south_migrate_all():
                     else:
                         initial_apps += [app]
                 else:
-                    schema_cmd.handle(app, initial=True)
+                    schema_cmd.handle( #pylint:disable=no-member
+                        app, initial=True)
                     initial_apps += [app]
             else:
                 print("warning: App %s does not seem to contain any Model" %
