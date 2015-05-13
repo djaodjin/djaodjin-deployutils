@@ -48,7 +48,7 @@ _SETTINGS = {
         settings.BASE_DIR + '/htdocs/'),
     'INSTALLED_TEMPLATES_ROOT': getattr(settings,
         'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
-        settings.TEMPLATE_DIRS[0]),
+        settings.TEMPLATE_DIRS[0] if len(settings.TEMPLATE_DIRS) > 0 else None),
     'RESOURCES_REMOTE_LOCATION': getattr(settings,
         'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION', None),
     'DENY_NO_SESSION': getattr(settings, 'DEPLOYUTILS_DENY_NO_SESSION', False),
