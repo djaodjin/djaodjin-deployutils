@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os, subprocess
+import logging, os, re, subprocess
 from optparse import make_option
 
 from django.conf import settings as django_settings
@@ -36,6 +36,8 @@ from django_assets.templatetags.assets import assets
 from deployutils import settings
 from deployutils.management.commands import shell_command
 from deployutils.management.commands import ResourceCommand, LOGGER
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AssetsParser(Parser):
@@ -93,16 +95,21 @@ class Command(ResourceCommand):
         make_option('--app_name', action='store', dest='app_name',
             default=None, help='overrides the destination site name'),
         make_option('--excludes', action='append', dest='excludes',
-            default=None, help='exclude specified templates directories'),
+            default=[], help='exclude specified templates directories'),
+        make_option('--includes', action='append', dest='includes',
+            default=[], help='include specified templates directories'\
+                ' (after excludes have been applied)'),
         )
 
     def handle(self, *args, **options):
-        install_theme(settings.INSTALLED_TEMPLATES_ROOT,
-            settings.RESOURCES_ROOT,
-            options['app_name'], options['excludes'])
+        install_theme(
+            settings.INSTALLED_TEMPLATES_ROOT, settings.RESOURCES_ROOT,
+            app_name=options['app_name'], excludes=options['excludes'],
+            includes=options['includes'])
 
 
-def install_theme(templates_dest, resources_dest, app_name=None, excludes=None):
+def install_theme(templates_dest, resources_dest,
+                  app_name=None, excludes=None, includes=None):
     if not app_name:
         app_name = django_settings.APP_NAME
     templates_dest = os.path.join(templates_dest, app_name)
@@ -119,7 +126,8 @@ def install_theme(templates_dest, resources_dest, app_name=None, excludes=None):
         # templates (ie. the ones we truely want to install).
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):
-            install_templates(template_dir, templates_dest, excludes)
+            install_templates(template_dir, templates_dest,
+                excludes=excludes, includes=includes)
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.APP_STATIC_ROOT
@@ -134,15 +142,30 @@ def install_theme(templates_dest, resources_dest, app_name=None, excludes=None):
         + [app_static_root, os.path.join(resources_dest, app_name)])
 
 
-def install_templates(srcroot, destroot, excludes=None):
+def install_templates(srcroot, destroot,
+                      prefix='', excludes=None, includes=None):
     """
     Expand link to compiled assets all templates in *srcroot*
     and its subdirectories.
     """
     #pylint: disable=too-many-locals
-    if not os.path.exists(destroot):
-        os.makedirs(destroot)
-    for pathname in os.listdir(srcroot):
+    if not os.path.exists(os.path.join(prefix, destroot)):
+        os.makedirs(os.path.join(prefix, destroot))
+    for pathname in os.listdir(os.path.join(srcroot, prefix)):
+        pathname = os.path.join(prefix, pathname)
+        excluded = False
+        for pat in excludes:
+            if re.match(pat, pathname):
+                excluded = True
+                break
+        if excluded:
+            for pat in includes:
+                if re.match(pat, pathname):
+                    excluded = False
+                    break
+        if excluded:
+            LOGGER.debug("skip %s", pathname)
+            continue
         source_name = os.path.join(srcroot, pathname)
         dest_name = os.path.join(destroot, pathname)
         if os.path.isfile(source_name):
@@ -162,12 +185,15 @@ def install_templates(srcroot, destroot, excludes=None):
                 # Non-zero error codes are ok here. That's how diff
                 # indicates the files are different.
                 if len(lines) > 0:
-                    print "modified %s" % dest_name
+                    verb = 'compile'
+                else:
+                    verb = 'install'
+                LOGGER.info("%s %s to *destroot*/%s", verb,
+                    source_name.replace(django_settings.BASE_DIR, '*APP_ROOT*'),
+                    pathname)
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
                     "from unicode or UTF-8 strings.", source_name)
-        elif os.path.isdir(source_name) and (
-            excludes is None or not pathname in excludes):
-            install_templates(source_name, dest_name)
-        else:
-            print "skip %s" % source_name
+        elif os.path.isdir(source_name):
+            install_templates(srcroot, destroot, prefix=pathname,
+                excludes=excludes, includes=includes)
