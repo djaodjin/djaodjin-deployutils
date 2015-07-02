@@ -69,9 +69,9 @@ class S3Backend(object):
                 local_datetime = datetime.datetime(*time.strptime(
                         local_meta['LastModified'],
                         '%a, %d %b %Y %H:%M:%S %Z')[0:6])
-                if local_datetime < s3_datetime:
+                if local_datetime > s3_datetime:
                     uploads += [local_meta['Key']]
-                elif local_datetime > s3_datetime:
+                elif local_datetime < s3_datetime:
                     downloads += [local_meta['Key']]
             else:
                 uploads += [local_meta['Key']]
