@@ -75,7 +75,7 @@ class DeployCommand(ResourceCommand):
             fab.env.hosts = settings.DEPLOYED_SERVERS
 
 
-def _resources_files(remote_location, prefix=None):
+def _resources_files(remote_location):
     remotes = []
     ignores = ['*~', '.DS_Store']
     with open('.gitignore') as gitignore:
@@ -88,8 +88,8 @@ def _resources_files(remote_location, prefix=None):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
                 pathname = pathname[:-1]
-            if (os.path.exists(pathname)
-                and (not prefix or pathname.startswith(prefix))
+                ignores += [pathname]
+            elif (os.path.exists(pathname)
                 and not os.path.basename(pathname).startswith('.')):
                 remotes += [pathname]
             else:
@@ -117,7 +117,7 @@ def download(remote_location):
     Download resources from a stage server.
     """
     prefix = settings.RESOURCES_ROOT
-    remotes, _ = _resources_files(remote_location, prefix)
+    remotes, _ = _resources_files(remote_location)
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)
@@ -148,7 +148,7 @@ def upload(remote_location):
     Upload resources to a stage server.
     """
     prefix = settings.RESOURCES_ROOT
-    remotes, ignores = _resources_files(remote_location, prefix)
+    remotes, ignores = _resources_files(remote_location)
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         backend = S3Backend(remote_location, dry_run=settings.DRY_RUN)

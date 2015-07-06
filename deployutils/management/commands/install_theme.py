@@ -69,6 +69,10 @@ class AssetsParser(Parser):
                     return nodelist
                 if command == 'assets':
                     try:
+                        # XXX This should work but for some reason debug does
+                        # not get propagated.
+                        # Lost in webassets.bundle.resolve_contents
+                        token.contents += ' debug=False'
                         compiled_result = assets(self, token)
                     except TemplateSyntaxError as err:
                         if not self.compile_function_error(token, err):
@@ -86,8 +90,9 @@ class Command(ResourceCommand):
     """
     Install templates with URLs to compiled assets, as well as
     static assets.
-    The cached assets must have been built before this command
-    is invoked. They won't be rebuilt here.
+
+    This command must be run with DEBUG=False and the cached assets must
+    have been built before this command is invoked. They won't be rebuilt here.
     """
     help = "install templates and resources to a separate directory."
 
@@ -175,6 +180,8 @@ def install_templates(srcroot, destroot,
                 template_string = force_text(template_string)
                 lexer = DebugLexer(template_string, origin=None)
                 tokens = lexer.tokenize()
+                if not os.path.isdir(os.path.dirname(dest_name)):
+                    os.makedirs(os.path.dirname(dest_name))
                 with open(dest_name, 'w') as dest:
                     parser = AssetsParser(tokens, dest)
                     parser.parse_through()
