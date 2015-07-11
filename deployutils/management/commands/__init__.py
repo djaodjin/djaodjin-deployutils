@@ -116,7 +116,7 @@ def download(remote_location):
     """
     Download resources from a stage server.
     """
-    prefix = settings.RESOURCES_ROOT
+    prefix = settings.MULTITIER_RESOURCES_ROOT
     remotes, _ = _resources_files(remote_location)
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
@@ -147,7 +147,7 @@ def upload(remote_location):
     """
     Upload resources to a stage server.
     """
-    prefix = settings.RESOURCES_ROOT
+    prefix = settings.MULTITIER_RESOURCES_ROOT
     remotes, ignores = _resources_files(remote_location)
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend

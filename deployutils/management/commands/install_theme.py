@@ -26,6 +26,7 @@ import logging, os, re, subprocess
 from optparse import make_option
 
 from django.conf import settings as django_settings
+from django.contrib.staticfiles.templatetags.staticfiles import do_static
 from django.template.base import (Parser,
     TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK, TOKEN_COMMENT, TemplateSyntaxError)
 from django.template.context import Context
@@ -45,6 +46,7 @@ class AssetsParser(Parser):
     def __init__(self, tokens, dest_stream):
         super(AssetsParser, self).__init__(tokens)
         self.dest_stream = dest_stream
+        self.context = Context({})
 
     def parse_through(self, parse_until=None):
         if parse_until is None:
@@ -77,8 +79,10 @@ class AssetsParser(Parser):
                     except TemplateSyntaxError as err:
                         if not self.compile_function_error(token, err):
                             raise
-                    context = Context({})
-                    self.dest_stream.write(compiled_result.render(context))
+                    self.dest_stream.write(compiled_result.render(self.context))
+                elif command == 'static':
+                    compiled_result = do_static(self, token)
+                    self.dest_stream.write(compiled_result.render(self.context))
                 else:
                     self.dest_stream.write(
                         "{%% %s %%}" % token.contents.encode('utf8'))
@@ -88,13 +92,50 @@ class AssetsParser(Parser):
 
 class Command(ResourceCommand):
     """
-    Install templates with URLs to compiled assets, as well as
-    static assets.
+    Install resources and templates into a multi-tier environment.
+
+    Templates are installed into ``MULTITIER_TEMPLATES_ROOT/APP_NAME``
+    after {% assets '*path*' %} and {% static '*path*' %} tags are
+    replaced by their compiled expression.
+
+    Resources include CSS, JS, images and other files which can be accessed
+    anonymously over HTTP and are necessary for the functionality of the site.
+    They are copied into ``MULTITIER_RESOURCES_ROOT/APP_NAME``
 
     This command must be run with DEBUG=False and the cached assets must
     have been built before this command is invoked. They won't be rebuilt here.
+
+    Example::
+
+    $ DEBUG=0 python manage.py install_theme
+
+    APP_NAME can be overriden with the ``--app_name`` command line flag.
+
+    Example::
+
+    $ ls
+    templates/base.html
+    $ python manage.py install_theme --app_name webapp
+    $ ls MULTITIER_TEMPLATES_ROOT
+    templates/webapp/base.html
+
+    It is possible to exclude template files that match a regular expression.
+    For more complex filters, it is possible to still include a subset
+    of the excluded templates when they also match a secondary regular
+    expression.
+
+    Example::
+
+    $ ls
+    templates/base.html
+    templates/skip/template.html
+    templates/skip/deep/template.html
+    $ python manage.py install_theme --exclude='skip/*' --include='skip/deep/*'
+    $ ls MULTITIER_TEMPLATES_ROOT
+    templates/app_name/base.html
+    templates/app_name/skip/deep/template.html
     """
-    help = "install templates and resources to a separate directory."
+    help = "install templates and resources for a multitier setup."
 
     option_list = ResourceCommand.option_list + (
         make_option('--app_name', action='store', dest='app_name',
@@ -108,7 +149,8 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         install_theme(
-            settings.INSTALLED_TEMPLATES_ROOT, settings.RESOURCES_ROOT,
+            settings.MULTITIER_TEMPLATES_ROOT,
+            settings.MULTITIER_RESOURCES_ROOT,
             app_name=options['app_name'], excludes=options['excludes'],
             includes=options['includes'])
 
@@ -117,6 +159,12 @@ def install_theme(templates_dest, resources_dest,
                   app_name=None, excludes=None, includes=None):
     if not app_name:
         app_name = django_settings.APP_NAME
+    # override STATIC_URL to prefix APP_NAME.
+    orig_static_url = django_settings.STATIC_URL
+    if not django_settings.STATIC_URL.startswith(
+            '/' + django_settings.APP_NAME):
+        django_settings.STATIC_URL = \
+            '/' + django_settings.APP_NAME + orig_static_url
     templates_dest = os.path.join(templates_dest, app_name)
     if (not os.path.exists(templates_dest)
         and os.path.isdir(os.path.dirname(templates_dest))):
@@ -133,18 +181,19 @@ def install_theme(templates_dest, resources_dest,
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest,
                 excludes=excludes, includes=includes)
+    django_settings.STATIC_URL = orig_static_url
+
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.APP_STATIC_ROOT
-    if app_name:
-        app_static_root = os.path.join(app_static_root, app_name)
-    if app_static_root[-1] != os.sep:
+    if app_static_root[-1] == os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-        app_static_root = app_static_root + os.sep
+        app_static_root = app_static_root[:-1]
     shell_command(['/usr/bin/rsync']
-        + excludes + ['-az', '--rsync-path', '/usr/bin/rsync']
-        + [app_static_root, os.path.join(resources_dest, app_name)])
+        + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
+        + [app_static_root, os.path.join(
+            resources_dest, django_settings.APP_NAME)])
 
 
 def install_templates(srcroot, destroot,
@@ -195,9 +244,11 @@ def install_templates(srcroot, destroot,
                     verb = 'compile'
                 else:
                     verb = 'install'
-                LOGGER.info("%s %s to *destroot*/%s", verb,
-                    source_name.replace(django_settings.BASE_DIR, '*APP_ROOT*'),
-                    pathname)
+                LOGGER.info("%s %s to %s", verb,
+                    source_name.replace(
+                        django_settings.BASE_DIR, '*APP_ROOT*'),
+                    dest_name.replace(settings.MULTITIER_TEMPLATES_ROOT,
+                        '*MULTITIER_TEMPLATES_ROOT*'))
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
                     "from unicode or UTF-8 strings.", source_name)

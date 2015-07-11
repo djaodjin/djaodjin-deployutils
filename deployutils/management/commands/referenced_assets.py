@@ -37,7 +37,7 @@ class Command(ResourceCommand):
     def handle(self, *args, **options):
         ResourceCommand.handle(self, *args, **options)
         excludes = ['--exclude=%s' % item for item in ['.git']]
-        prefix = settings.RESOURCES_ROOT
+        prefix = settings.MULTITIER_RESOURCES_ROOT
         for key in list_local([django_settings.APP_STATIC_ROOT], prefix):
             filename = key['Key']
             mtime = key['LastModified']

@@ -66,8 +66,8 @@ class Command(ResourceCommand):
             last_up_commit, up_commit = fetch_changes(repo_path, up_commit)
             # Fetch resources which are not stored under source control
             download(settings.RESOURCES_REMOTE_LOCATION)
-            install_theme(settings.INSTALLED_TEMPLATES_ROOT,
-                settings.RESOURCES_ROOT)
+            install_theme(settings.MULTITIER_TEMPLATES_ROOT,
+                settings.MULTITIER_RESOURCES_ROOT)
             migrate_all()
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
