@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getpass, mimetypes
+import getpass, mimetypes, os
 from optparse import make_option
 
 import boto
@@ -48,13 +48,17 @@ class Command(BaseCommand):
         conn = boto.connect_s3()
         bucket = conn.get_bucket(options['bucket'])
         for confname in args:
-            content = None
-            conf_path = locate_config(confname, app_name)
+            if os.path.exists(confname):
+                conf_path = confname
+                confname = os.path.basename(confname)
+            else:
+                conf_path = locate_config(confname, app_name)
             content_type = mimetypes.guess_type(conf_path)[0]
             if content_type:
                 headers = {'Content-Type': content_type}
             else:
                 headers = {}
+            content = None
             with open(conf_path) as conf_file:
                 content = conf_file.read()
             encrypted = crypt.encrypt(content, passphrase)
