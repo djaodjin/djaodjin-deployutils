@@ -166,7 +166,7 @@ def package_theme(app_name, build_dir=None, excludes=None, includes=None):
     if not build_dir:
         build_dir = os.path.join(os.getcwd(), 'build')
     templates_dest = os.path.join(build_dir, app_name, 'templates')
-    resources_dest = os.path.join(build_dir, app_name, 'static')
+    resources_dest = os.path.join(build_dir, app_name, 'public')
     # override STATIC_URL to prefix APP_NAME.
     orig_static_url = django_settings.STATIC_URL
     if not django_settings.STATIC_URL.startswith(
@@ -191,10 +191,10 @@ def package_theme(app_name, build_dir=None, excludes=None, includes=None):
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.APP_STATIC_ROOT
-    if app_static_root[-1] != os.sep:
+    if app_static_root[-1] == os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-        app_static_root = app_static_root + os.sep
+        app_static_root = app_static_root[:-1]
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
