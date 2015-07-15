@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging, os, re, subprocess
+import logging, os, re, subprocess, zipfile
 from optparse import make_option
 
 from django.conf import settings as django_settings
@@ -92,22 +92,24 @@ class AssetsParser(Parser):
 
 class Command(ResourceCommand):
     """
-    Install resources and templates into a multi-tier environment.
+    Package resources and templates for a multi-tier environment
+    into a zip file.
 
-    Templates are installed into ``MULTITIER_TEMPLATES_ROOT/APP_NAME``
-    after {% assets '*path*' %} and {% static '*path*' %} tags are
-    replaced by their compiled expression.
+    Templates are pre-compiled into ``*build_dir*/*app_name*/templates``.
+    Compilation means {% assets '*path*' %} and {% static '*path*' %} tags
+    are replaced by their compiled expression.
 
+    Resources are copied into ``*build_dir*/*app_name*/static``.
     Resources include CSS, JS, images and other files which can be accessed
     anonymously over HTTP and are necessary for the functionality of the site.
-    They are copied into ``MULTITIER_RESOURCES_ROOT/APP_NAME``
+    This command considers everything in ``APP_STATIC_ROOT`` to be a resource.
 
     This command must be run with DEBUG=False and the cached assets must
     have been built before this command is invoked. They won't be rebuilt here.
 
     Example::
 
-    $ DEBUG=0 python manage.py install_theme
+    $ DEBUG=0 python manage.py package_theme
 
     APP_NAME can be overriden with the ``--app_name`` command line flag.
 
@@ -115,9 +117,9 @@ class Command(ResourceCommand):
 
     $ ls
     templates/base.html
-    $ python manage.py install_theme --app_name webapp
-    $ ls MULTITIER_TEMPLATES_ROOT
-    templates/webapp/base.html
+    $ python manage.py package_theme --app_name webapp
+    $ ls build
+    build/webapp/templates/base.html
 
     It is possible to exclude template files that match a regular expression.
     For more complex filters, it is possible to still include a subset
@@ -130,16 +132,19 @@ class Command(ResourceCommand):
     templates/base.html
     templates/skip/template.html
     templates/skip/deep/template.html
-    $ python manage.py install_theme --exclude='skip/*' --include='skip/deep/*'
-    $ ls MULTITIER_TEMPLATES_ROOT
-    templates/app_name/base.html
-    templates/app_name/skip/deep/template.html
+    $ python manage.py package_theme --exclude='skip/*' --include='skip/deep/*'
+    $ ls build
+    build/app_name/templates/base.html
+    build/app_name/templates/skip/deep/template.html
     """
-    help = "install templates and resources for a multitier setup."
+    help = "package templates and resources for a multitier setup."
 
     option_list = ResourceCommand.option_list + (
         make_option('--app_name', action='store', dest='app_name',
             default=None, help='overrides the destination site name'),
+        make_option('--build_dir', action='store', dest='build_dir',
+            default=None,
+            help='set the directory root where output files are created.'),
         make_option('--excludes', action='append', dest='excludes',
             default=[], help='exclude specified templates directories'),
         make_option('--includes', action='append', dest='includes',
@@ -148,27 +153,27 @@ class Command(ResourceCommand):
         )
 
     def handle(self, *args, **options):
-        install_theme(
-            settings.MULTITIER_TEMPLATES_ROOT,
-            settings.MULTITIER_RESOURCES_ROOT,
-            app_name=options['app_name'], excludes=options['excludes'],
+        app_name = options['app_name']
+        if not app_name:
+            app_name = settings.APP_NAME
+        package_theme(
+            app_name, build_dir=options['build_dir'],
+            excludes=options['excludes'],
             includes=options['includes'])
 
 
-def install_theme(templates_dest, resources_dest,
-                  app_name=None, excludes=None, includes=None):
-    if not app_name:
-        app_name = django_settings.APP_NAME
+def package_theme(app_name, build_dir=None, excludes=None, includes=None):
+    if not build_dir:
+        build_dir = os.path.join(os.getcwd(), 'build')
+    templates_dest = os.path.join(build_dir, app_name, 'templates')
+    resources_dest = os.path.join(build_dir, app_name, 'static')
     # override STATIC_URL to prefix APP_NAME.
     orig_static_url = django_settings.STATIC_URL
     if not django_settings.STATIC_URL.startswith(
-            '/' + django_settings.APP_NAME):
+            '/' + settings.APP_NAME):
         django_settings.STATIC_URL = \
-            '/' + django_settings.APP_NAME + orig_static_url
-    templates_dest = os.path.join(templates_dest, app_name)
-    if (not os.path.exists(templates_dest)
-        and os.path.isdir(os.path.dirname(templates_dest))):
-        # subdirectory in a directory already present. We are OK with that.
+            '/' + settings.APP_NAME + orig_static_url
+    if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
     template_dirs = [django_settings.TEMPLATE_DIRS[0]]
     candidate_dir = os.path.join(django_settings.TEMPLATE_DIRS[0], app_name)
@@ -186,14 +191,26 @@ def install_theme(templates_dest, resources_dest,
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.APP_STATIC_ROOT
-    if app_static_root[-1] == os.sep:
+    if app_static_root[-1] != os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-        app_static_root = app_static_root[:-1]
+        app_static_root = app_static_root + os.sep
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
-        + [app_static_root, os.path.join(
-            resources_dest, django_settings.APP_NAME)])
+        + [app_static_root, resources_dest])
+    with zipfile.ZipFile(
+            os.path.join(build_dir, '%s.zip' % app_name), 'w') as zip_file:
+        fill_package(zip_file, build_dir, prefix=app_name)
+
+
+def fill_package(zip_file, srcroot, prefix=''):
+    for pathname in os.listdir(os.path.join(srcroot, prefix)):
+        pathname = os.path.join(prefix, pathname)
+        full_path = os.path.join(srcroot, pathname)
+        if os.path.isfile(full_path):
+            zip_file.write(full_path, pathname)
+        if os.path.isdir(full_path):
+            fill_package(zip_file, srcroot, prefix=pathname)
 
 
 def install_templates(srcroot, destroot,
@@ -247,7 +264,7 @@ def install_templates(srcroot, destroot,
                 LOGGER.info("%s %s to %s", verb,
                     source_name.replace(
                         django_settings.BASE_DIR, '*APP_ROOT*'),
-                    dest_name.replace(settings.MULTITIER_TEMPLATES_ROOT,
+                    dest_name.replace(destroot,
                         '*MULTITIER_TEMPLATES_ROOT*'))
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "

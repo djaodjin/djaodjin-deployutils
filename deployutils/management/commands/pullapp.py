@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, fnmatch, inspect, logging, os, re, subprocess, sys
+import datetime, fnmatch, inspect, logging, os, re, shutil, subprocess, sys
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
@@ -30,7 +30,7 @@ from django.core.exceptions import ImproperlyConfigured
 import deployutils.settings as settings
 from deployutils.management.commands import (
     ResourceCommand, download, shell_command)
-from deployutils.management.commands.install_theme import install_theme
+from deployutils.management.commands.package_theme import package_theme
 
 
 LOGGER = logging.getLogger(__name__)
@@ -66,14 +66,24 @@ class Command(ResourceCommand):
             last_up_commit, up_commit = fetch_changes(repo_path, up_commit)
             # Fetch resources which are not stored under source control
             download(settings.RESOURCES_REMOTE_LOCATION)
-            install_theme(settings.MULTITIER_TEMPLATES_ROOT,
-                settings.MULTITIER_RESOURCES_ROOT)
             migrate_all()
+            # XXX moving towards deprecation?
+            app_name = settings.APP_NAME
+            build_dir = os.path.join(os.getcwd(), 'build')
+            package_theme(app_name, build_dir=build_dir)
+            templates_dest = os.path.join(
+                settings.MULTITIER_TEMPLATES_ROOT, app_name)
+            resources_dest = os.path.join(
+                settings.MULTITIER_RESOURCES_ROOT, app_name)
+            shutil.copy(os.path.join(build_dir, app_name, 'templates'),
+                templates_dest)
+            shutil.copy(os.path.join(build_dir, app_name, 'static'),
+                resources_dest)
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
         except subprocess.CalledProcessError, err:
             LOGGER.exception(
-                "syncapp %s caught exception: %s", self.webapp, err)
+                "pullapp %s caught exception: %s", self.webapp, err)
 
 
 def sources_latest_timestamp(root_dir, file_pat='*.py'):
