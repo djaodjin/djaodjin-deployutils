@@ -26,22 +26,26 @@ import getpass
 from optparse import make_option
 
 import boto
-from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
 
 from deployutils import crypt
+from deployutils import settings
+
 
 class Command(BaseCommand):
     help = "Download the config files from a S3 bucket and decrypt them."
 
     option_list = BaseCommand.option_list + (
+        make_option('--app_name', action='store', dest='app_name',
+            default=settings.APP_NAME,
+            help='Name of the config file(s) project'),
         make_option('--bucket', action='store', dest='bucket',
             default='deployutils',
             help='Print but do not execute'),
         )
 
     def handle(self, *args, **options):
-        app_name = django_settings.APP_NAME
+        app_name = options['app_name']
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
         bucket = conn.get_bucket(options['bucket'])

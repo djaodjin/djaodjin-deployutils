@@ -27,7 +27,7 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.2.7'
+__version__ = '0.2.8-dev'
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
     """

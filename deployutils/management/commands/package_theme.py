@@ -141,7 +141,8 @@ class Command(ResourceCommand):
 
     option_list = ResourceCommand.option_list + (
         make_option('--app_name', action='store', dest='app_name',
-            default=None, help='overrides the destination site name'),
+            default=settings.APP_NAME,
+            help='overrides the destination site name'),
         make_option('--build_dir', action='store', dest='build_dir',
             default=None,
             help='set the directory root where output files are created.'),
@@ -154,8 +155,6 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        if not app_name:
-            app_name = settings.APP_NAME
         package_theme(
             app_name, build_dir=options['build_dir'],
             excludes=options['excludes'],

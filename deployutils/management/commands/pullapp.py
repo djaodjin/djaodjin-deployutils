@@ -23,11 +23,12 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime, fnmatch, inspect, logging, os, re, shutil, subprocess, sys
+from optparse import make_option
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 
-import deployutils.settings as settings
+from deployutils import settings
 from deployutils.management.commands import (
     ResourceCommand, download, shell_command)
 from deployutils.management.commands.package_theme import package_theme
@@ -56,7 +57,14 @@ except ImportError: # South not present in virtualenv.
 class Command(ResourceCommand):
     help = "Fetch latest code and resources from the stage machine."
 
+    option_list = ResourceCommand.option_list + (
+        make_option('--app_name', action='store', dest='app_name',
+            default=settings.APP_NAME,
+            help='Override the name of the project'),
+        )
+
     def handle(self, *args, **options):
+        app_name = options['app_name']
         if len(args) > 0:
             up_commit = args[0]
         else:
@@ -68,7 +76,6 @@ class Command(ResourceCommand):
             download(settings.RESOURCES_REMOTE_LOCATION)
             migrate_all()
             # XXX moving towards deprecation?
-            app_name = settings.APP_NAME
             build_dir = os.path.join(os.getcwd(), 'build')
             package_theme(app_name, build_dir=build_dir)
             templates_dest = os.path.join(
