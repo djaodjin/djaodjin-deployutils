@@ -102,7 +102,7 @@ class Command(ResourceCommand):
     Resources are copied into ``*build_dir*/*app_name*/static``.
     Resources include CSS, JS, images and other files which can be accessed
     anonymously over HTTP and are necessary for the functionality of the site.
-    This command considers everything in ``APP_STATIC_ROOT`` to be a resource.
+    This command considers everything in ``STATIC_ROOT`` to be a resource.
 
     This command must be run with DEBUG=False and the cached assets must
     have been built before this command is invoked. They won't be rebuilt here.
@@ -189,7 +189,7 @@ def package_theme(app_name, build_dir=None, excludes=None, includes=None):
 
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
-    app_static_root = django_settings.APP_STATIC_ROOT
+    app_static_root = django_settings.STATIC_ROOT
     if app_static_root[-1] == os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
