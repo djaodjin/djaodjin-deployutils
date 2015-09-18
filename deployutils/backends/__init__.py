@@ -44,7 +44,8 @@ def fingerprint(dirnames, prefix=None, previous=[]):
         for filename in os.listdir(dirname):
             fullpath = os.path.join(dirname, filename)
             if os.path.isdir(fullpath):
-                results += fingerprint(fullpath, previous, filename)
+                results += fingerprint(
+                    [fullpath], prefix=filename, previous=previous)
             else:
                 fullname = fullpath
                 if prefix and fullname.startswith(prefix):
