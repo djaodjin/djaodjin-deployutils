@@ -34,11 +34,23 @@ from django.template.debug import DebugLexer
 from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
-from deployutils import settings
 from deployutils.management.commands import shell_command
 from deployutils.management.commands import ResourceCommand, LOGGER
 
 LOGGER = logging.getLogger(__name__)
+
+
+class URLRewriteWrapper(object):
+
+    def __init__(self, file_obj, app_name=None):
+        self.wrapped = file_obj
+        self.app_name = app_name
+
+    def write(self, text):
+        if self.app_name:
+            text = text.replace(
+                '="/static', '="/%s/static' % self.app_name)
+        return self.wrapped.write(text)
 
 
 class AssetsParser(Parser):
@@ -141,10 +153,13 @@ class Command(ResourceCommand):
 
     option_list = ResourceCommand.option_list + (
         make_option('--app_name', action='store', dest='app_name',
-            default=settings.APP_NAME,
+            default=django_settings.APP_NAME,
             help='overrides the destination site name'),
-        make_option('--build_dir', action='store', dest='build_dir',
-            default=None,
+        make_option('--build_dir',
+            action='store', dest='build_dir', default=None,
+            help='set the directory root where temporary files are created.'),
+        make_option('--install_dir',
+            action='store', dest='install_dir', default=None,
             help='set the directory root where output files are created.'),
         make_option('--excludes', action='append', dest='excludes',
             default=[], help='exclude specified templates directories'),
@@ -155,23 +170,28 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        package_theme(
-            app_name, build_dir=options['build_dir'],
+        package_theme(app_name,
+            install_dir=options['install_dir'],
+            build_dir=options['build_dir'],
             excludes=options['excludes'],
             includes=options['includes'])
 
 
-def package_theme(app_name, build_dir=None, excludes=None, includes=None):
+def package_theme(app_name, install_dir=None, build_dir=None,
+                  excludes=None, includes=None):
     if not build_dir:
         build_dir = os.path.join(os.getcwd(), 'build')
+    if not install_dir:
+        install_dir = os.getcwd()
+    build_dir = os.path.normpath(os.path.abspath(build_dir))
+    install_dir = os.path.normpath(os.path.abspath(install_dir))
     templates_dest = os.path.join(build_dir, app_name, 'templates')
     resources_dest = os.path.join(build_dir, app_name, 'public')
     # override STATIC_URL to prefix APP_NAME.
     orig_static_url = django_settings.STATIC_URL
-    if not django_settings.STATIC_URL.startswith(
-            '/' + settings.APP_NAME):
+    if not django_settings.STATIC_URL.startswith('/' + app_name):
         django_settings.STATIC_URL = \
-            '/' + settings.APP_NAME + orig_static_url
+            '/' + app_name + orig_static_url
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
     template_dirs = [django_settings.TEMPLATE_DIRS[0]]
@@ -184,12 +204,15 @@ def package_theme(app_name, build_dir=None, excludes=None, includes=None):
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest,
-                excludes=excludes, includes=includes)
-    django_settings.STATIC_URL = orig_static_url
+                excludes=excludes, includes=includes, app_name=app_name)
 
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.STATIC_ROOT
+    if not app_static_root.endswith(django_settings.STATIC_URL):
+        app_static_root = os.path.join(
+            app_static_root, django_settings.STATIC_URL[1:])
+
     if app_static_root[-1] == os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
@@ -198,7 +221,7 @@ def package_theme(app_name, build_dir=None, excludes=None, includes=None):
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
     with zipfile.ZipFile(
-            os.path.join(build_dir, '%s.zip' % app_name), 'w') as zip_file:
+            os.path.join(install_dir, '%s.zip' % app_name), 'w') as zip_file:
         fill_package(zip_file, build_dir, prefix=app_name)
 
 
@@ -213,7 +236,8 @@ def fill_package(zip_file, srcroot, prefix=''):
 
 
 def install_templates(srcroot, destroot,
-                      prefix='', excludes=None, includes=None):
+                      prefix='', excludes=None, includes=None, app_name=None):
+    #pylint:disable=too-many-arguments
     """
     Expand link to compiled assets all templates in *srcroot*
     and its subdirectories.
@@ -248,7 +272,8 @@ def install_templates(srcroot, destroot,
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))
                 with open(dest_name, 'w') as dest:
-                    parser = AssetsParser(tokens, dest)
+                    parser = AssetsParser(
+                        tokens, URLRewriteWrapper(dest, app_name))
                     parser.parse_through()
                 cmdline = ['diff', '-u', source_name, dest_name]
                 cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
@@ -270,4 +295,4 @@ def install_templates(srcroot, destroot,
                     "from unicode or UTF-8 strings.", source_name)
         elif os.path.isdir(source_name):
             install_templates(srcroot, destroot, prefix=pathname,
-                excludes=excludes, includes=includes)
+                excludes=excludes, includes=includes, app_name=app_name)
