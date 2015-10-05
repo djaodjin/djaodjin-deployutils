@@ -189,9 +189,9 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     resources_dest = os.path.join(build_dir, app_name, 'public')
     # override STATIC_URL to prefix APP_NAME.
     orig_static_url = django_settings.STATIC_URL
-    if not django_settings.STATIC_URL.startswith('/' + app_name):
-        django_settings.STATIC_URL = \
-            '/' + app_name + orig_static_url
+    if (app_name != django_settings.APP_NAME
+        and not django_settings.STATIC_URL.startswith('/' + app_name)):
+        django_settings.STATIC_URL = '/' + app_name + orig_static_url
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
     template_dirs = [django_settings.TEMPLATE_DIRS[0]]
