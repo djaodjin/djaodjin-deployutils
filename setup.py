@@ -41,6 +41,7 @@ setup(
     install_requires=requirements,
     packages=['deployutils',
               'deployutils.backends',
+              'deployutils.mockup',
               'deployutils.management',
               'deployutils.management.commands' ],
     url='https://github.com/djaodjin/djaodjin-deployutils/',
