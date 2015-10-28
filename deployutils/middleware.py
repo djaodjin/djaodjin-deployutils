@@ -45,7 +45,7 @@ class SessionMiddleware(BaseMiddleware):
         engine = import_module(django_settings.SESSION_ENGINE)
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
         request.session = engine.SessionStore(session_key)
-        if not session_key and settings.DENY_NO_SESSION:
+        if not session_key and not request.path in settings.ALLOWED_NO_SESSION:
             raise PermissionDenied("No DjaoDjin session key")
         try:
             # trigger ``load()``

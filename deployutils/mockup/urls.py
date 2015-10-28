@@ -29,14 +29,15 @@ Mockup login URL used in testing.
 from django.conf.urls import patterns, url
 from django.views.generic import TemplateView
 
-from .views import SigninView
+from .views import SigninView, SignupView
 
 
 urlpatterns = patterns('',
     url(r'^register/',
-        TemplateView.as_view(), name='registration_register'),
+        SignupView.as_view(), name='registration_register'),
     url(r'^logout/',
-        TemplateView.as_view(), name='logout'),
+        TemplateView.as_view(template_name='accounts/logout.html'),
+        name='logout'),
     url(r'^login/recover/',
         TemplateView.as_view(), name='password_reset'),
     url(r'^login/', SigninView.as_view(), name='login'),

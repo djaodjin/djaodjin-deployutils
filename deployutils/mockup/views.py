@@ -29,7 +29,8 @@ Mockup login view used in testing.
 import urlparse
 
 from django.conf import settings as django_settings
-from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login
+from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
+    get_user_model)
 from django.contrib.auth.forms import AuthenticationForm
 from django.http.request import split_domain_port, validate_host
 from django.utils.module_loading import import_string
@@ -38,6 +39,7 @@ from django.views.generic.edit import FormMixin, ProcessFormView
 
 from ..import settings
 from ..backends.encrypted_cookies import SessionStore
+from .forms import SignupForm
 
 
 class RedirectFormMixin(FormMixin):
@@ -97,3 +99,44 @@ class SigninView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
         self.request.session = session_store
 
         return super(SigninView, self).form_valid(form)
+
+
+class SignupView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
+    """
+    A frictionless registration backend With a full name and email
+    address, the user is immediately signed up and logged in.
+    """
+
+    form_class = SignupForm
+    template_name = 'accounts/register.html'
+
+    def form_valid(self, form):
+        self.register(**form.cleaned_data)
+        return super(SignupView, self).form_valid(form)
+
+    def register(self, **cleaned_data):
+        #pylint: disable=maybe-no-member
+        email = cleaned_data['email']
+        first_name = cleaned_data.get('first_name', None)
+        last_name = cleaned_data.get('last_name', None)
+        if not first_name:
+            # If the form does not contain a first_name/last_name pair,
+            # we assume a full_name was passed instead.
+            full_name = cleaned_data['full_name']
+            name_parts = full_name.split(' ')
+            if len(name_parts) > 0:
+                first_name = name_parts[0]
+                last_name = ' '.join(name_parts[1:])
+            else:
+                first_name = full_name
+                last_name = ''
+        username = cleaned_data.get('username', None)
+        password = cleaned_data.get('password', None)
+        user = get_user_model().objects.create_user(
+            username=username, password=password,
+            email=email, first_name=first_name, last_name=last_name)
+
+        # Bypassing authentication here, the user just registered.
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        auth_login(self.request, user)
+        return user
