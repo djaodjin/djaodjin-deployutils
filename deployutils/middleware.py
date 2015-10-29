@@ -45,8 +45,14 @@ class SessionMiddleware(BaseMiddleware):
         engine = import_module(django_settings.SESSION_ENGINE)
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
         request.session = engine.SessionStore(session_key)
-        if not session_key and not request.path in settings.ALLOWED_NO_SESSION:
-            raise PermissionDenied("No DjaoDjin session key")
+        if not session_key:
+            found = False
+            for path in settings.ALLOWED_NO_SESSION:
+                if request.path.startswith(str(path)):
+                    found = True
+                    break
+            if not found:
+                raise PermissionDenied("No DjaoDjin session key")
         try:
             # trigger ``load()``
             request.session._session #pylint: disable=protected-access
