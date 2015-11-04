@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging, os, re, subprocess, zipfile
+import logging, os, re, subprocess, sys, zipfile
 from optparse import make_option
 
 from django.conf import settings as django_settings
@@ -170,15 +170,17 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        package_theme(app_name,
+        zip_path = package_theme(app_name,
             install_dir=options['install_dir'],
             build_dir=options['build_dir'],
             excludes=options['excludes'],
             includes=options['includes'])
+        sys.stdout.write('package built: %s\n' % zip_path)
 
 
 def package_theme(app_name, install_dir=None, build_dir=None,
                   excludes=None, includes=None):
+    #pylint:disable=too-many-locals
     if not build_dir:
         build_dir = os.path.join(os.getcwd(), 'build')
     if not install_dir:
@@ -210,9 +212,15 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.STATIC_ROOT
     if not app_static_root.endswith(django_settings.STATIC_URL):
-        app_static_root = os.path.join(
-            app_static_root, django_settings.STATIC_URL[1:])
-
+        static_url_parts = []
+        for part in django_settings.STATIC_URL.split('/'):
+            if part:
+                static_url_parts += [part]
+        if static_url_parts[0] == django_settings.APP_NAME:
+            static_url = '/'.join(static_url_parts[1:])
+        else:
+            static_url = django_settings.STATIC_URL[1:]
+        app_static_root = os.path.join(app_static_root, static_url)
     if app_static_root[-1] == os.sep:
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
@@ -220,10 +228,10 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
-    with zipfile.ZipFile(
-            os.path.join(install_dir, '%s.zip' % app_name), 'w') as zip_file:
+    zip_path = os.path.join(install_dir, '%s.zip' % app_name)
+    with zipfile.ZipFile(zip_path, 'w') as zip_file:
         fill_package(zip_file, build_dir, prefix=app_name)
-
+    return zip_path
 
 def fill_package(zip_file, srcroot, prefix=''):
     for pathname in os.listdir(os.path.join(srcroot, prefix)):
