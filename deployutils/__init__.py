@@ -81,8 +81,8 @@ def load_config(confname, module, app_name,
                 content = key.get_contents_as_string()
                 if verbose:
                     sys.stderr.write(
-                        "config loaded from '%s' in S3 bucket '%s'\n" % (
-                        key, bucket_name))
+                        "config loaded from 's3://%s/%s'\n" % (
+                        bucket_name, key.name))
             except (boto.exception.NoAuthHandlerFound,
                     boto.exception.S3ResponseError) as _:
                 pass

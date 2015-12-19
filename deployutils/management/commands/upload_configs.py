@@ -38,6 +38,9 @@ class Command(BaseCommand):
         make_option('--app_name', action='store', dest='app_name',
             default=settings.APP_NAME,
             help='Name of the config file(s) project'),
+        make_option('--outdir', action='store', dest='upload_local',
+            default=None,
+            help='Copy encrypted file back to disk instead of to a S3 bucket'),
         make_option('--bucket', action='store', dest='bucket',
             default='deployutils',
             help='Print but do not execute'),
@@ -47,6 +50,7 @@ class Command(BaseCommand):
         #pylint: disable=too-many-locals
         default_acl = 'private'
         app_name = options['app_name']
+        upload_local = options['upload_local']
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
         bucket = conn.get_bucket(options['bucket'])
@@ -65,7 +69,12 @@ class Command(BaseCommand):
             with open(conf_path) as conf_file:
                 content = conf_file.read()
             encrypted = crypt.encrypt(content, passphrase)
-            key = boto.s3.key.Key(bucket)
-            key.name = '%s/%s' % (app_name, confname)
-            key.set_contents_from_string(encrypted, headers,
-                replace=True, policy=default_acl)
+            if upload_local:
+                with open(
+                    os.path.join(upload_local, confname), "wb") as upload_file:
+                    upload_file.write(encrypted)
+            else:
+                key = boto.s3.key.Key(bucket)
+                key.name = '%s/%s' % (app_name, confname)
+                key.set_contents_from_string(encrypted, headers,
+                    replace=True, policy=default_acl)
