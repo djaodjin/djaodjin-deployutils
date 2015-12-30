@@ -26,6 +26,7 @@
 Helpers to redirect based on session.
 """
 
+from django import http
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateResponseMixin
 
@@ -40,6 +41,8 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
     slug_url_kwarg = 'organization'
     template_name = 'account_redirects.html'
     permanent = False
+    create_on_none = True
+    new_account_url = '/app/new/'
 
     def get(self, request, *args, **kwargs):
         if 'manages' in request.session:
@@ -48,9 +51,19 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
             managed = []
         count = len(managed)
         if count == 0:
-            kwargs.update({self.slug_url_kwarg: 'none'})
-            return super(AccountRedirectView, self).get(
-                request, *args, **kwargs)
+            if self.create_on_none:
+                kwargs.update({
+                    self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
+                next_url = super(AccountRedirectView, self).get_redirect_url(
+                *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
+                    ':%s' % self.slug_url_kwarg)
+                url = '%s?next=%s' % (self.new_account_url, next_url)
+                if self.permanent:
+                    return http.HttpResponsePermanentRedirect(url)
+                else:
+                    return http.HttpResponseRedirect(url)
+            else:
+                raise http.Http404("No account")
         if count == 1:
             organization = managed[0]
             if organization['slug'] == request.user.username:
