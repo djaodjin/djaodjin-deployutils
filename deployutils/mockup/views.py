@@ -31,9 +31,8 @@ import urlparse
 from django.conf import settings as django_settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
     get_user_model)
-from django.contrib.auth.forms import AuthenticationForm
+from django import forms
 from django.http.request import split_domain_port, validate_host
-from django.utils.module_loading import import_string
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.edit import FormMixin, ProcessFormView
 
@@ -78,6 +77,15 @@ class RedirectFormMixin(FormMixin):
         return context
 
 
+class AuthenticationForm(forms.Form):
+    """
+    Base class for authenticating users. Extend this to get a form that accepts
+    username/password logins.
+    """
+    username = forms.CharField(max_length=254)
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
+
+
 class SigninView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
     """
     Check credentials and sign in the authenticated user.
@@ -87,14 +95,11 @@ class SigninView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
     template_name = 'accounts/login.html'
 
     def form_valid(self, form):
-        auth_login(self.request, form.get_user())
-
-        serializer_class = import_string(settings.SESSION_SERIALIZER)
-        serializer = serializer_class(self.request.user)
         session_store = SessionStore(settings.DJAODJIN_SECRET_KEY)
         #pylint:disable=protected-access
         session_store._session_key = session_store.prepare(
-            serializer.data, settings.DJAODJIN_SECRET_KEY)
+            settings.MOCKUP_SESSIONS[form.cleaned_data['username']],
+            settings.DJAODJIN_SECRET_KEY)
         session_store.modified = True
         self.request.session = session_store
 

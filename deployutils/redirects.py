@@ -64,12 +64,11 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
                     return http.HttpResponseRedirect(url)
             else:
                 raise http.Http404("No account")
-        if count == 1:
+        if count == 1 and not self.create_on_none:
             organization = managed[0]
-            if organization['slug'] == request.user.username:
-                kwargs.update({self.slug_url_kwarg: organization['slug']})
-                return super(AccountRedirectView, self).get(
-                    request, *args, **kwargs)
+            kwargs.update({self.slug_url_kwarg: organization['slug']})
+            return super(AccountRedirectView, self).get(
+                request, *args, **kwargs)
         redirects = []
         for org in managed:
             kwargs.update({self.slug_url_kwarg: org['slug']})
