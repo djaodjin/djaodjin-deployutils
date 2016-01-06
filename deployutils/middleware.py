@@ -25,15 +25,15 @@
 """
 Session Store for encrypted cookies.
 """
+from importlib import import_module
 import logging
 
 from django.conf import settings as django_settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.middleware import SessionMiddleware \
     as BaseMiddleware
-from django.utils.importlib import import_module
 
-from deployutils import settings
+from . import settings
 
 
 LOGGER = logging.getLogger(__name__)
