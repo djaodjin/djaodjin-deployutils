@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin inc.
+# Copyright (c) 2016, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,13 @@
 Mockup login URL used in testing.
 """
 
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.views.generic import TemplateView
 
 from .views import SigninView, SignupView
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^register/',
         SignupView.as_view(), name='registration_register'),
     url(r'^logout/',
@@ -41,5 +41,5 @@ urlpatterns = patterns('',
     url(r'^login/recover/',
         TemplateView.as_view(), name='password_reset'),
     url(r'^login/', SigninView.as_view(), name='login'),
-)
+]
 
