@@ -28,8 +28,7 @@ from django.contrib.auth import get_user_model
 
 class ProxyUserBackend(object):
 
-    def __init__(self):
-        self.users = []
+    users = []
 
     def authenticate(self, remote_user):
         """
