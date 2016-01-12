@@ -34,6 +34,7 @@ from django.template.debug import DebugLexer
 from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
+from deployutils import settings
 from deployutils.management.commands import shell_command
 from deployutils.management.commands import ResourceCommand, LOGGER
 
@@ -196,10 +197,13 @@ def package_theme(app_name, install_dir=None, build_dir=None,
         django_settings.STATIC_URL = '/' + app_name + orig_static_url
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
-    template_dirs = [django_settings.TEMPLATE_DIRS[0]]
-    candidate_dir = os.path.join(django_settings.TEMPLATE_DIRS[0], app_name)
-    if os.path.isdir(candidate_dir):
-        template_dirs += [candidate_dir]
+
+    candidate_dir = os.path.join(
+        settings.MULTITIER_THEMES_DIR, app_name, 'templates')
+    if not os.path.isdir(candidate_dir):
+        template_dirs = django_settings.TEMPLATE_DIRS
+    else:
+        template_dirs = [candidate_dir]
     for template_dir in template_dirs:
         # The first TEMPLATE_DIRS usually contains the most specialized
         # templates (ie. the ones we truely want to install).
@@ -293,6 +297,11 @@ def install_templates(srcroot, destroot,
                     verb = 'compile'
                 else:
                     verb = 'install'
+                print "%s %s to %s" % (verb,
+                    source_name.replace(
+                        django_settings.BASE_DIR, '*APP_ROOT*'),
+                    dest_name.replace(destroot,
+                        '*MULTITIER_TEMPLATES_ROOT*'))
                 LOGGER.info("%s %s to %s", verb,
                     source_name.replace(
                         django_settings.BASE_DIR, '*APP_ROOT*'),

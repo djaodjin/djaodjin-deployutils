@@ -31,9 +31,11 @@ In a production environment, the static resources (images, css, js) are served
 directly by nginx from MULTITIER_RESOURCES_ROOT. Furthermore the CMS pages are
 served by one process while the app is served by another process. This requires
 to install the templates from the app repo into the CMS template directory
-(MULTITIER_TEMPLATES_ROOT) after the TemplateNodes related to the assets
+(MULTITIER_THEMES_DIR) after the TemplateNodes related to the assets
 pipeline have been resolved.
 """
+import os
+
 from django.conf import settings
 
 _SETTINGS = {
@@ -47,9 +49,7 @@ _SETTINGS = {
         settings.INSTALLED_APPS),
     'MULTITIER_RESOURCES_ROOT': getattr(settings, 'DEPLOYUTILS_RESOURCES_ROOT',
         settings.BASE_DIR + '/htdocs/'),
-    'MULTITIER_TEMPLATES_ROOT': getattr(settings,
-        'DEPLOYUTILS_INSTALLED_TEMPLATES_ROOT',
-        settings.TEMPLATE_DIRS[0] if len(settings.TEMPLATE_DIRS) > 0 else None),
+    'MULTITIER_THEMES_DIR': os.path.join(settings.BASE_DIR, 'themes'),
     'RESOURCES_REMOTE_LOCATION': getattr(settings,
         'DEPLOYUTILS_RESOURCES_REMOTE_LOCATION', None),
     'ALLOWED_NO_SESSION': [],
@@ -67,7 +67,7 @@ DEPLOYED_WEBAPP_ROOT = _SETTINGS.get('DEPLOYED_WEBAPP_ROOT')
 DEPLOYED_SERVERS = _SETTINGS.get('DEPLOYED_SERVERS')
 APP_NAME = _SETTINGS.get('APP_NAME')
 INSTALLED_APPS = _SETTINGS.get('INSTALLED_APPS')
-MULTITIER_TEMPLATES_ROOT = _SETTINGS.get('MULTITIER_TEMPLATES_ROOT')
+MULTITIER_THEMES_DIR = _SETTINGS.get('MULTITIER_THEMES_DIR')
 RESOURCES_REMOTE_LOCATION = _SETTINGS.get('RESOURCES_REMOTE_LOCATION',
     'git@%s:%s' % (settings.ALLOWED_HOSTS[0], DEPLOYED_WEBAPP_ROOT))
 

@@ -79,7 +79,7 @@ class Command(ResourceCommand):
             build_dir = os.path.join(os.getcwd(), 'build')
             package_theme(app_name, build_dir=build_dir)
             templates_dest = os.path.join(
-                settings.MULTITIER_TEMPLATES_ROOT, app_name)
+                settings.MULTITIER_THEMES_DIR, app_name)
             resources_dest = os.path.join(
                 settings.MULTITIER_RESOURCES_ROOT, app_name)
             shutil.copy(os.path.join(build_dir, app_name, 'templates'),
