@@ -41,6 +41,7 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
     slug_url_kwarg = 'organization'
     template_name = 'account_redirects.html'
     permanent = False
+    create_more = False
     create_on_none = True
     new_account_url = '/app/new/'
 
@@ -64,7 +65,7 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
                     return http.HttpResponseRedirect(url)
             else:
                 raise http.Http404("No account")
-        if count == 1 and not self.create_on_none:
+        if count == 1 and not self.create_more:
             organization = managed[0]
             kwargs.update({self.slug_url_kwarg: organization['slug']})
             return super(AccountRedirectView, self).get(
