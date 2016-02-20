@@ -27,16 +27,16 @@ from optparse import make_option
 
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.templatetags.staticfiles import do_static
-from django.template.base import (Parser,
+from django.template.base import (Parser, NodeList,
     TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK, TOKEN_COMMENT, TemplateSyntaxError)
 from django.template.context import Context
-from django.template.debug import DebugLexer
 from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
-from deployutils import settings
-from deployutils.management.commands import shell_command
-from deployutils.management.commands import ResourceCommand, LOGGER
+from ... import settings
+from ...compat import DebugLexer
+from . import shell_command
+from . import ResourceCommand, LOGGER
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +59,12 @@ class AssetsParser(Parser):
     def __init__(self, tokens, dest_stream):
         super(AssetsParser, self).__init__(tokens)
         self.dest_stream = dest_stream
-        self.context = Context({})
+        self.context = Context()
 
     def parse_through(self, parse_until=None):
         if parse_until is None:
             parse_until = []
-        nodelist = self.create_nodelist()
+        nodelist = NodeList()
         while self.tokens:
             token = self.next_token()
             if token.token_type == TOKEN_TEXT:
@@ -88,14 +88,14 @@ class AssetsParser(Parser):
                         # not get propagated.
                         # Lost in webassets.bundle.resolve_contents
                         token.contents += ' debug=False'
-                        compiled_result = assets(self, token)
+                        self.dest_stream.write(
+                            assets(self, token).render(self.context))
                     except TemplateSyntaxError as err:
                         if not self.compile_function_error(token, err):
                             raise
-                    self.dest_stream.write(compiled_result.render(self.context))
                 elif command == 'static':
-                    compiled_result = do_static(self, token)
-                    self.dest_stream.write(compiled_result.render(self.context))
+                    self.dest_stream.write(
+                        do_static(self, token).render(self.context))
                 else:
                     self.dest_stream.write(
                         "{%% %s %%}" % token.contents.encode('utf8'))
@@ -289,7 +289,7 @@ def install_templates(srcroot, destroot,
                 template_string = source.read()
             try:
                 template_string = force_text(template_string)
-                lexer = DebugLexer(template_string, origin=None)
+                lexer = DebugLexer(template_string)
                 tokens = lexer.tokenize()
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))

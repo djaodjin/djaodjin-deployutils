@@ -140,7 +140,7 @@ def _south_migrate_all():
     if not 'south' in settings.INSTALLED_APPS:
         print "'south' is not in INSTALLED_APPS, no migration done."
         return 0
-    #pylint: disable=import-error
+    #pylint: disable=import-error,too-many-nested-blocks
     from south.migration import Migrations
     from south.management.commands import migrate
     schema_cmd = SchemaMigration()
