@@ -213,8 +213,10 @@ def package_theme(app_name, install_dir=None, build_dir=None,
                 excludes=excludes, includes=includes, app_name=app_name)
 
     # Copy local resources (not under source control) to resources_dest.
-    excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
+    excludes = ['--exclude', '*~', '--exclude', '.DS_Store',
+        '--exclude', '.webassets-cache']
     app_static_root = django_settings.STATIC_ROOT
+    assert app_static_root is not None and len(app_static_root) > 0
     # When app_static_root ends with the static_url, we will want
     # to insert the app_name prefix.
     static_root_parts = app_static_root.split(os.sep)
