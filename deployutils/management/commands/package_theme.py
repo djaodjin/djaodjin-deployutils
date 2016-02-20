@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2016, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -215,20 +215,28 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store']
     app_static_root = django_settings.STATIC_ROOT
-    if not app_static_root.endswith(django_settings.STATIC_URL):
-        static_url_parts = []
-        for part in django_settings.STATIC_URL.split('/'):
-            if part:
-                static_url_parts += [part]
-        if static_url_parts[0] == django_settings.APP_NAME:
-            static_url = '/'.join(static_url_parts[1:])
-        else:
-            static_url = django_settings.STATIC_URL[1:]
-        app_static_root = os.path.join(app_static_root, static_url)
-    if app_static_root[-1] == os.sep:
+    # When app_static_root ends with the static_url, we will want
+    # to insert the app_name prefix.
+    static_root_parts = app_static_root.split(os.sep)
+    root_parts_idx = len(static_root_parts)
+    root_idx = len(app_static_root)
+    found = False
+    for url_part in reversed(orig_static_url.split('/')):
+        found = True # With ``break`` later on to default to False
+                     # when zero iteration.
+        if url_part:
+            root_parts_idx = root_parts_idx - 1
+            root_idx = root_idx - len(static_root_parts[root_parts_idx]) - 1
+            if url_part != static_root_parts[root_parts_idx]:
+                found = False
+                break
+    if found:
+        app_static_root = os.path.join(
+            app_static_root[:root_idx], django_settings.STATIC_URL[1:-1])
+        # static_url is required per-Django to start and ends with a '/'
+        # (i.e. '/static/').
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-        app_static_root = app_static_root[:-1]
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
