@@ -43,7 +43,8 @@ setup(
               'deployutils.backends',
               'deployutils.mockup',
               'deployutils.management',
-              'deployutils.management.commands' ],
+              'deployutils.management.commands',
+              'deployutils.templatetags'],
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,
