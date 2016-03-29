@@ -24,10 +24,16 @@
 
 from django import template
 from django.contrib.messages.api import get_messages
+from django.core.urlresolvers import reverse
 from django.forms import Form
 
 
 register = template.Library()
+
+
+@register.filter()
+def host(request):
+    return request.get_host()
 
 
 @register.filter()
@@ -38,3 +44,13 @@ def messages(obj):
     if isinstance(obj, Form):
         return obj.non_field_errors()
     return get_messages(obj)
+
+
+@register.filter()
+def url_profile(request): #pylint:disable=unused-argument
+    """
+    Mockup to access the user profile.
+    """
+    if request.user.is_authenticated():
+        return reverse('users_profile', args=(request.user,))
+    return None

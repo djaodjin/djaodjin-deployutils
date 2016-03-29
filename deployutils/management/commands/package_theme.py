@@ -34,7 +34,7 @@ from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
 from ... import settings
-from ...compat import DebugLexer
+from ...compat import DebugLexer, get_html_engine
 from . import shell_command
 from . import ResourceCommand, LOGGER
 
@@ -54,12 +54,22 @@ class URLRewriteWrapper(object):
         return self.wrapped.write(text)
 
 
+class Template(object):
+
+    def __init__(self, engine):
+        self.engine = engine
+
+
 class AssetsParser(Parser):
 
-    def __init__(self, tokens, dest_stream):
-        super(AssetsParser, self).__init__(tokens)
+    def __init__(self, tokens, dest_stream,
+                 libraries=None, builtins=None, origin=None):
+        #pylint:disable=too-many-arguments
+        super(AssetsParser, self).__init__(tokens,
+            libraries=libraries, builtins=builtins, origin=origin)
         self.dest_stream = dest_stream
         self.context = Context()
+        self.context.template = Template(get_html_engine())
 
     def parse_through(self, parse_until=None):
         if parse_until is None:
@@ -91,7 +101,10 @@ class AssetsParser(Parser):
                         self.dest_stream.write(
                             assets(self, token).render(self.context))
                     except TemplateSyntaxError as err:
-                        if not self.compile_function_error(token, err):
+                        if hasattr(self, 'error'):
+                            raise self.error(token, err)
+                        # Django < 1.8
+                        elif not self.compile_function_error(token, err):
                             raise
                 elif command == 'static':
                     self.dest_stream.write(
@@ -242,6 +255,8 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     shell_command(['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
+    if not os.path.isdir(install_dir):
+        os.makedirs(install_dir)
     zip_path = os.path.join(install_dir, '%s.zip' % app_name)
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
         fill_package(zip_file, build_dir, prefix=app_name)
@@ -293,9 +308,14 @@ def install_templates(srcroot, destroot,
                 tokens = lexer.tokenize()
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))
+                from django.template.backends.django import DjangoTemplates
+                engine = get_html_engine()
                 with open(dest_name, 'w') as dest:
-                    parser = AssetsParser(
-                        tokens, URLRewriteWrapper(dest, app_name))
+                    parser = AssetsParser(tokens,
+                        URLRewriteWrapper(dest, app_name),
+                        libraries=engine.template_libraries,
+                        builtins=engine.template_builtins,
+                        origin=None)
                     parser.parse_through()
                 cmdline = ['diff', '-u', source_name, dest_name]
                 cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE)

@@ -33,3 +33,24 @@ except ImportError: # django < 1.8
 
         def __init__(self, template_string):
             super(DebugLexer, self).__init__(template_string, origin=None)
+
+
+class DjangoTemplate(object):
+
+    @property
+    def template_builtins(self):
+        from django.template.base import builtins
+        return builtins
+
+    @property
+    def template_libraries(self):
+        from django.template.base import libraries
+        return libraries
+
+
+def get_html_engine():
+    try:
+        from django.template import engines
+        return engines['django'].engine
+    except ImportError: # django < 1.8
+        return DjangoTemplate()
