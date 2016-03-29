@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2016, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,20 +23,20 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os, re, tempfile
-from optparse import make_option
 
 from django.core.management.commands.loaddata import Command as BaseCommand
 
 
 class Command(BaseCommand):
 
-    option_list = BaseCommand.option_list + (
-        make_option('--email', action='store', dest='email',
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--email', action='store', dest='email',
             default='', help='Replace email fields in fixtures by a derivative'\
-            ' of this parameter (e.g. support+idx@example.com)'),)
+            ' of this parameter (e.g. support+idx@example.com)')
 
     def handle(self, *fixture_labels, **options):
-        email = options['email']
+        email = options.get('email')
         if email:
             fixture_tmps = self.replace_email(email, *fixture_labels)
             try:
