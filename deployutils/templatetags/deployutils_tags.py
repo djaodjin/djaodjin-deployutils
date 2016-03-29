@@ -23,12 +23,23 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from django import template
+from django.conf import settings
 from django.contrib.messages.api import get_messages
-from django.core.urlresolvers import reverse
 from django.forms import Form
+
+#pylint:disable=no-name-in-module,import-error
+from django.utils.six.moves.urllib.parse import urljoin
 
 
 register = template.Library()
+
+
+@register.filter()
+def asset(path):
+    """
+    *Mockup*: adds the appropriate url or path prefix.
+    """
+    return site_prefixed(path)
 
 
 @register.filter()
@@ -47,10 +58,18 @@ def messages(obj):
 
 
 @register.filter()
+def site_prefixed(path):
+    """
+    *Mockup*: adds the path prefix when required.
+    """
+    return urljoin('/%s/' % settings.APP_NAME, path)
+
+
+@register.filter()
 def url_profile(request): #pylint:disable=unused-argument
     """
-    Mockup to access the user profile.
+    *Mockup*: access the user profile.
     """
     if request.user.is_authenticated():
-        return reverse('users_profile', args=(request.user,))
+        return site_prefixed("users/%s" % request.user)
     return None
