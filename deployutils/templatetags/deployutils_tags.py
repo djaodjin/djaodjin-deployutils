@@ -62,7 +62,9 @@ def site_prefixed(path):
     """
     *Mockup*: adds the path prefix when required.
     """
-    return urljoin('/%s/' % settings.APP_NAME, path)
+    if settings.DEBUG:
+        return urljoin('/%s/' % settings.APP_NAME, path)
+    return urljoin('/', path)
 
 
 @register.filter()
