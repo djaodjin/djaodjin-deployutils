@@ -23,7 +23,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging, os, re, subprocess, sys, zipfile
-from optparse import make_option
 
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.templatetags.staticfiles import do_static
@@ -165,22 +164,22 @@ class Command(ResourceCommand):
     """
     help = "package templates and resources for a multitier setup."
 
-    option_list = ResourceCommand.option_list + (
-        make_option('--app_name', action='store', dest='app_name',
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--app_name', action='store', dest='app_name',
             default=django_settings.APP_NAME,
-            help='overrides the destination site name'),
-        make_option('--build_dir',
+            help='overrides the destination site name')
+        parser.add_argument('--build_dir',
             action='store', dest='build_dir', default=None,
-            help='set the directory root where temporary files are created.'),
-        make_option('--install_dir',
+            help='set the directory root where temporary files are created.')
+        parser.add_argument('--install_dir',
             action='store', dest='install_dir', default=None,
-            help='set the directory root where output files are created.'),
-        make_option('--excludes', action='append', dest='excludes',
-            default=[], help='exclude specified templates directories'),
-        make_option('--includes', action='append', dest='includes',
+            help='set the directory root where output files are created.')
+        parser.add_argument('--excludes', action='append', dest='excludes',
+            default=[], help='exclude specified templates directories')
+        parser.add_argument('--includes', action='append', dest='includes',
             default=[], help='include specified templates directories'\
-                ' (after excludes have been applied)'),
-        )
+                ' (after excludes have been applied)')
 
     def handle(self, *args, **options):
         app_name = options['app_name']

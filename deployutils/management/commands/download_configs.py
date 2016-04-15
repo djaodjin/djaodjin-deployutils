@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2016, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import getpass
-from optparse import make_option
 
 import boto
 from django.core.management.base import BaseCommand
@@ -35,14 +34,14 @@ from deployutils import settings
 class Command(BaseCommand):
     help = "Download the config files from a S3 bucket and decrypt them."
 
-    option_list = BaseCommand.option_list + (
-        make_option('--app_name', action='store', dest='app_name',
-            default=settings.APP_NAME,
-            help='Name of the config file(s) project'),
-        make_option('--bucket', action='store', dest='bucket',
-            default='deployutils',
-            help='Print but do not execute'),
-        )
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--app_name',
+            action='store', dest='app_name', default=settings.APP_NAME,
+            help='Name of the config file(s) project')
+        parser.add_argument('--bucket',
+            action='store', dest='bucket', default='deployutils',
+            help='Print but do not execute')
 
     def handle(self, *args, **options):
         app_name = options['app_name']

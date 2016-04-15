@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2016, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime, fnmatch, inspect, logging, os, re, shutil, subprocess, sys
-from optparse import make_option
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
@@ -57,11 +56,11 @@ except ImportError: # South not present in virtualenv.
 class Command(ResourceCommand):
     help = "Fetch latest code and resources from the stage machine."
 
-    option_list = ResourceCommand.option_list + (
-        make_option('--app_name', action='store', dest='app_name',
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--app_name', action='store', dest='app_name',
             default=settings.APP_NAME,
-            help='Override the name of the project'),
-        )
+            help='Override the name of the project')
 
     def handle(self, *args, **options):
         app_name = options['app_name']
