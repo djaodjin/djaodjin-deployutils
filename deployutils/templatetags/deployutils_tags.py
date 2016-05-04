@@ -25,7 +25,7 @@
 from django import template
 from django.conf import settings
 from django.contrib.messages.api import get_messages
-from django.forms import Form
+from django.forms import BaseForm
 
 #pylint:disable=no-name-in-module,import-error
 from django.utils.six.moves.urllib.parse import urljoin
@@ -52,7 +52,7 @@ def messages(obj):
     """
     Messages to be displayed to the current session.
     """
-    if isinstance(obj, Form):
+    if isinstance(obj, BaseForm):
         return obj.non_field_errors()
     return get_messages(obj)
 
