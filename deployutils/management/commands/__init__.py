@@ -37,20 +37,18 @@ LOGGER = logging.getLogger(__name__)
 class ResourceCommand(BaseCommand):
     """Commands intended to interact with the resources server directly."""
 
-    option_list = BaseCommand.option_list + (
-        make_option('-n',
-            action='store_true',
-            dest='no_execute',
-            default=False,
-            help='Print but do not execute'),
-        )
-
     def __init__(self):
         BaseCommand.__init__(self)
         self.webapp = os.path.basename(
             os.path.dirname(os.path.abspath(sys.argv[0])))
         self.deployed_path = os.path.join(
             settings.DEPLOYED_WEBAPP_ROOT, self.webapp)
+
+    def add_arguments(self, parser):
+        super(ResourceCommand, self).add_arguments(parser)
+        parser.add_argument('-n', action='store_true', dest='no_execute',
+            default=False,
+            help='Print but do not execute')
 
     def handle(self, *args, **options):
         settings.DRY_RUN = options['no_execute']

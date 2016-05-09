@@ -175,9 +175,9 @@ class Command(ResourceCommand):
         parser.add_argument('--install_dir',
             action='store', dest='install_dir', default=None,
             help='set the directory root where output files are created.')
-        parser.add_argument('--excludes', action='append', dest='excludes',
+        parser.add_argument('--exclude', action='append', dest='excludes',
             default=[], help='exclude specified templates directories')
-        parser.add_argument('--includes', action='append', dest='includes',
+        parser.add_argument('--include', action='append', dest='includes',
             default=[], help='include specified templates directories'\
                 ' (after excludes have been applied)')
 
