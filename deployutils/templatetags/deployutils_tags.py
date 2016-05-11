@@ -66,6 +66,8 @@ def site_prefixed(path):
         if not path:
             return '/%s' % settings.APP_NAME
         return urljoin('/%s/' % settings.APP_NAME, path)
+    if not path:
+        return ''
     return urljoin('/', path)
 
 
