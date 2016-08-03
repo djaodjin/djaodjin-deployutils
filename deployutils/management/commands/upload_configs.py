@@ -42,8 +42,9 @@ class Command(BaseCommand):
             action='store', dest='upload_local', default=None,
             help='Copy encrypted file back to disk instead of to a S3 bucket')
         parser.add_argument('--bucket', action='store', dest='bucket',
-            default='deployutils',
-            help='Print but do not execute')
+            default='deployutils', help='Print but do not execute')
+        parser.add_argument('filenames', metavar='filenames', nargs='+',
+            help="config files to upload")
 
     def handle(self, *args, **options):
         #pylint: disable=too-many-locals
@@ -53,7 +54,7 @@ class Command(BaseCommand):
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
         bucket = conn.get_bucket(options['bucket'])
-        for confname in args:
+        for confname in options['filenames']:
             if os.path.exists(confname):
                 conf_path = confname
                 confname = os.path.basename(confname)
