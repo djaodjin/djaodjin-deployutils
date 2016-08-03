@@ -11,61 +11,61 @@ project by the HTTP session manager.
 Install
 -------
 
-1. Install deployutils into your environment
+Install deployutils into your environment
 
 
     $ pip install djaodjin-deployutils
 
 
-2. Update your settings.py
+Update your settings.py
 
 
-   +from deployutils import load_config
+    +from deployutils import load_config
 
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-   +APP_NAME = os.path.basename(BASE_DIR)
+     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    +APP_NAME = os.path.basename(BASE_DIR)
 
-   +load_config('credentials', sys.modules[__name__], APP_NAME, verbose=True)
+    +load_config('credentials', sys.modules[__name__], APP_NAME, verbose=True)
 
-    INSTALLED_APPS = (
-        'django.contrib.admin',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-   +    'deployutils',
-    )
+     INSTALLED_APPS = (
+         'django.contrib.admin',
+         'django.contrib.auth',
+         'django.contrib.contenttypes',
+         'django.contrib.sessions',
+         'django.contrib.messages',
+         'django.contrib.staticfiles',
+    +    'deployutils',
+     )
 
-    MIDDLEWARE_CLASSES = (
-        'django.middleware.security.SecurityMiddleware',
-   -    'django.contrib.sessions.middleware.SessionMiddleware',
-   +    'deployutils.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-       )
+     MIDDLEWARE_CLASSES = (
+         'django.middleware.security.SecurityMiddleware',
+    -    'django.contrib.sessions.middleware.SessionMiddleware',
+    +    'deployutils.middleware.SessionMiddleware',
+         'django.middleware.common.CommonMiddleware',
+         'django.middleware.csrf.CsrfViewMiddleware',
+         'django.contrib.auth.middleware.AuthenticationMiddleware',
+     )
 
-   +AUTHENTICATION_BACKENDS = (
-   +    'deployutils.backends.auth.ProxyUserBackend',
-   +)
+    +AUTHENTICATION_BACKENDS = (
+    +    'deployutils.backends.auth.ProxyUserBackend',
+    +)
 
-   # Session settings
-   +SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
+    # Session settings
+    +SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
 
-   +DEPLOYUTILS = {
-   +    # Hardcoded mockups here.
-   +    'MOCKUP_SESSIONS': {
-   +        'donny': {
-   +            'username': 'donny',
-   +            'manages': [{'slug': 'testsite', 'full_name': 'Testsite'}]},
-   +    },
-   +    'ALLOWED_NO_SESSION': [
-   +        STATIC_URL, reverse_lazy('login')]
-   +}
+    +DEPLOYUTILS = {
+    +    # Hardcoded mockups here.
+    +    'MOCKUP_SESSIONS': {
+    +        'donny': {
+    +            'username': 'donny',
+    +            'manages': [{'slug': 'testsite', 'full_name': 'Testsite'}]},
+    +    },
+    +    'ALLOWED_NO_SESSION': [
+    +        STATIC_URL, reverse_lazy('login')]
+    +}
 
 
-4. Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``
+Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``
 
 
     $ cat ./credentials
@@ -73,7 +73,7 @@ Install
     DJAODJIN_SECRET_KEY = "__your_secret_key__"
 
 
-3. (for stand-alone testing) Add the mockup views in urls.py
+(for stand-alone testing) Add the mockup views in urls.py
 
 
      urlpatterns = [
@@ -86,7 +86,7 @@ Install
 Development
 -----------
 
-1. Clone the repository in a virtualenv and install the prerequisites
+Clone the repository in a virtualenv and install the prerequisites
 
 
     $ virtualenv-2.7 _installTop_
@@ -97,19 +97,19 @@ Development
     $ pip install -r testsite/requirements.txt
 
 
-2. Create the credentials file with a ``DJAODJIN_SECRET_KEY``
+Create the credentials file with a ``DJAODJIN_SECRET_KEY``
 
 
     $ make initdb
 
 
-3. Run the web application
+Run the web application
 
 
     $ python manage.py runserver
 
 
-4. Browse to http://localhost:8000
+Browse to http://localhost:8000
 
 
 
