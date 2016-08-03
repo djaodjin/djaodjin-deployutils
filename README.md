@@ -13,9 +13,12 @@ Install
 
 1. Install deployutils into your environment
 
+
     $ pip install djaodjin-deployutils
 
+
 2. Update your settings.py
+
 
     +from deployutils import load_config
 
@@ -48,7 +51,6 @@ Install
     +)
 
     # Session settings
-    # ----------------
     +SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
 
     +DEPLOYUTILS = {
@@ -62,19 +64,24 @@ Install
     +        STATIC_URL, reverse_lazy('login')]
     +}
 
+
 4. Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``
+
 
     $ cat ./credentials
     # Authentication for djaodjin firewall
     DJAODJIN_SECRET_KEY = "__your_secret_key__"
 
+
 3. (for stand-alone testing) Add the mockup views in urls.py
+
 
      urlpatterns = [
      ...
     +    url(r'^', include('deployutils.mockup.urls')),
      ...
      ]
+
 
 Development
 -----------
