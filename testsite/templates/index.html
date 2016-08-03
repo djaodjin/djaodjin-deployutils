@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load deployutils_tags %}
+
+{% block content %}
+<div>
+    <p>
+Welcome to the testsite for djaodjin-deployutils!
+    </p>
+    <p>
+<a href="{% url 'login' %}">Sign-in</a> to the site (login: donny, password: yoyo) and see how the HTTP cookie header is decoded into a session.
+    </p>
+    <div>
+        <div>
+            <h4>As HTTP Cookie Header</h4>
+            <pre><code>{{request.session.session_key|wraplines}}</code></pre>
+        </div>
+        <div>
+            <h4>Session Data</h4>
+            <pre><code>{{request.session.data|wraplines}}</code></pre>
+        </div>
+    </div>
+    <div>
+        <p>
+Clear the browser data to reset the session passed to the site.
+        </p>
+    </div>
+</div>
+{% endblock %}

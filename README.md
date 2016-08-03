@@ -1,27 +1,107 @@
 DjaoDjin deployutils
 ====================
 
-This Django app contains the commands used to manage the process from
-development to code in production at DjaoDjin.
+This Django app enables a Django project to seamlessly integrate behind
+the [DjaoDjin HTTP session manager reverse proxy](https://djaodjin.com/docs/technical/).
+It will replace the default ``django.contrib.sessions``
+and ``AUTHENTICATION_BACKENDS`` to decode sessions forwarded to your Django
+project by the HTTP session manager.
+
 
 Install
 -------
 
-1. Install deployutils into your virtualenv
+1. Install deployutils into your environment
 
-    $ python setup.py install
+    $ pip install djaodjin-deployutils
+
+2. Update your settings.py
+
+    +from deployutils import load_config
+
+     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    +APP_NAME = os.path.basename(BASE_DIR)
+
+    +load_config('credentials', sys.modules[__name__], APP_NAME, verbose=True)
+
+     INSTALLED_APPS = (
+         'django.contrib.admin',
+         'django.contrib.auth',
+         'django.contrib.contenttypes',
+         'django.contrib.sessions',
+         'django.contrib.messages',
+         'django.contrib.staticfiles',
+    +    'deployutils',
+     )
+
+     MIDDLEWARE_CLASSES = (
+         'django.middleware.security.SecurityMiddleware',
+    -    'django.contrib.sessions.middleware.SessionMiddleware',
+    +    'deployutils.middleware.SessionMiddleware',
+         'django.middleware.common.CommonMiddleware',
+         'django.middleware.csrf.CsrfViewMiddleware',
+         'django.contrib.auth.middleware.AuthenticationMiddleware',
+        )
+
+    +AUTHENTICATION_BACKENDS = (
+    +    'deployutils.backends.auth.ProxyUserBackend',
+    +)
+
+    # Session settings
+    # ----------------
+    +SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
+
+    +DEPLOYUTILS = {
+    +    # Hardcoded mockups here.
+    +    'MOCKUP_SESSIONS': {
+    +        'donny': {
+    +            'username': 'donny',
+    +            'manages': [{'slug': 'testsite', 'full_name': 'Testsite'}]},
+    +    },
+    +    'ALLOWED_NO_SESSION': [
+    +        STATIC_URL, reverse_lazy('login')]
+    +}
+
+4. Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``
+
+    $ cat ./credentials
+    # Authentication for djaodjin firewall
+    DJAODJIN_SECRET_KEY = "__your_secret_key__"
+
+3. (for stand-alone testing) Add the mockup views in urls.py
+
+     urlpatterns = [
+     ...
+    +    url(r'^', include('deployutils.mockup.urls')),
+     ...
+     ]
+
+Development
+-----------
+
+1. Clone the repository in a virtualenv and install the prerequisites
+
+    $ virtualenv-2.7 _installTop_
+    $ cd _installTop_
+    $ source bin/activate
+    $ git clone https://github.com/djaodjin/djaodjin-deployutils.git
+    $ cd djaodjin-deployutils
+    $ pip install -r testsite/requirements.txt
+
+2. Create the credentials file with a ``DJAODJIN_SECRET_KEY``
+
+    $ make initdb
+
+3. Run the web application
+
+    $ python manage.py runserver
+
+4. Browse to http://localhost:8000
 
 
-2. Add _deployutils_ to the INSTALLED_APPS
 
-3. Configure the DEPLOYUTILS variables in the project settings
-
-* DRY_RUN                   Do not execute, just show the commands
-* DEPLOYED_WEBAPP_ROOT      Directory on DEPLOYED_SERVERS where to find webapps
-* DEPLOYED_SERVERS          List of Hostname/IP webapps are deployed to
-* RESOURCES_MACHINE         URL to the resources not under source control
-                            (ex: git@example.com)
-
+Bonus commands
+--------------
 
 Commands to upload/download resources
 -------------------------------------
@@ -42,24 +122,6 @@ Commands to setup on deployed servers
 
 Fetch/merge from the remote git repository and downlad the extra resources
 from the stage server.
-
-
-Commnands to deploy webapp
---------------------------
-
-    $ python manage.py syncapp
-
-This command will trigger a "python manage.py pullapp" on the deployed server.
-
-Note that you will need to setup the deployed machine with appropriate
-authentication.
-
-
-    $ python manage.py pushapp
-
-Sometimes you are trying to test a hotfix directly in production. To that
-purpose *pushapp* will rsync the webapp directly from your dev system
-to the production servers.
 
 Using configuration files from a S3 bucket
 ------------------------------------------

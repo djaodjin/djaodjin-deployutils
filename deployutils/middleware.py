@@ -52,8 +52,8 @@ class SessionMiddleware(BaseMiddleware):
                     found = True
                     break
             if not found:
-                LOGGER.debug("%s not found in %s",
-                    request.path, settings.ALLOWED_NO_SESSION)
+                LOGGER.debug("%s not found in %s", request.path,
+                    [str(url) for url in settings.ALLOWED_NO_SESSION])
                 raise PermissionDenied("No DjaoDjin session key")
         try:
             # trigger ``load()``

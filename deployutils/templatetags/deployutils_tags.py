@@ -43,6 +43,11 @@ def asset(path):
 
 
 @register.filter()
+def is_authenticated(request):
+    return request.user.is_authenticated()
+
+
+@register.filter()
 def host(request):
     return request.get_host()
 
@@ -62,13 +67,15 @@ def site_prefixed(path):
     """
     *Mockup*: adds the path prefix when required.
     """
+    if path is None:
+        path = ''
+    if path.startswith('/'):
+        path = path[1:]
     if settings.DEBUG and hasattr(settings, 'APP_NAME'):
-        if not path:
-            return '/%s' % settings.APP_NAME
-        return urljoin('/%s/' % settings.APP_NAME, path)
-    if not path:
-        return ''
-    return urljoin('/', path)
+        path_prefix = '/%s/' % settings.APP_NAME
+    else:
+        path_prefix = '/'
+    return urljoin(path_prefix, path)
 
 
 @register.filter()
@@ -79,3 +86,16 @@ def url_profile(request): #pylint:disable=unused-argument
     if request.user.is_authenticated():
         return site_prefixed("users/%s/" % request.user)
     return None
+
+
+@register.filter()
+def wraplines(text):
+    text = str(text)
+    line_length = 80
+    text_length = len(text)
+    nb_lines = text_length / line_length
+    if text_length % line_length > 0:
+        nb_lines += 1
+    lines = [text[first * line_length:(first + 1) * line_length]
+        for first in range(0, nb_lines)]
+    return '\n'.join(lines)

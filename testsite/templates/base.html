@@ -1,0 +1,54 @@
+{% load deployutils_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Deployutils Testsite</title>
+  <script type="text/javascript" src="/static/vendor/jquery.js"></script>
+  {% if csrf_token %}
+  <meta name="csrf-token" content="{{csrf_token}}">
+  <script type="text/javascript">
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        crossDomain: false, // obviates need for sameOrigin test
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+            }
+        }
+    });
+  </script>
+  {% endif %}
+  {% block localheader %}{% endblock %}
+</head>
+<body>
+  {% block menubar %}
+  <div>
+  <a href="/">Home</a>
+  </div>
+  {% endblock %}
+  <div id="messages">
+    <div id="messages-content">
+      {% for message in request|messages %}
+      <div class="alert{% if message.tags %} alert-{{message.tags}}{% endif %}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div>{{message|safe}}</div>
+      </div>
+      {% endfor %}
+      {% if form %}
+      {% for message in form|messages %}
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div>{{message}}</div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  {% block content %}{% endblock %}
+  {% block footer %}{% endblock %}
+</body>
+{% block bodyscripts %}{% endblock %}
+</html>

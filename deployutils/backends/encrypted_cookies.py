@@ -54,6 +54,10 @@ class SessionStore(SessionBase):
     def __init__(self, session_key=None):
         super(SessionStore, self).__init__(session_key=session_key)
 
+    @property
+    def data(self):
+        return self._session
+
     @staticmethod
     def prepare(session_data={}, #pylint: disable=dangerous-default-value
                 passphrase=None):
@@ -94,7 +98,9 @@ class SessionStore(SessionBase):
             # create Users and session keys expected by Django
             # contrib.auth backend.
             if 'username' in session_data:
-                user = ProxyUserBackend().authenticate(session_data['username'])
+                backend = ProxyUserBackend()
+                backend.create_user(session_data)
+                user = backend.authenticate(session_data['username'])
                 session_data[SESSION_KEY] = user.id
                 session_data[BACKEND_SESSION_KEY] \
                     = 'deployutils.backends.auth.ProxyUserBackend'

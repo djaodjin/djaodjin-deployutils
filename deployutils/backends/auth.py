@@ -22,8 +22,34 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import random, sys
+
 from django.contrib.auth.backends import RemoteUserBackend
+from django.contrib.auth import get_user_model
+
 
 class ProxyUserBackend(RemoteUserBackend):
 
-    pass
+    users = {}
+
+    def create_user(self, session_data):
+        user_id = random.randint(1, sys.maxint - 1)
+        username = session_data['username']
+        self.users[user_id] = get_user_model()(id=user_id, username=username)
+
+    def authenticate(self, remote_user):
+        """
+        The username passed as ``remote_user`` is considered trusted.  This
+        method simply returns the ``User`` object with the given username.
+        """
+        if not remote_user:
+            return
+        username = self.clean_username(remote_user)
+        for user in self.users.values():
+            if user.username == username:
+                return user
+        return None
+
+    def get_user(self, user_id):
+        return self.users.get(user_id, None)
+
