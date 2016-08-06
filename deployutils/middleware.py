@@ -55,13 +55,5 @@ class SessionMiddleware(BaseMiddleware):
                 LOGGER.debug("%s not found in %s", request.path,
                     [str(url) for url in settings.ALLOWED_NO_SESSION])
                 raise PermissionDenied("No DjaoDjin session key")
-        try:
-            # trigger ``load()``
-            request.session._session #pylint: disable=protected-access
-        except PermissionDenied:
-            if not settings.BACKUP_SESSION_ENGINE:
-                raise
-            engine = import_module(settings.BACKUP_SESSION_ENGINE)
-            request.session = engine.SessionStore(session_key)
-            LOGGER.warning("fallback to %s SessionStore",
-                settings.BACKUP_SESSION_ENGINE)
+        # trigger ``load()``
+        _ = request.session._session #pylint: disable=protected-access

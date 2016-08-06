@@ -72,7 +72,7 @@ def site_prefixed(path):
     if path.startswith('/'):
         path = path[1:]
     if settings.DEBUG and hasattr(settings, 'APP_NAME'):
-        path_prefix = '/%s/' % settings.APP_NAME
+        path_prefix = '/%s' % settings.APP_NAME
     else:
         path_prefix = '/'
     return urljoin(path_prefix, path)

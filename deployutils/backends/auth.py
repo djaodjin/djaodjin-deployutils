@@ -22,10 +22,14 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import random, sys
+import logging, random, sys
 
+from django.conf import settings as django_settings
 from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ProxyUserBackend(RemoteUserBackend):
@@ -33,9 +37,22 @@ class ProxyUserBackend(RemoteUserBackend):
     users = {}
 
     def create_user(self, session_data):
-        user_id = random.randint(1, sys.maxint - 1)
+        user = None
         username = session_data['username']
-        self.users[user_id] = get_user_model()(id=user_id, username=username)
+        UserModel = get_user_model() #pylint:disable=invalid-name
+        if ('django.contrib.auth.backends.ModelBackend'
+            in django_settings.AUTHENTICATION_BACKENDS):
+            LOGGER.warning("load ``User`` from database.")
+            try:
+                #pylint:disable=protected-access
+                user = UserModel._default_manager.get_by_natural_key(username)
+            except UserModel.DoesNotExist:
+                pass
+        else:
+            user = UserModel(
+                id=random.randint(1, sys.maxint - 1), username=username)
+        if user is not None:
+            self.users[user.id] = user
 
     def authenticate(self, remote_user):
         """
