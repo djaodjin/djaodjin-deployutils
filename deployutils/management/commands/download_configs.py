@@ -42,13 +42,15 @@ class Command(BaseCommand):
         parser.add_argument('--bucket',
             action='store', dest='bucket', default='deployutils',
             help='Print but do not execute')
+        parser.add_argument('filenames', metavar='filenames', nargs='+',
+            help="config files to upload")
 
     def handle(self, *args, **options):
         app_name = options['app_name']
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
         bucket = conn.get_bucket(options['bucket'])
-        for confname in args:
+        for confname in options['filenames']:
             content = None
             key = bucket.get_key('%s/%s' % (app_name, confname))
             encrypted = key.get_contents_as_string()
