@@ -42,16 +42,18 @@ class ProxyUserBackend(RemoteUserBackend):
         UserModel = get_user_model() #pylint:disable=invalid-name
         if ('django.contrib.auth.backends.ModelBackend'
             in django_settings.AUTHENTICATION_BACKENDS):
-            LOGGER.warning("load ``User`` from database.")
+            LOGGER.warning("attempt to load ``User`` from database.")
             try:
                 #pylint:disable=protected-access
                 user = UserModel._default_manager.get_by_natural_key(username)
             except UserModel.DoesNotExist:
-                pass
+                LOGGER.warning("'%s' is not in database.", username)
         else:
             user = UserModel(
                 id=random.randint(1, sys.maxint - 1), username=username)
         if user is not None:
+            LOGGER.debug("add User(id=%d, username=%s) to cache.",
+                user.id, user.username)
             self.users[user.id] = user
 
     def authenticate(self, remote_user):
@@ -63,6 +65,8 @@ class ProxyUserBackend(RemoteUserBackend):
             return
         username = self.clean_username(remote_user)
         for user in self.users.values():
+            LOGGER.debug("match %s with User(id=%d, username=%s)",
+                username, user.id, user.username)
             if user.username == username:
                 return user
         return None
