@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin inc.
+# Copyright (c) 2016, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,6 @@ Session Store for encrypted cookies.
 import logging, json
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
@@ -107,7 +106,7 @@ class SessionStore(SessionBase):
         except (IndexError, TypeError, ValueError) as _:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
-            raise PermissionDenied("Cannot decode session")
+            return {}
         return session_data
 
     def _get_session_key(self):

@@ -88,7 +88,7 @@ def url_profile(request): #pylint:disable=unused-argument
     """
     *Mockup*: access the user profile.
     """
-    if request.user.is_authenticated():
+    if hasattr(request, 'user') and request.user.is_authenticated():
         return site_prefixed("users/%s/" % request.user)
     return None
 
