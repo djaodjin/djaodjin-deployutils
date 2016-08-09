@@ -210,12 +210,14 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
 
+    template_dirs = []
     candidate_dir = os.path.join(
         settings.MULTITIER_THEMES_DIR, app_name, 'templates')
-    if not os.path.isdir(candidate_dir):
-        template_dirs = django_settings.TEMPLATE_DIRS
-    else:
-        template_dirs = [candidate_dir]
+    if os.path.isdir(candidate_dir):
+        template_dirs += [candidate_dir]
+    template_dirs += list(django_settings.TEMPLATE_DIRS)
+    if hasattr(django_settings, 'TEMPLATES_DIRS'):
+        template_dirs += list(django_settings.TEMPLATES_DIRS)
     for template_dir in template_dirs:
         # The first TEMPLATE_DIRS usually contains the most specialized
         # templates (ie. the ones we truely want to install).
