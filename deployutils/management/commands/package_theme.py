@@ -34,10 +34,9 @@ from django.template.context import Context
 from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 
-from ... import settings
 from ...compat import DebugLexer, get_html_engine
 from . import shell_command
-from . import ResourceCommand, LOGGER
+from . import ResourceCommand, get_template_search_path
 
 LOGGER = logging.getLogger(__name__)
 
@@ -212,16 +211,9 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
 
-    template_dirs = []
-    candidate_dir = os.path.join(
-        settings.MULTITIER_THEMES_DIR, app_name, 'templates')
-    if os.path.isdir(candidate_dir):
-        template_dirs += [candidate_dir]
-    template_dirs += list(django_settings.TEMPLATE_DIRS)
-    if hasattr(django_settings, 'TEMPLATES_DIRS'):
-        template_dirs += list(django_settings.TEMPLATES_DIRS)
+    template_dirs = get_template_search_path(app_name)
     for template_dir in template_dirs:
-        # The first TEMPLATE_DIRS usually contains the most specialized
+        # The first of template_dirs usually contains the most specialized
         # templates (ie. the ones we truely want to install).
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):

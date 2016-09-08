@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2016, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,8 @@
 
 import os, re, sys
 
-from django.conf import settings as django_settings
-from deployutils.management.commands import ResourceCommand
+from deployutils.management.commands import (ResourceCommand,
+    get_template_search_path)
 
 
 class Command(ResourceCommand):
@@ -33,9 +33,9 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         self.edges = []
-        for template_dir in django_settings.TEMPLATE_DIRS:
+        for template_dir in get_template_search_path():
             self._load_templates(
-                template_dir, template_roots=django_settings.TEMPLATE_DIRS)
+                template_dir, template_roots=get_template_search_path())
         for edge in self.edges:
             print edge
         self._roots()

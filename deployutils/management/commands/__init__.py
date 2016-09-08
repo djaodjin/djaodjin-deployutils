@@ -28,6 +28,7 @@ import datetime, logging, os, subprocess, sys
 
 import fabric.api as fab
 from optparse import make_option
+from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
 
 import deployutils.settings as settings
@@ -128,6 +129,18 @@ def download(remote_location):
                 '/usr/bin/rsync',
                 '-thrRvz', '--rsync-path', '/usr/bin/rsync',
                 '%s/./' % remote_location, dest_root])
+
+
+def get_template_search_path(app_name=None):
+    template_dirs = []
+    if app_name:
+        candidate_dir = os.path.join(
+            settings.MULTITIER_THEMES_DIR, app_name, 'templates')
+        if os.path.isdir(candidate_dir):
+            template_dirs += [candidate_dir]
+    for field_name in ['TEMPLATE_DIRS', 'TEMPLATES_DIRS']:
+        template_dirs += list(getattr(django_settings, field_name, []))
+    return template_dirs
 
 
 def shell_command(cmd):
