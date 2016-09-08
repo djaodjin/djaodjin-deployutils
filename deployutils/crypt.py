@@ -26,7 +26,9 @@
 Encryption and Decryption functions
 """
 
-import logging
+from __future__ import absolute_import
+
+import json, logging
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
@@ -35,6 +37,14 @@ from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 
 LOGGER = logging.getLogger(__name__)
+
+
+class JSONEncoder(json.JSONEncoder):
+
+    def default(self, obj): #pylint: disable=method-hidden
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        return super(JSONEncoder, self).default(obj)
 
 
 def _log_debug(salt, key, iv_, encrypted_text, plain_text):

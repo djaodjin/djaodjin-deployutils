@@ -26,6 +26,8 @@
 Session Store for encrypted cookies.
 """
 
+from __future__ import absolute_import
+
 import logging, json
 
 from django.conf import settings
@@ -38,14 +40,6 @@ from deployutils import crypt
 from deployutils.backends.auth import ProxyUserBackend
 
 LOGGER = logging.getLogger(__name__)
-
-
-class JSONEncoder(json.JSONEncoder):
-
-    def default(self, obj): #pylint: disable=method-hidden
-        if hasattr(obj, 'isoformat'):
-            return obj.isoformat()
-        return super(JSONEncoder, self).default(obj)
 
 
 class SessionStore(SessionBase):
@@ -74,7 +68,8 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        return crypt.encrypt(bytes(json.dumps(session_data, cls=JSONEncoder)),
+        return crypt.encrypt(
+            bytes(json.dumps(session_data, cls=crypt.JSONEncoder)),
             passphrase=passphrase)
 
     def load(self):

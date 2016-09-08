@@ -25,6 +25,10 @@
 """
 Session Store for encrypted cookies.
 """
+
+from __future__ import absolute_import
+
+from datetime import datetime, timedelta
 from importlib import import_module
 import logging
 
@@ -32,8 +36,10 @@ from django.conf import settings as django_settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.middleware import SessionMiddleware \
     as BaseMiddleware
+from django.db import connections
 
 from . import settings
+from .thread_local import clear_cache, set_request
 
 
 LOGGER = logging.getLogger(__name__)
@@ -57,3 +63,33 @@ class SessionMiddleware(BaseMiddleware):
                 raise PermissionDenied("No DjaoDjin session key")
         # trigger ``load()``
         _ = request.session._session #pylint: disable=protected-access
+
+
+
+class RequestLoggingMiddleware(object):
+
+    @staticmethod
+    def process_request(request):
+        clear_cache()
+        set_request(request)
+
+    @staticmethod
+    def process_response(request, response):
+        nb_queries = 0
+        duration = timedelta()
+        for connection in connections.all():
+            nb_queries += len(connection.queries)
+            for query in connection.queries:
+                convert = datetime.strptime(query['time'], "%S.%f")
+                duration += timedelta(
+                    0, convert.second, convert.microsecond)
+                    # days, seconds, microseconds
+        LOGGER.info("\"%s %s %s\" %d %d %s \"%s\"",
+            request.method, request.get_full_path(),
+            request.META.get('SERVER_PROTOCOL', '-'),
+            response.status_code, nb_queries, duration,
+            request.META.get('HTTP_USER_AGENT', '-'),
+            extra={
+                'nb_queries': nb_queries,
+                'queries_duration': duration})
+        return response
