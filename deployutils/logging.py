@@ -42,9 +42,9 @@ class RequestFilter(logging.Filter):
         request = get_request()
         user = getattr(request, 'user', None)
         if user and not user.is_anonymous():
-            record.user = user.username
+            record.username = user.username
         else:
-            record.user = '-'
+            record.username = '-'
         meta = getattr(request, 'META', {})
         record.remote_addr = meta.get('REMOTE_ADDR', '-')
         return True
@@ -58,14 +58,15 @@ class JSONFormatter(logging.Formatter):
     _whitelists = {
         'record': [
             'asctime',
-            'message',
+            'event',
+            'http_user_agent',
             'levelname',
-            'request_method',
+            'message',
             'path_info',
-            'user',
             'remote_addr',
+            'request_method',
             'server_protocol',
-            'http_user_agent'
+            'username'
         ],
         'traceback': [
             'server_time',
@@ -188,10 +189,16 @@ class JSONFormatter(logging.Formatter):
         ]
     }
 
-    def __init__(self, fmt=None, datefmt=None, whitelists=None):
+    def __init__(self, fmt=None, datefmt=None, whitelists=None, replace=False):
         super(JSONFormatter, self).__init__(fmt=fmt, datefmt=datefmt)
-        if whitelists:
+        if whitelists and replace:
             self.whitelists = whitelists
+        elif whitelists:
+            self.whitelists = self._whitelists
+            for key, values in whitelists.iteritems():
+                if not key in self.whitelists:
+                    self.whitelists[key] = []
+                self.whitelists[key] += values
         else:
             self.whitelists = self._whitelists
 
@@ -206,7 +213,7 @@ class JSONFormatter(logging.Formatter):
             if attr_name in self.whitelists.get('record')
         }
         if record.exc_info:
-            if record.request:
+            if hasattr(record, 'request'):
                 request = record.request
             else:
                 request = None
@@ -214,8 +221,7 @@ class JSONFormatter(logging.Formatter):
                 record.exc_info, request=request)
             if exc_info_dict:
                 record_dict.update(exc_info_dict)
-        return json.dumps(
-            record_dict, indent=2, cls=crypt.JSONEncoder)
+        return json.dumps(record_dict, cls=crypt.JSONEncoder)
 
     def formatException(self, exc_info, request=None):
         #pylint:disable=too-many-locals,arguments-differ
@@ -226,13 +232,13 @@ class JSONFormatter(logging.Formatter):
         if request:
             user = getattr(request, 'user', None)
             if user and not user.is_anonymous():
-                user = user.username
+                username = user.username
             else:
-                user = '-'
+                username = '-'
             filtered_traceback_data.update({
                 'method': request.method,
                 'path_info': request.path_info,
-                'user': user,
+                'username': username,
                 'remote_addr': request.META.get('REMOTE_ADDR', '-'),
                 'server_protocol': request.META.get('SERVER_PROTOCOL', '-'),
                 'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
