@@ -212,11 +212,26 @@ class JSONFormatter(logging.Formatter):
             for attr_name in record.__dict__
             if attr_name in self.whitelists.get('record')
         }
-        if record.exc_info:
-            if hasattr(record, 'request'):
-                request = record.request
+
+        if hasattr(record, 'request'):
+            request = record.request
+            user = getattr(request, 'user', None)
+            if user and not user.is_anonymous():
+                username = user.username
             else:
-                request = None
+                username = '-'
+            record_dict.update({
+                'request_method': request.method,
+                'path_info': request.path_info,
+                'username': username,
+                'remote_addr': request.META.get('REMOTE_ADDR', '-'),
+                'server_protocol': request.META.get('SERVER_PROTOCOL', '-'),
+                'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
+            })
+        else:
+            request = None
+
+        if record.exc_info:
             exc_info_dict = self.formatException(
                 record.exc_info, request=request)
             if exc_info_dict:
@@ -230,21 +245,8 @@ class JSONFormatter(logging.Formatter):
         filtered_traceback_data = {}
 
         if request:
-            user = getattr(request, 'user', None)
-            if user and not user.is_anonymous():
-                username = user.username
-            else:
-                username = '-'
-            filtered_traceback_data.update({
-                'method': request.method,
-                'path_info': request.path_info,
-                'username': username,
-                'remote_addr': request.META.get('REMOTE_ADDR', '-'),
-                'server_protocol': request.META.get('SERVER_PROTOCOL', '-'),
-                'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
-            })
             request_dict = {
-                'method': request.method,
+                'request_method': request.method,
                 'path_info': request.path_info}
             params = {}
             for key, val in request.GET.iteritems():

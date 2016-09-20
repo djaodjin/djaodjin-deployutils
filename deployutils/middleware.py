@@ -84,12 +84,9 @@ class RequestLoggingMiddleware(object):
                 duration += timedelta(
                     0, convert.second, convert.microsecond)
                     # days, seconds, microseconds
-        LOGGER.info("\"%s %s %s\" %d %d %s \"%s\"",
+        LOGGER.info("%s %s %d %s for %d SQL queries",
             request.method, request.get_full_path(),
-            request.META.get('SERVER_PROTOCOL', '-'),
-            response.status_code, nb_queries, duration,
-            request.META.get('HTTP_USER_AGENT', '-'),
-            extra={
-                'nb_queries': nb_queries,
-                'queries_duration': duration})
+            response.status_code, duration, nb_queries,
+            extra={'request': request, 'nb_queries': nb_queries,
+                'queries_duration': str(duration)})
         return response
