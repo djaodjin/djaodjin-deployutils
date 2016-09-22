@@ -60,12 +60,12 @@ class JSONFormatter(logging.Formatter):
             'asctime',
             'event',
             'http_user_agent',
-            'levelname',
+            'log_level',
             'message',
-            'path_info',
+            'http_path',
             'remote_addr',
-            'request_method',
-            'server_protocol',
+            'http_method',
+            'http_version',
             'username'
         ],
         'traceback': [
@@ -189,6 +189,16 @@ class JSONFormatter(logging.Formatter):
         ]
     }
 
+    translated = {
+        'levelname': 'log_level',
+        'path_info': 'http_path',
+        'request_method': 'http_method',
+        'server_protocol': 'http_version'
+    }
+
+    def usesTime(self):
+        return True
+
     def __init__(self, fmt=None, datefmt=None, whitelists=None, replace=False):
         super(JSONFormatter, self).__init__(fmt=fmt, datefmt=datefmt)
         if whitelists and replace:
@@ -212,6 +222,9 @@ class JSONFormatter(logging.Formatter):
             for attr_name in record.__dict__
             if attr_name in self.whitelists.get('record')
         }
+        for from_key, to_key in self.translated.iteritems():
+            if hasattr(record, from_key):
+                record_dict.update({to_key: getattr(record, from_key)})
 
         if hasattr(record, 'request'):
             request = record.request
@@ -221,11 +234,11 @@ class JSONFormatter(logging.Formatter):
             else:
                 username = '-'
             record_dict.update({
-                'request_method': request.method,
-                'path_info': request.path_info,
+                'http_method': request.method,
+                'http_path': request.path_info,
                 'username': username,
                 'remote_addr': request.META.get('REMOTE_ADDR', '-'),
-                'server_protocol': request.META.get('SERVER_PROTOCOL', '-'),
+                'http_version': request.META.get('SERVER_PROTOCOL', '-'),
                 'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
             })
         else:
@@ -246,8 +259,8 @@ class JSONFormatter(logging.Formatter):
 
         if request:
             request_dict = {
-                'request_method': request.method,
-                'path_info': request.path_info}
+                'http_method': request.method,
+                'http_path': request.path_info}
             params = {}
             for key, val in request.GET.iteritems():
                 params.update({key: val})
