@@ -234,7 +234,7 @@ class JSONFormatter(logging.Formatter):
             user = None
         if user and not user.is_anonymous():
             record_dict.update({'username': user.username})
-        else:
+        elif not 'username' in record_dict:
             record_dict.update({'username': '-'})
 
         if hasattr(record, 'request'):
