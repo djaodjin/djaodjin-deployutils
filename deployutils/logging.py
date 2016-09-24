@@ -226,17 +226,22 @@ class JSONFormatter(logging.Formatter):
             if hasattr(record, from_key):
                 record_dict.update({to_key: getattr(record, from_key)})
 
+        if hasattr(record, 'user'):
+            user = record.user
+        elif hasattr(record, 'request'):
+            user = getattr(record.request, 'user', None)
+        else:
+            user = None
+        if user and not user.is_anonymous():
+            record_dict.update({'username': user.username})
+        else:
+            record_dict.update({'username': '-'})
+
         if hasattr(record, 'request'):
             request = record.request
-            user = getattr(request, 'user', None)
-            if user and not user.is_anonymous():
-                username = user.username
-            else:
-                username = '-'
             record_dict.update({
                 'http_method': request.method,
                 'http_path': request.path_info,
-                'username': username,
                 'remote_addr': request.META.get('REMOTE_ADDR', '-'),
                 'http_version': request.META.get('SERVER_PROTOCOL', '-'),
                 'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
