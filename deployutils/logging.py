@@ -293,7 +293,7 @@ class JSONFormatter(logging.Formatter):
                     params.update({key: value})
             if params:
                 request_dict.update({'META': params})
-            filtered_traceback_data.update({'request': request_dict})
+            filtered_traceback_data.update({'request_data': request_dict})
 
         for frame in traceback_data.get('frames', []):
             frame.pop('tb', None)
