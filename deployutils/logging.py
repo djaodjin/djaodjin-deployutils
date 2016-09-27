@@ -190,6 +190,7 @@ class JSONFormatter(logging.Formatter):
     }
 
     translated = {
+        'asctime': 'time_local',
         'levelname': 'log_level',
         'path_info': 'http_path',
         'request_method': 'http_method',
