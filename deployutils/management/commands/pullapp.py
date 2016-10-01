@@ -210,5 +210,3 @@ def migrate_all():
     migrate_cmd = migrate.Command()
     print "MIGRATE ALL!"
     migrate_cmd.run_from_argv([sys.executable, 'migrate'])
-
-

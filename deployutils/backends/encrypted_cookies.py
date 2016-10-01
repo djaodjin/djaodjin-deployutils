@@ -30,7 +30,6 @@ from __future__ import absolute_import
 
 import logging, json
 
-from django.conf import settings
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY

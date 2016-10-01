@@ -62,8 +62,7 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
 
 # Read environment variable first
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
-def load_config(confname, module, app_name,
-                prefix='etc', verbose=False, s3_bucket=None, passphrase=None):
+def load_config(app_name, *args, **kwargs):
     """
     Given a path to a file, parse its lines in ini-like format, and then
     set them in the current namespace.
@@ -71,75 +70,87 @@ def load_config(confname, module, app_name,
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
+    # compatible with Python 2 and 3.
+    prefix = kwargs.get('prefix', 'etc')
+    verbose = kwargs.get('verbose', False)
+    s3_bucket = kwargs.get('s3_bucket', None)
+    passphrase = kwargs.get('passphrase', None)
+    confnames = args
+
     from deployutils import crypt # prevent pip install to break.
-    content = None
-    if s3_bucket:
-        try:
-            import boto
-            bucket_name = s3_bucket
+    config = {}
+    for confname in confnames:
+        content = None
+        if s3_bucket:
             try:
-                conn = boto.connect_s3()
-                bucket = conn.get_bucket(bucket_name)
-                key = bucket.get_key('%s/%s' % (app_name, confname))
-                content = key.get_contents_as_string()
-                if verbose:
-                    sys.stderr.write(
-                        "config loaded from 's3://%s/%s'\n" % (
-                        bucket_name, key.name))
-            except (boto.exception.NoAuthHandlerFound,
-                    boto.exception.S3ResponseError) as _:
-                pass
-        except ImportError:
-            pass
-
-    # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
-    if not content:
-        confpath = locate_config(
-            confname, app_name, prefix=prefix, verbose=verbose)
-        if confpath:
-            with open(confpath, 'rb') as conffile:
-                content = conffile.read()
-
-    if content:
-        if passphrase:
-            lines = crypt.decrypt(content, passphrase).split('\n')
-        else:
-            lines = content.split('\n')
-
-        # We used to parse the file line by line. Once Django 1.5
-        # introduced ALLOWED_HOSTS (a tuple that definitely belongs
-        # to the site.conf set), we had no choice other than resort
-        # to eval(value, {}, {}).
-        # We are not resorting to import conf module yet but that
-        # might be necessary once we use dictionary configs for some
-        # of the apps...
-        # todo: consider using something like ConfigObj for this:
-        # http://www.voidspace.org.uk/python/configobj.html
-        for line in lines:
-            if not line.startswith('#'):
-                look = re.match(r'(\w+)\s*=\s*(.*)', line)
-                if look:
-                    if 'LOCALSTATEDIR' in look.group(2):
-                        value = look.group(2) \
-                            % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
-                    else:
-                        value = look.group(2)
-                    try:
-                        #pylint:disable=eval-used
-                        setattr(module,
-                                look.group(1).upper(), eval(value, {}, {}))
-                    except StandardError:
-                        raise
-        if hasattr(module, 'LOG_FILE'):
-            for pathname in [module.LOG_FILE]:
+                import boto
+                bucket_name = s3_bucket
                 try:
-                    if not os.path.exists(pathname):
-                        if not os.path.exists(os.path.dirname(pathname)):
-                            os.makedirs(os.path.dirname(pathname))
-                        with open(pathname, 'w') as _:
-                            pass    # touch file
-                    sys.stderr.write('logging app messages in %s\n' % pathname)
-                except OSError:
-                    sys.stderr.write(
-                        'warning: permission denied on %s\n' % pathname)
+                    conn = boto.connect_s3()
+                    bucket = conn.get_bucket(bucket_name)
+                    key = bucket.get_key('%s/%s' % (app_name, confname))
+                    content = key.get_contents_as_string()
+                    if verbose:
+                        sys.stderr.write(
+                            "config loaded from 's3://%s/%s'\n" % (
+                            bucket_name, key.name))
+                except (boto.exception.NoAuthHandlerFound,
+                        boto.exception.S3ResponseError) as _:
+                    pass
+            except ImportError:
+                pass
 
+        # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
+        if not content:
+            confpath = locate_config(
+                confname, app_name, prefix=prefix, verbose=verbose)
+            if confpath:
+                with open(confpath, 'rb') as conffile:
+                    content = conffile.read()
+
+        if content:
+            if passphrase:
+                content = crypt.decrypt(content, passphrase)
+            for line in content.decode("utf-8").split(u'\n'):
+                if not line.startswith('#'):
+                    look = re.match(r'(\w+)\s*=\s*(.*)', line)
+                    if look:
+                        try:
+                            # We used to parse the file line by line.
+                            # Once Django 1.5 introduced ALLOWED_HOSTS
+                            # (a tuple that definitely belongs to the site.conf
+                            # set), we had no choice other than resort
+                            # to eval(value, {}, {}).
+                            # We are not resorting to import conf module yet
+                            # but that might be necessary once we use
+                            # dictionary configs for some of the apps...
+                            # TODO: consider using something like ConfigObj
+                            # for this:
+                            # http://www.voidspace.org.uk/python/configobj.html
+                            #pylint:disable=eval-used
+                            config.update({look.group(1).upper():
+                                eval(look.group(2), {}, {})})
+                        except Exception:
+                            raise
+
+    return config
+
+
+def update_settings(module, config):
+    for key, value in config.items:
+        if 'LOCALSTATEDIR' in value:
+            value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
+            setattr(module, key.upper(), value)
+
+    if hasattr(module, 'LOG_FILE'):
+        for pathname in [module.LOG_FILE]:
+            try:
+                if not os.path.exists(pathname):
+                    if not os.path.exists(os.path.dirname(pathname)):
+                        os.makedirs(os.path.dirname(pathname))
+                    with open(pathname, 'w') as _:
+                        pass    # touch file
+                sys.stderr.write('logging app messages in %s\n' % pathname)
+            except OSError:
+                sys.stderr.write(
+                    'warning: permission denied on %s\n' % pathname)

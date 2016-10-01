@@ -174,4 +174,3 @@ def upload(remote_location):
         shell_command(['/usr/bin/rsync']
             + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
             + remotes + [remote_location])
-

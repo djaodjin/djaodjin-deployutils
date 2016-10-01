@@ -40,6 +40,8 @@ setup(
     author_email='support@djaodjin.com',
     install_requires=requirements,
     packages=['deployutils',
+              'deployutils.apps',
+              'deployutils.apps.flask',
               'deployutils.backends',
               'deployutils.mockup',
               'deployutils.management',

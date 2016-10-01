@@ -22,23 +22,27 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Mockup login URL used in testing.
-"""
+#pylint:disable=no-name-in-module,import-error
+from six.moves.urllib.parse import urljoin
 
-from django.conf.urls import url
-from django.views.generic import TemplateView
-
-from .views import SigninView, SignupView
+from . import settings
 
 
-urlpatterns = [
-    url(r'^register/',
-        SignupView.as_view(), name='registration_register'),
-    url(r'^logout/',
-        TemplateView.as_view(template_name='accounts/logout.html'),
-        name='logout'),
-    url(r'^login/recover/',
-        TemplateView.as_view(), name='password_reset'),
-    url(r'^login/', SigninView.as_view(), name='login'),
-]
+def site_prefixed(path):
+    """
+    *Mockup*: adds the path prefix when required.
+    """
+    if path is None:
+        path = ''
+    if settings.DEBUG and hasattr(settings, 'APP_NAME'):
+        path_prefix = '/%s' % settings.APP_NAME
+    else:
+        path_prefix = ''
+    if path:
+        # We have an actual path instead of generating a prefix that will
+        # be placed in front of static urls (ie. {{'pricing'|site_prefixed}}
+        # insted of {{''|site_prefixed}}{{ASSET_URL}}).
+        path_prefix += '/'
+        if path.startswith('/'):
+            path = path[1:]
+    return urljoin(path_prefix, path)

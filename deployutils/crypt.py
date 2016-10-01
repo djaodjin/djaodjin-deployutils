@@ -28,13 +28,19 @@ Encryption and Decryption functions
 
 from __future__ import absolute_import
 
-import json, logging
+import json, logging, sys
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
+
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    _TextType = str
+else:
+    _TextType = unicode
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +54,17 @@ class JSONEncoder(json.JSONEncoder):
 
 
 def _log_debug(salt, key, iv_, encrypted_text, plain_text):
+    if PY2:
+        hex_salt = u''.join(["%X" % ord(c) for c in salt])
+    else:
+        hex_salt = u''.join(["%X" % c for c in salt])
     try:
-        LOGGER.debug('salt:    %s', ''.join(["%X" % ord(c) for c in salt]))
+        LOGGER.debug('salt:    %s', hex_salt)
         LOGGER.debug('key:     %s', hexlify(key).upper())
         LOGGER.debug('iv:      %s', hexlify(iv_).upper())
         LOGGER.debug("encrypt: '%s'", encrypted_text)
-        LOGGER.debug("plain:   '%s'", plain_text)
+        if plain_text:
+            LOGGER.debug("plain:   '%s'", plain_text)
     except UnicodeDecodeError:
         LOGGER.debug('decryption failed')
 
@@ -61,14 +72,14 @@ def _log_debug(salt, key, iv_, encrypted_text, plain_text):
 def _openssl_key_iv(passphrase, salt):
     """
     Returns a (key, iv) tuple that can be used in AES symmetric encryption
-    from a passphrase and salt.
+    from a *passphrase* (a byte or unicode string) and *salt* (a byte array).
     """
     def _openssl_kdf(req):
-        if isinstance(passphrase, unicode):
+        if isinstance(passphrase, _TextType):
             passwd = passphrase.encode('ascii', 'ignore')
         else:
             passwd = passphrase
-        prev = ''
+        prev = b''
         while req > 0:
             prev = MD5.new(prev + passwd + salt).digest()
             req -= 16
@@ -76,7 +87,7 @@ def _openssl_key_iv(passphrase, salt):
     assert passphrase is not None
     assert salt is not None
     # AES key: 32 bytes, IV: 16 bytes
-    mat = ''.join([x for x in _openssl_kdf(32 + 16)])
+    mat = b''.join([x for x in _openssl_kdf(32 + 16)])
     return mat[0:32], mat[32:48]
 
 
@@ -98,10 +109,13 @@ def decrypt(source_text, passphrase):
     cipher = AES.new(key, AES.MODE_CBC, iv_)
     plain_text = cipher.decrypt(encrypted_text)
     # PKCS#5 padding
-    padding = ord(plain_text[-1])
+    if PY2:
+        padding = ord(plain_text[-1])
+    else:
+        padding = plain_text[-1]
     plain_text = plain_text[:-padding]
     _log_debug(salt, key, iv_, source_text, plain_text)
-    return plain_text
+    return plain_text.decode('utf-8')
 
 
 def encrypt(source_text, passphrase):
@@ -122,8 +136,9 @@ def encrypt(source_text, passphrase):
     key, iv_ = _openssl_key_iv(passphrase, salt)
     cipher = AES.new(key, AES.MODE_CBC, iv_)
     # PKCS#5 padding
-    padding = AES.block_size - len(source_text) % AES.block_size
-    plain_text = source_text + chr(padding) * padding
+    source_utf8 = source_text.encode('utf-8')
+    padding = AES.block_size - len(source_utf8) % AES.block_size
+    plain_text = source_utf8 + chr(padding) * padding
     encrypted_text = cipher.encrypt(plain_text)
     full_encrypted = b64encode(prefix + salt + encrypted_text)
     _log_debug(salt, key, iv_, full_encrypted, source_text)

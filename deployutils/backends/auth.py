@@ -75,4 +75,3 @@ class ProxyUserBackend(RemoteUserBackend):
 
     def get_user(self, user_id):
         return self.users.get(user_id, None)
-
