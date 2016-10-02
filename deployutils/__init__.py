@@ -137,10 +137,13 @@ def load_config(app_name, *args, **kwargs):
 
 
 def update_settings(module, config):
-    for key, value in config.items:
-        if 'LOCALSTATEDIR' in value:
+    from deployutils import crypt # prevent pip install to break.
+
+    for key, value in config.items():
+        #pylint:disable=protected-access
+        if isinstance(value, crypt._TextType) and 'LOCALSTATEDIR' in value:
             value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
-            setattr(module, key.upper(), value)
+        setattr(module, key.upper(), value)
 
     if hasattr(module, 'LOG_FILE'):
         for pathname in [module.LOG_FILE]:
