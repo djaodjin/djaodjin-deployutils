@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin Inc.
+# Copyright (c) 2016, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,18 +36,19 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
     candidates = []
     app_config_dir = ('%s_CONFIG_DIR' % app_name).upper()
     if app_config_dir in os.environ:
-        candidate = os.path.join(os.environ[app_config_dir], confname)
+        candidate = os.path.normpath(
+            os.path.join(os.environ[app_config_dir], confname))
         if os.path.isfile(candidate):
             candidates += [candidate]
-    candidate = os.path.join(
+    candidate = os.path.normpath(os.path.join(
         os.path.dirname(os.path.dirname(sys.executable)),
-        prefix, app_name, confname)
+        prefix, app_name, confname))
     if os.path.isfile(candidate):
         candidates += [candidate]
-    candidate = '/%s/%s/%s' % (prefix, app_name, confname)
+    candidate = os.path.normpath('/%s/%s/%s' % (prefix, app_name, confname))
     if os.path.isfile(candidate):
         candidates += [candidate]
-    candidate = os.path.join(os.getcwd(), confname)
+    candidate = os.path.normpath(os.path.join(os.getcwd(), confname))
     if os.path.isfile(candidate):
         candidates += [candidate]
     if len(candidates) > 0:
