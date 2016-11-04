@@ -49,11 +49,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         #pylint: disable=too-many-locals
         default_acl = 'private'
+        bucket_name = options['bucket']
         app_name = options['app_name']
         upload_local = options['upload_local']
+        if upload_local:
+            self.stdout.write('upload to local directory %s' % upload_local)
+        else:
+            self.stdout.write('upload to s3://%s/%s' % (bucket_name, app_name))
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
-        bucket = conn.get_bucket(options['bucket'])
+        bucket = conn.get_bucket(bucket_name)
         for confname in options['filenames']:
             if os.path.exists(confname):
                 conf_path = confname
