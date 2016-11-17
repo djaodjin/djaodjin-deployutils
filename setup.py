@@ -47,6 +47,8 @@ setup(
               'deployutils.management',
               'deployutils.management.commands',
               'deployutils.templatetags'],
+    package_data={'deployutils': [
+              'templates/accounts/*.html']},
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,
