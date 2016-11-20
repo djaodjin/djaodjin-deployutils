@@ -27,6 +27,7 @@ Helpers to redirect based on session.
 """
 
 from django import http
+from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateResponseMixin
 
@@ -58,7 +59,8 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
                 next_url = super(AccountRedirectView, self).get_redirect_url(
                 *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
                     ':%s' % self.slug_url_kwarg)
-                url = '%s?next=%s' % (self.new_account_url, next_url)
+                url = '%s?%s=%s' % (self.new_account_url,
+                    REDIRECT_FIELD_NAME, next_url)
                 if self.permanent:
                     return http.HttpResponsePermanentRedirect(url)
                 else:
