@@ -164,7 +164,8 @@ DEPLOYUTILS = {
     'MOCKUP_SESSIONS': {
         'donny': {
             'username': 'donny',
-            'manages': [{'slug': 'testsite', 'full_name': 'Testsite'}]},
+            'roles': {
+                'manager': [{'slug': 'testsite', 'full_name': 'Testsite'}]}},
     },
     'ALLOWED_NO_SESSION': [
         STATIC_URL,

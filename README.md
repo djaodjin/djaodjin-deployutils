@@ -57,8 +57,9 @@ Update your settings.py
     +    # Hardcoded mockups here.
     +    'MOCKUP_SESSIONS': {
     +        'donny': {
-    +            'username': 'donny',
-    +            'manages': [{'slug': 'testsite', 'full_name': 'Testsite'}]},
+    +          'username': 'donny',
+    +          'roles': {
+    +            'manager': [{'slug': 'testsite', 'full_name': 'Testsite'}]}},
     +    },
     +    'ALLOWED_NO_SESSION': [
     +        STATIC_URL, reverse_lazy('login')]
