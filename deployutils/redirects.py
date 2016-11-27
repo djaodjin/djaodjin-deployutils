@@ -46,11 +46,12 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
     create_on_none = True
     new_account_url = '/app/new/'
 
+    @staticmethod
+    def get_managed(request):
+        return request.session.get('roles', {}).get('manager', [])
+
     def get(self, request, *args, **kwargs):
-        if 'manages' in request.session:
-            managed = request.session['manages']
-        else:
-            managed = []
+        managed = self.get_managed(request)
         count = len(managed)
         if count == 0:
             if self.create_on_none:
