@@ -29,6 +29,31 @@ from django.http import Http404
 from django.utils.translation import ugettext as _
 
 
+class AccessiblesMixin(object):
+    """
+    Organizations accessibles by the ``request.user`` as defined
+    in the session passed by the DjaoDjin proxy.
+    """
+    def accessibles(self, roles=None):
+        results = []
+        for role_name, organizations in self.request.session.get('roles', {}):
+            if roles is None or role_name in roles:
+                results += [organization['slug']
+                    for organization in organizations]
+        return results
+
+    @property
+    def managed_accounts(self):
+        return self.accessibles(roles=['manager'])
+
+    def manages(self, account):
+        for organization in self.request.session.get(
+                'roles', {}).get('manager', []):
+            if account == organization['slug']:
+                return True
+        return False
+
+
 class AccountMixin(object):
     """
     Mixin to use in views that will retrieve an account object (out of
