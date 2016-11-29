@@ -31,8 +31,11 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateResponseMixin
 
+from .mixins import AccessiblesMixin
 
-class AccountRedirectView(TemplateResponseMixin, RedirectView):
+
+class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
+                          RedirectView):
     """
     Find the ``Account`` associated with the request user
     and return the URL that contains the organization slug
@@ -46,13 +49,9 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
     create_on_none = True
     new_account_url = '/app/new/'
 
-    @staticmethod
-    def get_managed(request):
-        return request.session.get('roles', {}).get('manager', [])
-
     def get(self, request, *args, **kwargs):
-        managed = self.get_managed(request)
-        count = len(managed)
+        candidates = self.get_accessibles(request)
+        count = len(candidates)
         if count == 0:
             if self.create_on_none:
                 kwargs.update({
@@ -69,12 +68,12 @@ class AccountRedirectView(TemplateResponseMixin, RedirectView):
             else:
                 raise http.Http404("No account")
         if count == 1 and not self.create_more:
-            organization = managed[0]
+            organization = candidates[0]
             kwargs.update({self.slug_url_kwarg: organization['slug']})
             return super(AccountRedirectView, self).get(
                 request, *args, **kwargs)
         redirects = []
-        for org in managed:
+        for org in candidates:
             kwargs.update({self.slug_url_kwarg: org['slug']})
             url = super(AccountRedirectView, self).get_redirect_url(
                 *args, **kwargs)

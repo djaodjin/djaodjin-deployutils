@@ -35,12 +35,28 @@ class AccessiblesMixin(object):
     in the session passed by the DjaoDjin proxy.
     """
     def accessibles(self, roles=None):
+        """
+        Returns the list of *slugs* for which the accounts are accessibles
+        by ``request.user`` filtered by ``roles`` if present.
+        """
+        return [org['slug']
+                for org in self.get_accessibles(self.request, roles=roles)]
+
+    @staticmethod
+    def get_accessibles(request, roles=None):
+        """
+        Returns the list of *dictionnaries* for which the accounts are
+        accessibles by ``request.user`` filtered by ``roles`` if present.
+        """
         results = []
-        for role_name, organizations in self.request.session.get('roles', {}):
+        for role_name, organizations in request.session.get(
+                'roles', {}).iteritems():
             if roles is None or role_name in roles:
-                results += [organization['slug']
-                    for organization in organizations]
+                results += organizations
         return results
+
+    def get_managed(self, request):
+        return self.get_accessibles(request, roles=['manager'])
 
     @property
     def managed_accounts(self):
