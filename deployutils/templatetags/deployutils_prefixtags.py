@@ -24,9 +24,6 @@
 
 from django import template
 from django.conf import settings
-from django.contrib.messages.api import get_messages
-from django.forms import BaseForm
-
 #pylint:disable=no-name-in-module,import-error
 from django.utils.six.moves.urllib.parse import urljoin
 
@@ -40,26 +37,6 @@ def asset(path):
     *Mockup*: adds the appropriate url or path prefix.
     """
     return site_prefixed(path)
-
-
-@register.filter()
-def is_authenticated(request):
-    return request.user.is_authenticated()
-
-
-@register.filter()
-def host(request):
-    return request.get_host()
-
-
-@register.filter()
-def messages(obj):
-    """
-    Messages to be displayed to the current session.
-    """
-    if isinstance(obj, BaseForm):
-        return obj.non_field_errors()
-    return get_messages(obj)
 
 
 @register.filter()
@@ -81,26 +58,3 @@ def site_prefixed(path):
         if path.startswith('/'):
             path = path[1:]
     return urljoin(path_prefix, path)
-
-
-@register.filter()
-def url_profile(request): #pylint:disable=unused-argument
-    """
-    *Mockup*: access the user profile.
-    """
-    if hasattr(request, 'user') and request.user.is_authenticated():
-        return site_prefixed("users/%s/" % request.user)
-    return None
-
-
-@register.filter()
-def wraplines(text):
-    text = str(text)
-    line_length = 80
-    text_length = len(text)
-    nb_lines = text_length / line_length
-    if text_length % line_length > 0:
-        nb_lines += 1
-    lines = [text[first * line_length:(first + 1) * line_length]
-        for first in range(0, nb_lines)]
-    return '\n'.join(lines)
