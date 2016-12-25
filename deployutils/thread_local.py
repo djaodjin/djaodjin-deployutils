@@ -33,7 +33,7 @@ _thread_locals = local() #pylint: disable=invalid-name
 
 def clear_cache():
     try:
-        del _thread_locals.site
+        del _thread_locals.request
     except AttributeError:
         pass
 
