@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-import logging, os, re, subprocess, sys, zipfile
+import logging, os, re, shutil, subprocess, sys, zipfile
 
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.templatetags.staticfiles import do_static
@@ -199,18 +199,21 @@ def package_theme(app_name, install_dir=None, build_dir=None,
         build_dir = os.path.join(os.getcwd(), 'build')
     if not install_dir:
         install_dir = os.getcwd()
-    build_dir = os.path.normpath(os.path.abspath(build_dir))
+    build_dir = os.path.join(
+        os.path.normpath(os.path.abspath(build_dir)), app_name)
     install_dir = os.path.normpath(os.path.abspath(install_dir))
-    templates_dest = os.path.join(build_dir, app_name, 'templates')
-    resources_dest = os.path.join(build_dir, app_name, 'public')
+    templates_dest = os.path.join(build_dir, 'templates')
+    resources_dest = os.path.join(build_dir, 'public')
     # override STATIC_URL to prefix APP_NAME.
     orig_static_url = django_settings.STATIC_URL
     if (app_name != django_settings.APP_NAME
         and not django_settings.STATIC_URL.startswith('/' + app_name)):
         django_settings.STATIC_URL = '/' + app_name + orig_static_url
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    os.makedirs(build_dir)
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
-
     template_dirs = get_template_search_path(app_name)
     for template_dir in template_dirs:
         # The first of template_dirs usually contains the most specialized
@@ -254,7 +257,7 @@ def package_theme(app_name, install_dir=None, build_dir=None,
         os.makedirs(install_dir)
     zip_path = os.path.join(install_dir, '%s.zip' % app_name)
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
-        fill_package(zip_file, build_dir, prefix=app_name)
+        fill_package(zip_file, os.path.dirname(build_dir), prefix=app_name)
     return zip_path
 
 def fill_package(zip_file, srcroot, prefix=''):
@@ -294,7 +297,8 @@ def install_templates(srcroot, destroot,
             continue
         source_name = os.path.join(srcroot, pathname)
         dest_name = os.path.join(destroot, pathname)
-        if os.path.isfile(source_name):
+        if os.path.isfile(source_name) and not os.path.exists(dest_name):
+            # We don't want to overwrite specific theme files by generic ones.
             with open(source_name) as source:
                 template_string = source.read()
             try:
