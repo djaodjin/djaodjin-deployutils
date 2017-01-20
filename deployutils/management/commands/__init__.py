@@ -138,6 +138,12 @@ def get_template_search_path(app_name=None):
             settings.MULTITIER_THEMES_DIR, app_name, 'templates')
         if os.path.isdir(candidate_dir):
             template_dirs += [candidate_dir]
+    # Django 1.8+
+    for loader in getattr(django_settings, 'TEMPLATES', []):
+        for dir_path in loader['DIRS']:
+            if dir_path not in template_dirs:
+                template_dirs += [dir_path]
+    # Previous Django versions
     for field_name in ['TEMPLATE_DIRS', 'TEMPLATES_DIRS']:
         template_dirs += list(getattr(django_settings, field_name, []))
     return template_dirs
