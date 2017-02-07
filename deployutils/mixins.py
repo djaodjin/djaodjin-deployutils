@@ -1,4 +1,4 @@
-# Copyright (c) 2016, DjaoDjin inc.
+# Copyright (c) 2017, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,14 @@
 
 from __future__ import unicode_literals
 
+import dateutil
+
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import ugettext as _
+
+from .helpers import datetime_or_now, start_of_day
 
 
 class AccessiblesMixin(object):
@@ -127,3 +132,68 @@ class AccountMixin(object):
             if url_kwarg_val:
                 kwargs.update({url_kwarg: url_kwarg_val})
         return kwargs
+
+
+class BeforeMixin(object):
+
+    clip = True
+    date_field = 'created_at'
+
+    def cache_fields(self, request):
+        self.ends_at = request.GET.get('ends_at', None)
+        if self.clip or self.ends_at:
+            if self.ends_at is not None:
+                self.ends_at = parse_datetime(self.ends_at.strip('"'))
+            self.ends_at = datetime_or_now(self.ends_at)
+
+    def get_queryset(self):
+        """
+        Implements before date filtering on ``date_field``
+        """
+        kwargs = {}
+        if self.ends_at:
+            kwargs.update({'%s__lt' % self.date_field: self.ends_at})
+        return super(BeforeMixin, self).get_queryset().filter(**kwargs)
+
+    def get(self, request, *args, **kwargs): #pylint: disable=unused-argument
+        self.cache_fields(request)
+        return super(BeforeMixin, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(BeforeMixin, self).get_context_data(**kwargs)
+        if self.ends_at:
+            context.update({'ends_at': self.ends_at})
+        return context
+
+
+class DateRangeMixin(BeforeMixin):
+
+    natural_period = dateutil.relativedelta.relativedelta(months=-1)
+
+    def cache_fields(self, request):
+        super(DateRangeMixin, self).cache_fields(request)
+        self.start_at = None
+        if self.ends_at:
+            self.start_at = request.GET.get('start_at', None)
+            if self.start_at:
+                self.start_at = datetime_or_now(parse_datetime(
+                    self.start_at.strip('"')))
+            else:
+                self.start_at = (
+                    start_of_day(self.ends_at + self.natural_period)
+                    + dateutil.relativedelta.relativedelta(days=1))
+
+    def get_queryset(self):
+        """
+        Implements date range filtering on ``created_at``
+        """
+        kwargs = {}
+        if self.start_at:
+            kwargs.update({'%s__gte' % self.date_field: self.start_at})
+        return super(DateRangeMixin, self).get_queryset().filter(**kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(DateRangeMixin, self).get_context_data(**kwargs)
+        if self.start_at:
+            context.update({'start_at': self.start_at})
+        return context
