@@ -24,7 +24,7 @@
 
 from __future__ import unicode_literals
 
-import dateutil
+import dateutil, dateutil.relativedelta
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
