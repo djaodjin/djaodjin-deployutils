@@ -122,7 +122,7 @@ class AccountMixin(object):
 
     def get_context_data(self, *args, **kwargs):
         context = super(AccountMixin, self).get_context_data(*args, **kwargs)
-        context.update({'account': self.account})
+        context.update({self.account_url_kwarg: self.account})
         return context
 
     def get_url_kwargs(self):
