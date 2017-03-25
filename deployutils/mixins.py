@@ -28,11 +28,12 @@ import dateutil, dateutil.relativedelta
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
+from django.utils import six
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import ugettext as _
 
 from .helpers import datetime_or_now, start_of_day
-
+from .templatetags.deployutils_prefixtags import site_prefixed
 
 class AccessiblesMixin(object):
     """
@@ -60,6 +61,17 @@ class AccessiblesMixin(object):
                 results += organizations
         return results
 
+    def get_context_data(self, *args, **kwargs):
+        context = super(AccessiblesMixin, self).get_context_data(
+            *args, **kwargs)
+        urls = {'profiles': []}
+        for account in self.get_managed(self.request):
+            urls['profiles'] += [{
+                'location': site_prefixed('/profile/%s/' % account['slug']),
+                'printable_name': account['printable_name']}]
+        self.update_context_urls(context, urls)
+        return context
+
     def get_managed(self, request):
         return self.get_accessibles(request, roles=['manager'])
 
@@ -73,6 +85,23 @@ class AccessiblesMixin(object):
             if account == organization['slug']:
                 return True
         return False
+
+    @staticmethod
+    def update_context_urls(context, urls):
+        if 'urls' in context:
+            for key, val in six.iteritems(urls):
+                if key in context['urls']:
+                    if isinstance(val, dict):
+                        context['urls'][key].update(val)
+                    else:
+                        # Because organization_create url is added in this mixin
+                        # and in ``OrganizationRedirectView``.
+                        context['urls'][key] = val
+                else:
+                    context['urls'].update({key: val})
+        else:
+            context.update({'urls': urls})
+        return context
 
 
 class AccountMixin(object):
