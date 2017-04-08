@@ -1,4 +1,4 @@
-# Copyright (c) 2016, DjaoDjin Inc.
+# Copyright (c) 2017, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.2.10-dev'
+__version__ = '0.2.10'
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
     """
