@@ -28,19 +28,13 @@ Encryption and Decryption functions
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import json, logging, sys
+import json, logging, six
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
-
-PY2 = sys.version_info[0] == 2
-if not PY2:
-    _TextType = str
-else:
-    _TextType = unicode
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +48,7 @@ class JSONEncoder(json.JSONEncoder):
 
 
 def _log_debug(salt, key, iv_, encrypted_text, plain_text):
-    if PY2:
+    if six.PY2:
         hex_salt = ''.join(["%X" % ord(c) for c in salt])
     else:
         hex_salt = ''.join(["%X" % c for c in salt])
@@ -75,7 +69,7 @@ def _openssl_key_iv(passphrase, salt):
     from a *passphrase* (a byte or unicode string) and *salt* (a byte array).
     """
     def _openssl_kdf(req):
-        if isinstance(passphrase, _TextType):
+        if hasattr(passphrase, 'encode'):
             passwd = passphrase.encode('ascii', 'ignore')
         else:
             passwd = passphrase
@@ -109,13 +103,15 @@ def decrypt(source_text, passphrase):
     cipher = AES.new(key, AES.MODE_CBC, iv_)
     plain_text = cipher.decrypt(encrypted_text)
     # PKCS#5 padding
-    if PY2:
+    if six.PY2:
         padding = ord(plain_text[-1])
     else:
         padding = plain_text[-1]
     plain_text = plain_text[:-padding]
     _log_debug(salt, key, iv_, source_text, plain_text)
-    return plain_text.decode('utf-8')
+    if hasattr(plain_text, 'decode'):
+        plain_text = plain_text.decode('utf-8')
+    return plain_text
 
 
 def encrypt(source_text, passphrase):
@@ -136,7 +132,10 @@ def encrypt(source_text, passphrase):
     key, iv_ = _openssl_key_iv(passphrase, salt)
     cipher = AES.new(key, AES.MODE_CBC, iv_)
     # PKCS#5 padding
-    source_utf8 = source_text.encode('utf-8')
+    if hasattr(source_text, 'encode'):
+        source_utf8 = source_text.encode('utf-8')
+    else:
+        source_utf8 = str(source_text)
     padding = AES.block_size - len(source_utf8) % AES.block_size
     plain_text = source_utf8 + chr(padding) * padding
     encrypted_text = cipher.encrypt(plain_text)
