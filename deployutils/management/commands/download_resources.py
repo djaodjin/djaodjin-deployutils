@@ -36,6 +36,6 @@ class Command(ResourceCommand):
         try:
             download(settings.RESOURCES_REMOTE_LOCATION)
             logging.info("downloaded resources for %s", self.webapp)
-        except subprocess.CalledProcessError, err:
+        except subprocess.CalledProcessError as err:
             logging.exception(
                 "download_resources %s caught exception: %s", self.webapp, err)

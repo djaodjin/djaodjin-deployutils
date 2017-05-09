@@ -123,6 +123,6 @@ class S3Backend(object):
                         s3_key.name = filename
                         s3_key.set_contents_from_string(file_obj.read(),
                             headers, replace=True, policy=self.default_acl)
-                    except socket.error, err:
+                    except socket.error as err:
                         sys.stderr.write("error: '%s' while uploading %s\n"
                             % (err, filename))

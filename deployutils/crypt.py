@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin inc.
+# Copyright (c) 2017, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 """
 Encryption and Decryption functions
 """
-
+from __future__ import unicode_literals
 from __future__ import absolute_import
 
 import json, logging, sys
@@ -55,9 +55,9 @@ class JSONEncoder(json.JSONEncoder):
 
 def _log_debug(salt, key, iv_, encrypted_text, plain_text):
     if PY2:
-        hex_salt = u''.join(["%X" % ord(c) for c in salt])
+        hex_salt = ''.join(["%X" % ord(c) for c in salt])
     else:
-        hex_salt = u''.join(["%X" % c for c in salt])
+        hex_salt = ''.join(["%X" % c for c in salt])
     try:
         LOGGER.debug('salt:    %s', hex_salt)
         LOGGER.debug('key:     %s', hexlify(key).upper())

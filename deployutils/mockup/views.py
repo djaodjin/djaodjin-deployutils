@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin inc.
+# Copyright (c) 2017, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,6 @@
 Mockup login view used in testing.
 """
 
-import urlparse
-
 from django.conf import settings as django_settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
     get_user_model)
@@ -40,6 +38,9 @@ from ..import settings
 from ..backends.encrypted_cookies import SessionStore
 from .forms import SignupForm
 
+#pylint:disable=no-name-in-module,import-error
+from django.utils.six.moves.urllib.parse import urlparse, urlunparse
+
 
 class RedirectFormMixin(FormMixin):
     success_url = django_settings.LOGIN_REDIRECT_URL
@@ -51,14 +52,14 @@ class RedirectFormMixin(FormMixin):
         """
         if not next_url:
             return None
-        parts = urlparse.urlparse(next_url)
+        parts = urlparse(next_url)
         if parts.netloc:
             domain, _ = split_domain_port(parts.netloc)
             allowed_hosts = (['*'] if django_settings.DEBUG
                 else django_settings.ALLOWED_HOSTS)
             if not (domain and validate_host(domain, allowed_hosts)):
                 return None
-        return urlparse.urlunparse((None, '', parts.path,
+        return urlunparse((None, '', parts.path,
             parts.params, parts.query, parts.fragment))
 
     def get_success_url(self):

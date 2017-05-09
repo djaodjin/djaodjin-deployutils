@@ -89,7 +89,7 @@ class Command(ResourceCommand):
                 resources_dest)
             LOGGER.info("pullapp %s %s (old: %s)",
                         self.webapp, up_commit, last_up_commit)
-        except subprocess.CalledProcessError, err:
+        except subprocess.CalledProcessError as err:
             LOGGER.exception(
                 "pullapp %s caught exception: %s", self.webapp, err)
 
@@ -139,7 +139,8 @@ def is_model_class(cls):
 
 def _south_migrate_all():
     if not 'south' in settings.INSTALLED_APPS:
-        print "'south' is not in INSTALLED_APPS, no migration done."
+        sys.stderr.write(
+            "warning: 'south' is not in INSTALLED_APPS, no migration done.\n")
         return 0
     #pylint: disable=import-error,too-many-nested-blocks
     from south.migration import Migrations
@@ -172,22 +173,24 @@ def _south_migrate_all():
                         app, initial=True)
                     initial_apps += [app]
             else:
-                print("warning: App %s does not seem to contain any Model" %
+                sys.stderr.write(
+                    "warning: App %s does not seem to contain any Model\n" %
                     app)
-        except OSError, err:
-            print "error: App %s, %s" % (app, err)
-        except RuntimeError, err:
-            print "warning: App %s, %s" % (app, err)
+        except OSError as err:
+            sys.stderr.write("error: App %s, %s\n" % (app, err))
+        except RuntimeError as err:
+            sys.stderr.write("error: App %s, %s\n" % (app, err))
         except ImproperlyConfigured:
-            print "warning: App %s does not seem to contain a models.py" % app
+            sys.stderr.write(
+                "warning: App %s does not seem to contain a models.py\n" % app)
 
     # Clear the cached Migrations instances now that we have more of them.
     Migrations._clear_cache() #pylint: disable=no-member,protected-access
     migrate_cmd = migrate.Command()
     for app in initial_apps:
-        print "initial migrate for %s" % app
+        sys.stderr.write("initial migrate for %s\n" % app)
         migrate_cmd.handle(app, fake=True)
-    print "MIGRATE ALL!"
+    sys.stderr.write("MIGRATE ALL!\n")
     migrate_cmd.handle(no_initial_data=True)
     return 0
 
@@ -208,5 +211,5 @@ def migrate_all():
     schema_cmd.run_from_argv(schema_args)
 
     migrate_cmd = migrate.Command()
-    print "MIGRATE ALL!"
+    sys.stderr.write("MIGRATE ALL!\n")
     migrate_cmd.run_from_argv([sys.executable, 'migrate'])

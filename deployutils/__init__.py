@@ -25,7 +25,9 @@
 """
 Function to load site and credentials config files
 """
-import os, re, sys
+from __future__ import unicode_literals
+
+import os, re, six, sys
 
 __version__ = '0.3.0-dev'
 
@@ -114,7 +116,7 @@ def load_config(app_name, *args, **kwargs):
                 content = crypt.decrypt(content, passphrase)
             if hasattr(content, 'decode'):
                 content = content.decode("utf-8")
-            for line in content.split(u'\n'):
+            for line in content.split('\n'):
                 if not line.startswith('#'):
                     look = re.match(r'(\w+)\s*=\s*(.*)', line)
                     if look:
@@ -142,7 +144,7 @@ def load_config(app_name, *args, **kwargs):
 def update_settings(module, config):
     from deployutils import crypt # prevent pip install to break.
 
-    for key, value in config.items():
+    for key, value in six.iteritems(config):
         #pylint:disable=protected-access
         if isinstance(value, crypt._TextType) and 'LOCALSTATEDIR' in value:
             value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}

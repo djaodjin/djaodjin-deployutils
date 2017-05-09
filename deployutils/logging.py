@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-import logging, json
+import logging, json, six
 
 from django.views.debug import ExceptionReporter
 from pip.utils import get_installed_distributions
@@ -206,7 +206,7 @@ class JSONFormatter(logging.Formatter):
             self.whitelists = whitelists
         elif whitelists:
             self.whitelists = self._whitelists
-            for key, values in whitelists.iteritems():
+            for key, values in six.iteritems(whitelists):
                 if not key in self.whitelists:
                     self.whitelists[key] = []
                 self.whitelists[key] += values
@@ -223,7 +223,7 @@ class JSONFormatter(logging.Formatter):
             for attr_name in record.__dict__
             if attr_name in self.whitelists.get('record')
         }
-        for from_key, to_key in self.translated.iteritems():
+        for from_key, to_key in six.iteritems(self.translated):
             if hasattr(record, from_key):
                 record_dict.update({to_key: getattr(record, from_key)})
 
@@ -268,22 +268,22 @@ class JSONFormatter(logging.Formatter):
                 'http_method': request.method,
                 'http_path': request.path_info}
             params = {}
-            for key, val in request.GET.iteritems():
+            for key, val in six.iteritems(request.GET):
                 params.update({key: val})
             if params:
                 request_dict.update({'GET': params})
             params = {}
-            for key, val in request.POST.iteritems():
+            for key, val in six.iteritems(request.POST):
                 params.update({key: val})
             if params:
                 request_dict.update({'POST': params})
             params = {}
-            for key, val in request.FILES.iteritems():
+            for key, val in six.iteritems(request.FILES):
                 params.update({key: val})
             if params:
                 request_dict.update({'FILES': params})
             params = {}
-            for key, val in request.COOKIES.iteritems():
+            for key, val in six.iteritems(request.COOKIES):
                 params.update({key: val})
             if params:
                 request_dict.update({'COOKIES': params})

@@ -55,8 +55,8 @@ class AccessiblesMixin(object):
         accessibles by ``request.user`` filtered by ``roles`` if present.
         """
         results = []
-        for role_name, organizations in request.session.get(
-                'roles', {}).iteritems():
+        for role_name, organizations in six.iteritems(request.session.get(
+                'roles', {})):
             if roles is None or role_name in roles:
                 results += organizations
         return results

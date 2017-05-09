@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os, re, sys
+import os, re, six, sys
 
 from deployutils.management.commands import (ResourceCommand,
     get_template_search_path)
@@ -37,7 +37,7 @@ class Command(ResourceCommand):
             self._load_templates(
                 template_dir, template_roots=get_template_search_path())
         for edge in self.edges:
-            print edge
+            self.stderr.write("%s\n" % edge)
         self._roots()
         self._create_tree()
 
@@ -48,7 +48,7 @@ class Command(ResourceCommand):
             sources |= set([edge[0]])
             targets |= set([edge[1]])
         roots = targets - sources
-        print "XXX roots: " + str(roots)
+        self.stderr.write("XXX roots: %s\n" % str(roots))
 
     def _create_tree(self):
         roots = {}
@@ -70,12 +70,13 @@ class Command(ResourceCommand):
                     level[edge[1]] += [edge[0]]
                 else:
                     remains += [edge]
-            print "XXX level=%s" % str(level)
-            print "XXX remains=%s" % '\n'.join([str(r) for r in remains])
+            self.stderr.write("XXX level=%s\n" % str(level))
+            self.stderr.write(
+                "XXX remains=%s\n" % '\n'.join([str(r) for r in remains]))
             deeper_level = roots
             roots = {}
             used = set([])
-            for root, leafs in level.iteritems():
+            for root, leafs in six.iteritems(level):
                 if not root in roots:
                     roots[root] = []
                 for leaf in leafs:
@@ -84,17 +85,17 @@ class Command(ResourceCommand):
                         used |= set([leaf])
                     else:
                         roots[root] += [leaf]
-            print "XXX USED: %s" % str(used)
-            for root, leafs in deeper_level.iteritems():
+            self.stderr.write("XXX USED: %s\n" % str(used))
+            for root, leafs in six.iteritems(deeper_level):
                 if not root in used:
                     if not root in roots:
                         roots[root] = leafs
                     else:
                         roots[root] += leafs
-            print "XXX ROOTS: " + str(roots)
+            self.stderr.write("XXX ROOTS: %s\n" % str(roots))
             self.edges = remains
-            print "---------------------------------------"
-        print roots.keys()
+            self.stderr.write("---------------------------------------\n")
+        self.stderr.write("%s\n" % str(list(roots.keys())))
 
 
     def _load_templates(self, template_dir, template_roots=None):

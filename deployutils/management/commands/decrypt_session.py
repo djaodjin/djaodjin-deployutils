@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2017, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,4 +33,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         store = SessionStore(args[0])
         session_data = store.load()
-        print str(session_data)
+        self.stdout.write(session_data)

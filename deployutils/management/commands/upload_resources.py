@@ -40,6 +40,6 @@ class Command(ResourceCommand):
             build_assets()
             upload(settings.RESOURCES_REMOTE_LOCATION)
             logging.info("uploaded resources for %s", self.webapp)
-        except subprocess.CalledProcessError, err:
+        except subprocess.CalledProcessError as err:
             logging.exception(
                 "upload_resources %s caught exception: %s", self.webapp, err)

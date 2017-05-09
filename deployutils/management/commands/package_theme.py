@@ -326,11 +326,11 @@ def install_templates(srcroot, destroot,
                     verb = 'compile'
                 else:
                     verb = 'install'
-                print "%s %s to %s" % (verb,
+                sys.stdout.write("%s %s to %s\n" % (verb,
                     source_name.replace(
                         django_settings.BASE_DIR, '*APP_ROOT*'),
                     dest_name.replace(destroot,
-                        '*MULTITIER_TEMPLATES_ROOT*'))
+                        '*MULTITIER_TEMPLATES_ROOT*')))
                 LOGGER.info("%s %s to %s", verb,
                     source_name.replace(
                         django_settings.BASE_DIR, '*APP_ROOT*'),

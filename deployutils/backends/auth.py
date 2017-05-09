@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-import logging, random, sys
+import logging, random, six
 
 from django.conf import settings as django_settings
 from django.contrib.auth.backends import RemoteUserBackend
@@ -52,7 +52,7 @@ class ProxyUserBackend(RemoteUserBackend):
                 LOGGER.warning("'%s' is not in database.", username)
         else:
             user = UserModel(
-                id=random.randint(1, sys.maxint - 1), username=username)
+                id=random.randint(1, (1 << 64) - 1), username=username)
         if user is not None:
             LOGGER.debug("add User(id=%d, username=%s) to cache.",
                 user.id, user.username)
@@ -66,7 +66,7 @@ class ProxyUserBackend(RemoteUserBackend):
         if not remote_user:
             return
         username = self.clean_username(remote_user)
-        for user in self.users.values():
+        for user in six.itervalues(self.users):
             LOGGER.debug("match %s with User(id=%d, username=%s)",
                 username, user.id, user.username)
             if user.username == username:
