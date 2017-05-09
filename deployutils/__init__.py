@@ -115,7 +115,7 @@ def load_config(app_name, *args, **kwargs):
             if passphrase:
                 content = crypt.decrypt(content, passphrase)
             if hasattr(content, 'decode'):
-                content = content.decode("utf-8")
+                content = content.decode('utf-8')
             for line in content.split('\n'):
                 if not line.startswith('#'):
                     look = re.match(r'(\w+)\s*=\s*(.*)', line)
