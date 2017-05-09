@@ -27,7 +27,7 @@ Function to load site and credentials config files
 """
 import os, re, sys
 
-__version__ = '0.2.10'
+__version__ = '0.3.0-dev'
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
     """
@@ -112,7 +112,9 @@ def load_config(app_name, *args, **kwargs):
         if content:
             if passphrase:
                 content = crypt.decrypt(content, passphrase)
-            for line in content.decode("utf-8").split(u'\n'):
+            if hasattr(content, 'decode'):
+                content = content.decode("utf-8")
+            for line in content.split(u'\n'):
                 if not line.startswith('#'):
                     look = re.match(r'(\w+)\s*=\s*(.*)', line)
                     if look:
