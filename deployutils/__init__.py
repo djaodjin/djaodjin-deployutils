@@ -146,7 +146,7 @@ def update_settings(module, config):
 
     for key, value in six.iteritems(config):
         #pylint:disable=protected-access
-        if isinstance(value, crypt._TextType) and 'LOCALSTATEDIR' in value:
+        if isinstance(value, six.string_types) and 'LOCALSTATEDIR' in value:
             value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
         setattr(module, key.upper(), value)
 
