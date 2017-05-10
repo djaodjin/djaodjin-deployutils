@@ -38,7 +38,9 @@ class Command(ResourceCommand):
         ResourceCommand.handle(self, *args, **options)
         try:
             build_assets()
-            upload(settings.RESOURCES_REMOTE_LOCATION)
+            upload(settings.RESOURCES_REMOTE_LOCATION,
+                prefix=settings.MULTITIER_RESOURCES_ROOT,
+                dry_run=settings.DRY_RUN)
             logging.info("uploaded resources for %s", self.webapp)
         except subprocess.CalledProcessError as err:
             logging.exception(

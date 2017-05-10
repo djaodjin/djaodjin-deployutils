@@ -33,10 +33,9 @@ LOGGER = logging.getLogger(__name__)
 
 class S3Backend(object):
 
-    def __init__(self, remote_location,
-                 default_acl='public-read', dry_run=False):
+    def __init__(self, remote_location, static_root=None, dry_run=False):
         self.dry_run = dry_run
-        self.default_acl = default_acl
+        self.static_root = static_root
         self.conn = boto.connect_s3()
         self.bucket = self.conn.get_bucket(remote_location[5:])
         # self.boto_datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
@@ -115,14 +114,20 @@ class S3Backend(object):
                 dry_run = "(dry run) "
             else:
                 dry_run = ""
-            LOGGER.info("%supload %s to %s", dry_run, pathname, filename)
+            policy = None
+            if self.static_root and pathname.startswith(self.static_root):
+                # By convention these are assets for browsers (css,js,etc)
+                policy = 'public-read'
+            LOGGER.info("%supload %s to %s%s", dry_run, pathname,
+                "s3://%s/%s" % (self.bucket.name, filename),
+                "(%s)" % policy if policy else "")
             if not self.dry_run:
                 with open(pathname, 'rb') as file_obj:
                     try:
                         s3_key = boto.s3.key.Key(self.bucket)
                         s3_key.name = filename
                         s3_key.set_contents_from_string(file_obj.read(),
-                            headers, replace=True, policy=self.default_acl)
+                            headers, replace=True, policy=policy)
                     except socket.error as err:
                         sys.stderr.write("error: '%s' while uploading %s\n"
                             % (err, filename))

@@ -28,6 +28,7 @@ import logging, subprocess
 
 import fabric.api as fab
 
+from deployutils import settings
 from deployutils.management.commands import (
     DeployCommand, build_assets, shell_command, upload)
 
@@ -66,5 +67,6 @@ def pushapp(webapp, webapp_path, sha1):
             '-pthrRvz', '--rsync-path', '/usr/bin/rsync', '--delete',
             '.', './htdocs/static/css', './htdocs/static/js',
             remote_location])
-    upload(remote_location)
+    upload(remote_location, prefix=settings.MULTITIER_RESOURCES_ROOT,
+        dry_run=settings.DRY_RUN)
     LOGGER.info("pushapp %s %s %s", webapp, fab.env.host_string, sha1)

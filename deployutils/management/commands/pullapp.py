@@ -74,7 +74,9 @@ class Command(ResourceCommand):
             repo_path = os.getcwd()
             last_up_commit, up_commit = fetch_changes(repo_path, up_commit)
             # Fetch resources which are not stored under source control
-            download(settings.RESOURCES_REMOTE_LOCATION)
+            download(settings.RESOURCES_REMOTE_LOCATION,
+                prefix=settings.MULTITIER_RESOURCES_ROOT,
+                dry_run=settings.DRY_RUN)
             migrate_all()
             # XXX moving towards deprecation?
             build_dir = os.path.join(os.getcwd(), 'build')
