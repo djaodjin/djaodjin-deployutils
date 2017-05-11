@@ -33,6 +33,7 @@ import logging, json
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
+from django.utils import six
 
 from deployutils import settings
 from deployutils import crypt
@@ -67,9 +68,13 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        return crypt.encrypt(
-            bytes(json.dumps(session_data, cls=crypt.JSONEncoder)),
-            passphrase=passphrase)
+        if six.PY2:
+            bytes_to_encrypt = bytes(json.dumps(
+                session_data, cls=crypt.JSONEncoder))
+        else:
+            bytes_to_encrypt = bytes(json.dumps(
+                session_data, cls=crypt.JSONEncoder), 'utf8')
+        return crypt.encrypt(bytes_to_encrypt, passphrase=passphrase)
 
     def load(self):
         """
