@@ -250,6 +250,13 @@ class JSONFormatter(logging.Formatter):
             })
         else:
             request = None
+            record_dict.update({
+                'http_method': "-",
+                'http_path': "-",
+                'remote_addr': "-",
+                'http_version': "-",
+                'http_user_agent': "-"
+            })
 
         if record.exc_info:
             exc_info_dict = self.formatException(
