@@ -48,6 +48,11 @@ class RequestFilter(logging.Filter):
                 record.username = '-'
             meta = getattr(request, 'META', {})
             record.remote_addr = meta.get('REMOTE_ADDR', '-')
+            record.http_user_agent = meta.get('HTTP_USER_AGENT', '-')
+        else:
+            record.username = '-'
+            record.remote_addr = '-'
+            record.http_user_agent = '-'
         return True
 
 
