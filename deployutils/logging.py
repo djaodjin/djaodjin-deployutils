@@ -40,13 +40,14 @@ class RequestFilter(logging.Filter):
         Adds user and remote_addr to the record.
         """
         request = get_request()
-        user = getattr(request, 'user', None)
-        if user and not user.is_anonymous():
-            record.username = user.username
-        else:
-            record.username = '-'
-        meta = getattr(request, 'META', {})
-        record.remote_addr = meta.get('REMOTE_ADDR', '-')
+        if request:
+            user = getattr(request, 'user', None)
+            if user and not user.is_anonymous():
+                record.username = user.username
+            else:
+                record.username = '-'
+            meta = getattr(request, 'META', {})
+            record.remote_addr = meta.get('REMOTE_ADDR', '-')
         return True
 
 
