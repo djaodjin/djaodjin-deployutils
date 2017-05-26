@@ -3,6 +3,7 @@ boto>=2.36.0
 pip>=8.1.2
 # With native library
 pycrypto>=2.6.1
+six>=1.10.0
 
 # For datetime-related helpers
 # pytz>=2015.6
