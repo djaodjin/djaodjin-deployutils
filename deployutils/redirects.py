@@ -48,9 +48,10 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     create_more = False
     create_on_none = True
     new_account_url = '/app/new/'
+    redirect_roles = None
 
     def get(self, request, *args, **kwargs):
-        candidates = self.get_accessibles(request)
+        candidates = self.get_accessibles(request, self.redirect_roles)
         count = len(candidates)
         if count == 0:
             if self.create_on_none:
