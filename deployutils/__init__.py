@@ -29,7 +29,7 @@ from __future__ import unicode_literals
 
 import os, re, six, sys
 
-__version__ = '0.3.0-dev'
+__version__ = '0.3.0'
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
     """
