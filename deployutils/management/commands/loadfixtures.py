@@ -21,6 +21,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from __future__ import unicode_literals
 
 import os, re, tempfile
 
@@ -58,7 +59,7 @@ class Command(BaseCommand):
         for fixture in fixture_labels:
             with open(fixture) as fixture_file:
                 tmp_file = tempfile.NamedTemporaryFile(
-                    suffix='.json', delete=False)
+                    mode='w+t', suffix='.json', delete=False)
                 for line in fixture_file.readlines():
                     look = re.match(r'(\s*"email":\s*)"(\S+)"(,)?', line)
                     if look:
