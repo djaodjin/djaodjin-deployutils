@@ -58,6 +58,8 @@ def _log_debug(salt, key, iv_, encrypted_text, plain_text):
         LOGGER.debug('iv:      %s', hexlify(iv_).upper())
         LOGGER.debug("encrypt: '%s'", encrypted_text)
         if plain_text:
+            if hasattr(plain_text, 'encode'):
+                plain_text.encode('utf-8')
             LOGGER.debug("plain:   '%s'", plain_text)
     except UnicodeDecodeError:
         LOGGER.debug('decryption failed')
