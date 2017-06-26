@@ -113,13 +113,15 @@ def build_assets():
     os.chdir(cwd)
 
 
-def download(remote_location, prefix="", dry_run=None):
+def download(remote_location, remotes=None, prefix="", dry_run=None):
     """
     Download resources from a stage server.
     """
     if dry_run is None:
         dry_run = settings.DRY_RUN
-    remotes, _ = _resources_files(abs_paths=remote_location.startswith('s3://'))
+    if remotes is None:
+        remotes, _ = _resources_files(
+            abs_paths=remote_location.startswith('s3://'))
     if remote_location.startswith('s3://'):
         from deployutils.backends.s3 import S3Backend
         backend = S3Backend(remote_location, dry_run=dry_run)

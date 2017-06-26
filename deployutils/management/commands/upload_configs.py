@@ -27,8 +27,8 @@ import getpass, mimetypes, os
 import boto
 from django.core.management.base import BaseCommand
 
-from deployutils import settings
-from deployutils import locate_config, crypt
+from deployutils import configs, crypt, settings
+
 
 class Command(BaseCommand):
     help = "Encrypt the configuration files and upload them to a S3 bucket."
@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 conf_path = confname
                 confname = os.path.basename(confname)
             else:
-                conf_path = locate_config(confname, app_name)
+                conf_path = configs.locate_config(confname, app_name)
             content_type = mimetypes.guess_type(conf_path)[0]
             if content_type:
                 headers = {'Content-Type': content_type}

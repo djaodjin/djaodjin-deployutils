@@ -5,19 +5,17 @@ Django settings for deployutils testsite project.
 import os, sys
 
 from django.core.urlresolvers import reverse_lazy
-from deployutils import load_config
+from deployutils.configs import load_config, update_settings
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_NAME = os.path.basename(BASE_DIR)
 
-load_config('credentials', sys.modules[__name__], APP_NAME, verbose=True,
-    s3_bucket=os.getenv("SETTINGS_BUCKET", None),
-    passphrase=os.getenv("SETTINGS_CRYPT_KEY", None))
-load_config('site.conf', sys.modules[__name__], APP_NAME, verbose=True,
-    s3_bucket=os.getenv("SETTINGS_BUCKET", None),
-    passphrase=os.getenv("SETTINGS_CRYPT_KEY", None))
+update_settings(sys.modules[__name__],
+    load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
+        s3_bucket=os.getenv("SETTINGS_BUCKET", None),
+        passphrase=os.getenv("SETTINGS_CRYPT_KEY", None)))
 
 if not hasattr(sys.modules[__name__], "SECRET_KEY"):
     from random import choice
