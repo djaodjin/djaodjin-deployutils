@@ -69,7 +69,8 @@ class AssetsParser(Parser):
             libraries=libraries, builtins=builtins, origin=origin)
         self.dest_stream = dest_stream
         self.context = Context()
-        self.context.template = Template(get_html_engine())
+        engine, _, _ = get_html_engine()
+        self.context.template = Template(engine)
 
     def parse_through(self, parse_until=None):
         if parse_until is None:
@@ -308,12 +309,12 @@ def install_templates(srcroot, destroot,
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))
                 from django.template.backends.django import DjangoTemplates
-                engine = get_html_engine()
+                _, libraries, builtins = get_html_engine()
                 with open(dest_name, 'w') as dest:
                     parser = AssetsParser(tokens,
                         URLRewriteWrapper(dest, app_name),
-                        libraries=engine.template_libraries,
-                        builtins=engine.template_builtins,
+                        libraries=libraries,
+                        builtins=builtins,
                         origin=None)
                     parser.parse_through()
                 cmdline = ['diff', '-u', source_name, dest_name]

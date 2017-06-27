@@ -51,6 +51,11 @@ class DjangoTemplate(object):
 def get_html_engine():
     try:
         from django.template import engines
-        return engines['django'].engine
+        from django.template.utils import InvalidTemplateEngineError
+        try:
+            return engines['html'], None, None
+        except InvalidTemplateEngineError:
+            engine = engines['django'].engine
+            return engine, engine.template_libraries, engine.template_builtins
     except ImportError: # django < 1.8
         return DjangoTemplate()
