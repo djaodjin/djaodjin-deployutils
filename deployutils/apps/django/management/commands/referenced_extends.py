@@ -24,8 +24,7 @@
 
 import os, re, six, sys
 
-from deployutils.management.commands import (ResourceCommand,
-    get_template_search_path)
+from . import ResourceCommand, get_template_search_path
 
 
 class Command(ResourceCommand):

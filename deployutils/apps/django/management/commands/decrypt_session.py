@@ -24,7 +24,7 @@
 
 from django.core.management.base import BaseCommand
 
-from deployutils.backends.encrypted_cookies import SessionStore
+from ...backends.encrypted_cookies import SessionStore
 
 
 class Command(BaseCommand):

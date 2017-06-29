@@ -29,10 +29,9 @@ import datetime, fnmatch, inspect, logging, os, re, shutil, subprocess, sys
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 
-from deployutils import settings
-from deployutils.management.commands import (
-    ResourceCommand, download, shell_command)
-from deployutils.management.commands.package_theme import package_theme
+from ... import settings
+from . import ResourceCommand, download, shell_command
+from .package_theme import package_theme
 
 
 LOGGER = logging.getLogger(__name__)

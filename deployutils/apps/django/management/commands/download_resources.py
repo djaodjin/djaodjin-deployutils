@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2017, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,17 +22,22 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
+from __future__ import absolute_import
 
-from django.core.management.base import BaseCommand
+import logging, subprocess
 
-from deployutils.backends.encrypted_cookies import SessionStore
+from ... import settings
+from . import ResourceCommand, download
 
-
-class Command(BaseCommand):
-    help = "Encrypt session data as the front-end would."
+class Command(ResourceCommand):
+    help = "Download resouces from stage."
 
     def handle(self, *args, **options):
-        store = SessionStore()
-        session_key = store.prepare(json.loads(args[0]))
-        self.stdout.write(session_key)
+        try:
+            download(settings.RESOURCES_REMOTE_LOCATION,
+                prefix=settings.MULTITIER_RESOURCES_ROOT,
+                dry_run=settings.DRY_RUN)
+            logging.info("downloaded resources for %s", self.webapp)
+        except subprocess.CalledProcessError as err:
+            logging.exception(
+                "download_resources %s caught exception: %s", self.webapp, err)

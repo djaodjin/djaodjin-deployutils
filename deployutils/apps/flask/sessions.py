@@ -30,7 +30,7 @@ from flask.sessions import SessionInterface as FlaskSessionInterface
 from flask.sessions import SessionMixin
 from werkzeug.datastructures import CallbackDict
 
-from deployutils import crypt
+from ... import crypt
 
 
 class PermissionDenied(Exception):

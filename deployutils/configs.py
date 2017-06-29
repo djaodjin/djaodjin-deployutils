@@ -28,6 +28,10 @@ Function to load site and credentials config files
 from __future__ import unicode_literals
 
 import os, re, six, sys
+#pylint:disable=import-error
+from six.moves.urllib.parse import urlparse
+
+from . import crypt
 
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
@@ -75,27 +79,25 @@ def load_config(app_name, *args, **kwargs):
     # compatible with Python 2 and 3.
     prefix = kwargs.get('prefix', 'etc')
     verbose = kwargs.get('verbose', False)
-    s3_bucket = kwargs.get('s3_bucket', None)
+    location = kwargs.get('location', None)
     passphrase = kwargs.get('passphrase', None)
     confnames = args
 
-    from deployutils import crypt # prevent pip install to break.
     config = {}
     for confname in confnames:
         content = None
-        if s3_bucket:
+        if location.startswith('s3://'):
             try:
                 import boto
-                bucket_name = s3_bucket
+                _, bucket_name, prefix = urlparse(location)[:3]
                 try:
                     conn = boto.connect_s3()
                     bucket = conn.get_bucket(bucket_name)
-                    key = bucket.get_key('%s/%s' % (app_name, confname))
+                    key = bucket.get_key('%s/%s/%s' % (
+                        prefix, app_name, confname))
                     content = key.get_contents_as_string()
                     if verbose:
-                        sys.stderr.write(
-                            "config loaded from 's3://%s/%s'\n" % (
-                            bucket_name, key.name))
+                        sys.stderr.write("config loaded from '%s'\n" % location)
                 except (boto.exception.NoAuthHandlerFound,
                         boto.exception.S3ResponseError) as _:
                     pass
@@ -141,7 +143,6 @@ def load_config(app_name, *args, **kwargs):
 
 
 def update_settings(module, config):
-    from deployutils import crypt # prevent pip install to break.
 
     for key, value in six.iteritems(config):
         #pylint:disable=protected-access

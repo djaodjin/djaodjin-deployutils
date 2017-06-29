@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2017, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,32 +22,18 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import hashlib, os
+"""
+Forms for mockups of sign-in, sign-up, etc.
+"""
 
-from django.conf import settings as django_settings
-
-from deployutils.management.commands import ResourceCommand
-
-class Command(ResourceCommand):
-    help = "Rename all .mp4 resources to _sha1_.mp4"
-
-    def handle(self, *args, **options):
-        ResourceCommand.handle(self, *args, **options)
-        cryptic_media(django_settings.MEDIA_ROOT)
+from django import forms
 
 
-def cryptic_media(rootdir):
-    for filename in os.listdir(rootdir):
-        pathname = os.path.join(rootdir, filename)
-        if os.path.isdir(pathname):
-            cryptic_media(pathname)
-        else:
-            parts = os.path.splitext(os.path.basename(pathname))
-            if len(parts) > 0:
-                ext = parts[-1]
-                if ext in ['.mp4']:
-                    dirname = os.path.dirname(pathname)
-                    basename = ' '.join(parts[:-1])
-                    cryptic_name = os.path.join(dirname,
-                        '%s%s' % (hashlib.sha1(basename).hexdigest(), ext))
-                    os.rename(pathname, cryptic_name)
+class SignupForm(forms.Form):
+    """
+    Register a user account.
+    """
+    full_name = forms.RegexField(regex=r'^[\w\s]+$', max_length=60)
+    email = forms.EmailField()
+    username = forms.SlugField()
+    password = forms.CharField(widget=forms.PasswordInput())

@@ -6,7 +6,7 @@ pycrypto>=2.6.1
 six>=1.10.0
 
 # For datetime-related helpers
-# pytz>=2015.6
+# pytz>=2017.2
 
 # When used with Django
 # django-assets>=0.10

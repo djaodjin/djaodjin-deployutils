@@ -26,18 +26,21 @@ from __future__ import absolute_import
 
 import logging, subprocess
 
-import deployutils.settings as settings
-from deployutils.management.commands import ResourceCommand, download
+from ... import settings
+from . import ResourceCommand, build_assets, upload
+
 
 class Command(ResourceCommand):
-    help = "Download resouces from stage."
+    help = "Upload resouces to stage."
 
     def handle(self, *args, **options):
+        ResourceCommand.handle(self, *args, **options)
         try:
-            download(settings.RESOURCES_REMOTE_LOCATION,
+            build_assets()
+            upload(settings.RESOURCES_REMOTE_LOCATION,
                 prefix=settings.MULTITIER_RESOURCES_ROOT,
                 dry_run=settings.DRY_RUN)
-            logging.info("downloaded resources for %s", self.webapp)
+            logging.info("uploaded resources for %s", self.webapp)
         except subprocess.CalledProcessError as err:
             logging.exception(
-                "download_resources %s caught exception: %s", self.webapp, err)
+                "upload_resources %s caught exception: %s", self.webapp, err)

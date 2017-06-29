@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2017, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,9 +25,9 @@
 import os, subprocess, sys
 
 from django.conf import settings as django_settings
-import deployutils.settings as settings
-from deployutils.management.commands import (
-    ResourceCommand, list_local, shell_command)
+
+from ... import settings
+from . import ResourceCommand, list_local, shell_command
 
 
 class Command(ResourceCommand):

@@ -31,8 +31,8 @@ from optparse import make_option
 from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
 
-import deployutils.settings as settings
-from deployutils.backends import list_local
+from ... import settings
+from .....filesys import list_local
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ def download(remote_location, remotes=None, prefix="", dry_run=None):
         remotes, _ = _resources_files(
             abs_paths=remote_location.startswith('s3://'))
     if remote_location.startswith('s3://'):
-        from deployutils.backends.s3 import S3Backend
+        from deployutils.s3 import S3Backend
         backend = S3Backend(remote_location, dry_run=dry_run)
         backend.download(list_local(remotes, prefix), prefix)
     else:
@@ -183,7 +183,7 @@ def upload(remote_location, remotes=None, ignores=None,
         remotes, ignores = _resources_files(
             abs_paths=remote_location.startswith('s3://'))
     if remote_location.startswith('s3://'):
-        from deployutils.backends.s3 import S3Backend
+        from deployutils.s3 import S3Backend
         backend = S3Backend(remote_location,
             static_root=static_root, dry_run=dry_run)
         backend.upload(list_local(remotes, prefix), prefix)

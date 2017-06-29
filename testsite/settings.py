@@ -14,7 +14,7 @@ APP_NAME = os.path.basename(BASE_DIR)
 
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
-        s3_bucket=os.getenv("SETTINGS_BUCKET", None),
+        location=os.getenv("SETTINGS_LOCATION", None),
         passphrase=os.getenv("SETTINGS_CRYPT_KEY", None)))
 
 if not hasattr(sys.modules[__name__], "SECRET_KEY"):
@@ -44,7 +44,7 @@ INSTALLED_APPS = ENV_INSTALLED_APPS + (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'deployutils',
+    'deployutils.apps.django',
     'testsite'
 )
 
@@ -76,7 +76,7 @@ LOGGING = {
 # HTTP Pipeline
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
-    'deployutils.middleware.SessionMiddleware',
+    'deployutils.apps.django.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME':
 # The default session serializer switched to JSONSerializer in Django 1.6
 # but just to be sure:
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
+SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
 
 # The Django Middleware expects to find the authentication backend
 # before returning an authenticated user model.
@@ -154,7 +154,7 @@ SESSION_ENGINE = 'deployutils.backends.encrypted_cookies'
 #        if backend_path in settings.AUTHENTICATION_BACKENDS:
 #            backend = load_backend(backend_path)
 AUTHENTICATION_BACKENDS = (
-    'deployutils.backends.auth.ProxyUserBackend',
+    'deployutils.apps.django.backends.auth.ProxyUserBackend',
 )
 
 DEPLOYUTILS = {

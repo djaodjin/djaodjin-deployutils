@@ -35,9 +35,9 @@ from django.contrib.sessions.backends.signed_cookies import SessionStore \
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
 from django.utils import six
 
-from deployutils import settings
-from deployutils import crypt
-from deployutils.backends.auth import ProxyUserBackend
+from .... import crypt
+from .. import settings
+from .auth import ProxyUserBackend
 
 LOGGER = logging.getLogger(__name__)
 

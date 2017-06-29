@@ -22,26 +22,38 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
+import getpass
 
-import logging, subprocess
+import boto
+from django.core.management.base import BaseCommand
 
-import deployutils.settings as settings
-from deployutils.management.commands import (
-    ResourceCommand, build_assets, upload)
+from ..... import crypt
+from ... import settings
 
 
-class Command(ResourceCommand):
-    help = "Upload resouces to stage."
+class Command(BaseCommand):
+    help = "Download the config files from a S3 bucket and decrypt them."
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--app_name',
+            action='store', dest='app_name', default=settings.APP_NAME,
+            help='Name of the config file(s) project')
+        parser.add_argument('--bucket',
+            action='store', dest='bucket', default='deployutils',
+            help='Print but do not execute')
+        parser.add_argument('filenames', metavar='filenames', nargs='+',
+            help="config files to upload")
 
     def handle(self, *args, **options):
-        ResourceCommand.handle(self, *args, **options)
-        try:
-            build_assets()
-            upload(settings.RESOURCES_REMOTE_LOCATION,
-                prefix=settings.MULTITIER_RESOURCES_ROOT,
-                dry_run=settings.DRY_RUN)
-            logging.info("uploaded resources for %s", self.webapp)
-        except subprocess.CalledProcessError as err:
-            logging.exception(
-                "upload_resources %s caught exception: %s", self.webapp, err)
+        app_name = options['app_name']
+        passphrase = getpass.getpass('Passphrase:')
+        conn = boto.connect_s3()
+        bucket = conn.get_bucket(options['bucket'])
+        for confname in options['filenames']:
+            content = None
+            key = bucket.get_key('%s/%s' % (app_name, confname))
+            encrypted = key.get_contents_as_string()
+            content = crypt.decrypt(encrypted, passphrase)
+            with open(confname, 'w') as conffile:
+                conffile.write(content)

@@ -22,51 +22,21 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
-
-import logging, subprocess
-
 import fabric.api as fab
 
-from deployutils import settings
-from deployutils.management.commands import (
-    DeployCommand, build_assets, shell_command, upload)
-
-
-LOGGER = logging.getLogger(__name__)
+from . import DeployCommand, shell_command
 
 
 class Command(DeployCommand):
-    help = "[Hotfix] Push local code and resources to deployed servers."
+    help = "Trigger a pull of the latest code and assets on deployed servers."
 
     def handle(self, *args, **options):
         DeployCommand.handle(self, *args, **options)
-        build_assets()
-        status = subprocess.check_output(['git', 'status', '--porcelain'])
-        if len(status) == 0:
-            sha1 = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-        else:
-            sha1 = "??"
-        with open('.timestamp', 'w') as timestamp_file:
-            timestamp_file.write(sha1)
         for host in fab.env.hosts:
             fab.env.host_string = host
-            pushapp(self.webapp, self.deployed_path, sha1)
-
+            syncapp(self.deployed_path)
 
 @fab.task
-def pushapp(webapp, webapp_path, sha1):
-    remote_location = '%s:%s' % (fab.env.host_string, webapp_path)
-    # Directories under htdocs/ are not under source control
-    # except for static/css and static/js.
-    shell_command([
-            '/usr/bin/rsync',
-            '--copy-links', '--exclude', '.git', '--exclude', 'htdocs/*',
-            '--exclude', 'img/', #'--exclude', '*.pyc',
-            '--exclude', '.DS_Store', '--exclude', '*~',
-            '-pthrRvz', '--rsync-path', '/usr/bin/rsync', '--delete',
-            '.', './htdocs/static/css', './htdocs/static/js',
-            remote_location])
-    upload(remote_location, prefix=settings.MULTITIER_RESOURCES_ROOT,
-        dry_run=settings.DRY_RUN)
-    LOGGER.info("pushapp %s %s %s", webapp, fab.env.host_string, sha1)
+def syncapp(webapp_path):
+    shell_command(['ssh', fab.env.host_string,
+        '/usr/local/bin/dpull', webapp_path])

@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Djaodjin Inc.
+# Copyright (c) 2017, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,20 +22,17 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fabric.api as fab
+import json
 
-from deployutils.management.commands import (DeployCommand, shell_command)
+from django.core.management.base import BaseCommand
 
-class Command(DeployCommand):
-    help = "Trigger a pull of the latest code and assets on deployed servers."
+from ...backends.encrypted_cookies import SessionStore
+
+
+class Command(BaseCommand):
+    help = "Encrypt session data as the front-end would."
 
     def handle(self, *args, **options):
-        DeployCommand.handle(self, *args, **options)
-        for host in fab.env.hosts:
-            fab.env.host_string = host
-            syncapp(self.deployed_path)
-
-@fab.task
-def syncapp(webapp_path):
-    shell_command(['ssh', fab.env.host_string,
-        '/usr/local/bin/dpull', webapp_path])
+        store = SessionStore()
+        session_key = store.prepare(json.loads(args[0]))
+        self.stdout.write(session_key)

@@ -22,38 +22,65 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getpass
+import getpass, mimetypes, os
 
 import boto
 from django.core.management.base import BaseCommand
 
-from deployutils import crypt
-from deployutils import settings
+from ..... import configs, crypt
+from ... import settings
 
 
 class Command(BaseCommand):
-    help = "Download the config files from a S3 bucket and decrypt them."
+    help = "Encrypt the configuration files and upload them to a S3 bucket."
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--app_name',
             action='store', dest='app_name', default=settings.APP_NAME,
             help='Name of the config file(s) project')
-        parser.add_argument('--bucket',
-            action='store', dest='bucket', default='deployutils',
-            help='Print but do not execute')
+        parser.add_argument('--outdir',
+            action='store', dest='upload_local', default=None,
+            help='Copy encrypted file back to disk instead of to a S3 bucket')
+        parser.add_argument('--bucket', action='store', dest='bucket',
+            default='deployutils', help='Print but do not execute')
         parser.add_argument('filenames', metavar='filenames', nargs='+',
             help="config files to upload")
 
     def handle(self, *args, **options):
+        #pylint: disable=too-many-locals
+        default_acl = 'private'
+        bucket_name = options['bucket']
         app_name = options['app_name']
+        upload_local = options['upload_local']
+        if upload_local:
+            self.stdout.write('upload to local directory %s' % upload_local)
+        else:
+            self.stdout.write('upload to s3://%s/%s' % (bucket_name, app_name))
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
-        bucket = conn.get_bucket(options['bucket'])
+        bucket = conn.get_bucket(bucket_name)
         for confname in options['filenames']:
+            if os.path.exists(confname):
+                conf_path = confname
+                confname = os.path.basename(confname)
+            else:
+                conf_path = configs.locate_config(confname, app_name)
+            content_type = mimetypes.guess_type(conf_path)[0]
+            if content_type:
+                headers = {'Content-Type': content_type}
+            else:
+                headers = {}
             content = None
-            key = bucket.get_key('%s/%s' % (app_name, confname))
-            encrypted = key.get_contents_as_string()
-            content = crypt.decrypt(encrypted, passphrase)
-            with open(confname, 'w') as conffile:
-                conffile.write(content)
+            with open(conf_path) as conf_file:
+                content = conf_file.read()
+            encrypted = crypt.encrypt(content, passphrase)
+            if upload_local:
+                with open(
+                    os.path.join(upload_local, confname), "wb") as upload_file:
+                    upload_file.write(encrypted)
+            else:
+                key = boto.s3.key.Key(bucket)
+                key.name = '%s/%s' % (app_name, confname)
+                key.set_contents_from_string(encrypted, headers,
+                    replace=True, policy=default_acl)

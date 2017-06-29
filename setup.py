@@ -1,4 +1,4 @@
-# Copyright (c) 2015, DjaoDjin Inc.
+# Copyright (c) 2017, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,13 +42,13 @@ setup(
     packages=['deployutils',
               'deployutils.apps',
               'deployutils.apps.flask',
-              'deployutils.backends',
-              'deployutils.mockup',
-              'deployutils.management',
-              'deployutils.management.commands',
-              'deployutils.templatetags'],
+              'deployutils.apps.django.backends',
+              'deployutils.apps.django.mockup',
+              'deployutils.apps.django.management',
+              'deployutils.apps.django.management.commands',
+              'deployutils.apps.django.templatetags'],
     package_data={'deployutils': [
-              'templates/accounts/*.html']},
+              'apps/django/templates/accounts/*.html']},
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,

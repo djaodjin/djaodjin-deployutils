@@ -29,8 +29,8 @@ import logging, json, six
 from django.views.debug import ExceptionReporter
 from pip.utils import get_installed_distributions
 
-from deployutils import crypt
-from deployutils.thread_local import get_request
+from ... import crypt
+from .thread_local import get_request
 
 
 class RequestFilter(logging.Filter):
