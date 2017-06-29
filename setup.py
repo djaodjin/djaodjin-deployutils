@@ -42,6 +42,7 @@ setup(
     packages=['deployutils',
               'deployutils.apps',
               'deployutils.apps.flask',
+              'deployutils.apps.django',
               'deployutils.apps.django.backends',
               'deployutils.apps.django.mockup',
               'deployutils.apps.django.management',
