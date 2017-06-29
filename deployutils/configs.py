@@ -86,7 +86,7 @@ def load_config(app_name, *args, **kwargs):
     config = {}
     for confname in confnames:
         content = None
-        if location.startswith('s3://'):
+        if location and location.startswith('s3://'):
             try:
                 import boto
                 _, bucket_name, prefix = urlparse(location)[:3]
