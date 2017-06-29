@@ -44,7 +44,8 @@ class ProxyUserBackend(RemoteUserBackend):
         UserModel = get_user_model() #pylint:disable=invalid-name
         if ('django.contrib.auth.backends.ModelBackend'
             in django_settings.AUTHENTICATION_BACKENDS):
-            LOGGER.warning("attempt to load ``User`` from database.")
+            LOGGER.warning(
+                "attempt to load User(username='%s') from database.", username)
             try:
                 #pylint:disable=protected-access
                 user = UserModel._default_manager.get_by_natural_key(username)

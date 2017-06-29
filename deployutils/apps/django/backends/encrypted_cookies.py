@@ -100,8 +100,8 @@ class SessionStore(SessionBase):
                 backend.create_user(session_data)
                 user = backend.authenticate(session_data['username'])
                 session_data[SESSION_KEY] = user.id
-                session_data[BACKEND_SESSION_KEY] \
-                    = 'deployutils.backends.auth.ProxyUserBackend'
+                session_data[BACKEND_SESSION_KEY] = "%s.%s" % (
+                     backend.__class__.__module__, backend.__class__.__name__)
         except (IndexError, TypeError, ValueError) as _:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
