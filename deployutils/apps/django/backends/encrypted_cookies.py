@@ -33,7 +33,6 @@ import logging, json
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
-from django.utils import six
 
 from .... import crypt
 from .. import settings
@@ -68,13 +67,8 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        if six.PY2:
-            bytes_to_encrypt = bytes(json.dumps(
-                session_data, cls=crypt.JSONEncoder))
-        else:
-            bytes_to_encrypt = bytes(json.dumps(
-                session_data, cls=crypt.JSONEncoder), 'utf8')
-        return crypt.encrypt(bytes_to_encrypt, passphrase=passphrase)
+        return crypt.encrypt(json.dumps(session_data, cls=crypt.JSONEncoder),
+            passphrase=passphrase)
 
     def load(self):
         """
@@ -90,8 +84,11 @@ class SessionStore(SessionBase):
         """
         session_data = {}
         try:
-            session_data = json.loads(crypt.decrypt(self.session_key,
-                passphrase=settings.DJAODJIN_SECRET_KEY))
+            session_text = crypt.decrypt(self.session_key,
+                passphrase=settings.DJAODJIN_SECRET_KEY)
+            LOGGER.debug("session text: %s<%s>",
+                session_text, session_text.__class__)
+            session_data = json.loads(session_text)
             # We have been able to decode the session data, let's
             # create Users and session keys expected by Django
             # contrib.auth backend.

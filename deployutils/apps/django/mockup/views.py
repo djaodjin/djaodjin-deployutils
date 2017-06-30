@@ -25,6 +25,7 @@
 """
 Mockup login view used in testing.
 """
+from __future__ import unicode_literals
 
 from django.conf import settings as django_settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
@@ -59,7 +60,7 @@ class RedirectFormMixin(FormMixin):
                 else django_settings.ALLOWED_HOSTS)
             if not (domain and validate_host(domain, allowed_hosts)):
                 return None
-        return urlunparse((None, '', parts.path,
+        return urlunparse(("", "", parts.path,
             parts.params, parts.query, parts.fragment))
 
     def get_success_url(self):
