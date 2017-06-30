@@ -53,6 +53,7 @@ def _log_debug(salt, key, iv_, encrypted_text, plain_text):
     else:
         hex_salt = ''.join(["%X" % c for c in salt])
     try:
+        LOGGER.debug('==========================================')
         LOGGER.debug('salt:    %s', hex_salt)
         LOGGER.debug('key:     %s', hexlify(key).upper())
         LOGGER.debug('iv:      %s', hexlify(iv_).upper())
@@ -63,6 +64,7 @@ def _log_debug(salt, key, iv_, encrypted_text, plain_text):
             LOGGER.debug("plain:   '%s'", plain_text)
     except UnicodeDecodeError:
         LOGGER.debug('decryption failed')
+    LOGGER.debug('*****************************************')
 
 
 def _openssl_key_iv(passphrase, salt):
@@ -110,9 +112,9 @@ def decrypt(source_text, passphrase):
     else:
         padding = plain_text[-1]
     plain_text = plain_text[:-padding]
-    _log_debug(salt, key, iv_, source_text, plain_text)
     if hasattr(plain_text, 'decode'):
         plain_text = plain_text.decode('utf-8')
+    _log_debug(salt, key, iv_, source_text, plain_text)
     return plain_text
 
 
@@ -139,7 +141,11 @@ def encrypt(source_text, passphrase):
     else:
         source_utf8 = str(source_text)
     padding = AES.block_size - len(source_utf8) % AES.block_size
-    plain_text = source_utf8 + chr(padding) * padding
+    if six.PY2:
+        padding = chr(padding) * padding
+    else:
+        padding = bytes([padding for _ in range(padding)])
+    plain_text = source_utf8 + padding
     encrypted_text = cipher.encrypt(plain_text)
     full_encrypted = b64encode(prefix + salt + encrypted_text)
     _log_debug(salt, key, iv_, full_encrypted, source_text)
