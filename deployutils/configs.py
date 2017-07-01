@@ -97,7 +97,7 @@ def load_config(app_name, *args, **kwargs):
                         prefix, app_name, confname))
                     content = key.get_contents_as_string()
                     if verbose:
-                        sys.stderr.write("config loaded from '%s'\n" % location)
+                        sys.stderr.write("config loaded from '%s'\n" % key)
                 except (boto.exception.NoAuthHandlerFound,
                         boto.exception.S3ResponseError) as _:
                     pass

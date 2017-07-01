@@ -30,6 +30,9 @@ from django.core.management.base import BaseCommand
 from ..... import configs, crypt
 from ... import settings
 
+#pylint:disable=import-error
+from six.moves.urllib.parse import urlparse
+
 
 class Command(BaseCommand):
     help = "Encrypt the configuration files and upload them to a S3 bucket."
@@ -39,24 +42,28 @@ class Command(BaseCommand):
         parser.add_argument('--app_name',
             action='store', dest='app_name', default=settings.APP_NAME,
             help='Name of the config file(s) project')
-        parser.add_argument('--outdir',
-            action='store', dest='upload_local', default=None,
-            help='Copy encrypted file back to disk instead of to a S3 bucket')
-        parser.add_argument('--bucket', action='store', dest='bucket',
-            default='deployutils', help='Print but do not execute')
+        parser.add_argument('--location', action='store', dest='location',
+            default=None, help='Print but do not execute')
         parser.add_argument('filenames', metavar='filenames', nargs='+',
             help="config files to upload")
 
     def handle(self, *args, **options):
         #pylint: disable=too-many-locals
         default_acl = 'private'
-        bucket_name = options['bucket']
         app_name = options['app_name']
-        upload_local = options['upload_local']
+        location = options['location']
+        if not location:
+            location = os.getenv("SETTINGS_LOCATION", None)
+        if not location:
+            self.stderr.write("a location argument must be passed on the "\
+            "command line or SETTINGS_LOCATION defined in the environment.\n")
+            return -1
+        upload_local = not location.startswith('s3://')
+        _, bucket_name, prefix = urlparse(location)[:3]
         if upload_local:
-            self.stdout.write('upload to local directory %s' % upload_local)
+            self.stdout.write('upload configs to local directory %s' % location)
         else:
-            self.stdout.write('upload to s3://%s/%s' % (bucket_name, app_name))
+            self.stdout.write("upload configs to %s/%s" % (location, app_name))
         passphrase = getpass.getpass('Passphrase:')
         conn = boto.connect_s3()
         bucket = conn.get_bucket(bucket_name)
@@ -77,10 +84,10 @@ class Command(BaseCommand):
             encrypted = crypt.encrypt(content, passphrase)
             if upload_local:
                 with open(
-                    os.path.join(upload_local, confname), "wb") as upload_file:
+                    os.path.join(location, confname), "wb") as upload_file:
                     upload_file.write(encrypted)
             else:
                 key = boto.s3.key.Key(bucket)
-                key.name = '%s/%s' % (app_name, confname)
+                key.name = '%s/%s/%s' % (prefix, app_name, confname)
                 key.set_contents_from_string(encrypted, headers,
                     replace=True, policy=default_acl)
