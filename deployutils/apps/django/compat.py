@@ -59,3 +59,10 @@ def get_html_engine():
             return engine, engine.template_libraries, engine.template_builtins
     except ImportError: # django < 1.8
         return DjangoTemplate()
+
+
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError: # django < 1.11
+    class MiddlewareMixin(object):
+        pass

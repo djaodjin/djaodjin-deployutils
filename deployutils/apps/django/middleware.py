@@ -33,12 +33,13 @@ from importlib import import_module
 import logging
 
 from django.conf import settings as django_settings
-from django.core.exceptions import PermissionDenied
 from django.contrib.sessions.middleware import SessionMiddleware \
     as BaseMiddleware
+from django.core.exceptions import PermissionDenied
 from django.db import connections
 
 from . import settings
+from .compat import MiddlewareMixin
 from .thread_local import clear_cache, set_request
 
 
@@ -66,7 +67,7 @@ class SessionMiddleware(BaseMiddleware):
 
 
 
-class RequestLoggingMiddleware(object):
+class RequestLoggingMiddleware(MiddlewareMixin):
 
     @staticmethod
     def process_request(request):

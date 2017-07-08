@@ -93,11 +93,12 @@ def load_config(app_name, *args, **kwargs):
                 try:
                     conn = boto.connect_s3()
                     bucket = conn.get_bucket(bucket_name)
-                    key = bucket.get_key('%s/%s/%s' % (
-                        prefix, app_name, confname))
+                    key_name = '%s/%s/%s' % (prefix, app_name, confname)
+                    key = bucket.get_key(key_name)
                     content = key.get_contents_as_string()
                     if verbose:
-                        sys.stderr.write("config loaded from '%s'\n" % key)
+                        sys.stderr.write("config loaded from 's3://%s/%s'\n" % (
+                            bucket_name, key_name))
                 except (boto.exception.NoAuthHandlerFound,
                         boto.exception.S3ResponseError) as _:
                     pass
