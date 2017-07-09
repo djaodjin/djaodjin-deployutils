@@ -31,6 +31,9 @@ from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
 
 
+# Beware that if you are using `deployutils.apps.django.logging.RequestFilter`
+# to add `%(username)s` to log entries, there will be a recursive loop through
+# django.contrib.auth calls coming here.
 LOGGER = logging.getLogger(__name__)
 
 
@@ -44,13 +47,13 @@ class ProxyUserBackend(RemoteUserBackend):
         UserModel = get_user_model() #pylint:disable=invalid-name
         if ('django.contrib.auth.backends.ModelBackend'
             in django_settings.AUTHENTICATION_BACKENDS):
-            LOGGER.warning(
+            LOGGER.debug(
                 "attempt to load User(username='%s') from database.", username)
             try:
                 #pylint:disable=protected-access
                 user = UserModel._default_manager.get_by_natural_key(username)
             except UserModel.DoesNotExist:
-                LOGGER.warning("'%s' is not in database.", username)
+                LOGGER.debug("'%s' is not in database.", username)
         else:
             user = UserModel(
                 id=random.randint(1, (1 << 64) - 1), username=username)
