@@ -56,7 +56,7 @@ class ProxyUserBackend(RemoteUserBackend):
                 LOGGER.debug("'%s' is not in database.", username)
         else:
             user = UserModel(
-                id=random.randint(1, (1 << 64) - 1), username=username)
+                id=random.randint(1, (1 << 32) - 1), username=username)
         if user is not None:
             LOGGER.debug("add User(id=%d, username=%s) to cache.",
                 user.id, user.username)
