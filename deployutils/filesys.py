@@ -65,7 +65,7 @@ def fingerprint(dirnames, prefix=None, previous=[]):
     return results
 
 
-def list_local(dirnames, prefix=None):
+def list_local(paths, prefix=None):
     """
     Returns a list of all files (recursively) present in a directory
     with their timestamp.
@@ -78,18 +78,29 @@ def list_local(dirnames, prefix=None):
     ]
     """
     results = []
-    for dirname in dirnames:
-        for filename in os.listdir(dirname):
-            fullpath = os.path.join(dirname, filename)
-            if os.path.isdir(fullpath):
-                results += list_local([fullpath], prefix)
-            else:
-                fullname = fullpath
-                if prefix and fullname.startswith(prefix):
-                    fullname = fullname[len(prefix):]
-                mtime = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(fullpath), tz=utc)
-                results += [{"Key": fullname,
-                    "LastModified": mtime.strftime(
-                            '%a, %d %b %Y %H:%M:%S %Z')}]
+    for path in paths:
+        if os.path.isdir(path):
+            for filename in os.listdir(path):
+                fullpath = os.path.join(path, filename)
+                if os.path.isdir(fullpath):
+                    results += list_local([fullpath], prefix)
+                else:
+                    fullname = fullpath
+                    if prefix and fullname.startswith(prefix):
+                        fullname = fullname[len(prefix):]
+                    mtime = datetime.datetime.fromtimestamp(
+                        os.path.getmtime(fullpath), tz=utc)
+                    results += [{"Key": fullname,
+                        "LastModified": mtime.strftime(
+                                '%a, %d %b %Y %H:%M:%S %Z')}]
+        else:
+            fullpath = path
+            fullname = fullpath
+            if prefix and fullname.startswith(prefix):
+                fullname = fullname[len(prefix):]
+            mtime = datetime.datetime.fromtimestamp(
+                os.path.getmtime(fullpath), tz=utc)
+            results += [{"Key": fullname,
+                "LastModified": mtime.strftime(
+                        '%a, %d %b %Y %H:%M:%S %Z')}]
     return results

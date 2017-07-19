@@ -27,6 +27,9 @@ from __future__ import absolute_import
 import datetime, logging, time, mimetypes, os, socket, sys
 
 import boto
+#pylint:disable=import-error
+from six.moves.urllib.parse import urlparse
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class S3Backend(object):
         self.dry_run = dry_run
         self.static_root = static_root
         self.conn = boto.connect_s3()
-        self.bucket = self.conn.get_bucket(remote_location[5:])
+        self.bucket = self.conn.get_bucket(urlparse(remote_location).netloc)
         # self.boto_datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
         # XXX boto seems to have changed the datetime format returned
         #     when reading a S3 key.
@@ -102,7 +105,7 @@ class S3Backend(object):
                 with open(pathname, 'wb') as file_obj:
                     file_obj.write(content)
 
-    def upload(self, local_files, prefix=''):
+    def upload(self, local_files, prefix=""):
         _, uploads = self._updated_s3_keys(local_files)
         for filename in uploads:
             headers = {}

@@ -23,11 +23,15 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import logging, subprocess
 
+from django.conf import settings as django_settings
+
 from ... import settings
-from . import ResourceCommand, build_assets, upload
+from .....copy import upload
+from . import ResourceCommand, build_assets
 
 
 class Command(ResourceCommand):
@@ -39,6 +43,7 @@ class Command(ResourceCommand):
             build_assets()
             upload(settings.RESOURCES_REMOTE_LOCATION,
                 prefix=settings.MULTITIER_RESOURCES_ROOT,
+                static_root=django_settings.STATIC_ROOT,
                 dry_run=settings.DRY_RUN)
             logging.info("uploaded resources for %s", self.webapp)
         except subprocess.CalledProcessError as err:

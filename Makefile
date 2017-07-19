@@ -15,6 +15,7 @@ SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import choice ; sys
 
 DJAODJIN_SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import choice ; sys.stdout.write("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@\#$%^*-_=+") for i in range(50)]))' )
 
+scripts := djd
 
 install::
 	cd $(srcDir) && $(PYTHON) ./setup.py --quiet \
@@ -31,3 +32,6 @@ $(srcDir)/credentials: $(srcDir)/testsite/etc/credentials
 doc:
 	$(installDirs) docs
 	cd $(srcDir) && sphinx-build -b html ./docs $(PWD)/docs
+
+
+-include $(buildTop)/share/dws/suffix.mk

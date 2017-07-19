@@ -23,6 +23,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import logging, os, re, shutil, subprocess, sys, zipfile
 
@@ -32,10 +33,11 @@ from django.template.base import (Parser, NodeList,
     TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK, TOKEN_COMMENT, TemplateSyntaxError)
 from django.template.context import Context
 from django.utils.encoding import force_text
+from django.utils import six
 from django_assets.templatetags.assets import assets
 
 from ...compat import DebugLexer, get_html_engine
-from . import shell_command
+from .....copy import shell_command
 from . import ResourceCommand, get_template_search_path
 
 LOGGER = logging.getLogger(__name__)
@@ -78,11 +80,14 @@ class AssetsParser(Parser):
         nodelist = NodeList()
         while self.tokens:
             token = self.next_token()
+            if six.PY2:
+                contents = token.contents.encode('utf8')
+            else:
+                contents = token.contents
             if token.token_type == TOKEN_TEXT:
-                self.dest_stream.write(token.contents.encode('utf8'))
+                self.dest_stream.write(contents)
             elif token.token_type == TOKEN_VAR:
-                self.dest_stream.write(
-                    "{{%s}}" % token.contents.encode('utf8'))
+                self.dest_stream.write("{{%s}}" % contents)
             elif token.token_type == TOKEN_BLOCK:
                 try:
                     command = token.contents.split()[0]
@@ -111,8 +116,7 @@ class AssetsParser(Parser):
                     self.dest_stream.write(
                         do_static(self, token).render(self.context))
                 else:
-                    self.dest_stream.write(
-                        "{%% %s %%}" % token.contents.encode('utf8'))
+                    self.dest_stream.write("{%% %s %%}" % contents)
             elif token.token_type == TOKEN_COMMENT:
                 pass
 

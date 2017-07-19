@@ -29,7 +29,8 @@ import logging, subprocess
 import fabric.api as fab
 
 from ... import settings
-from . import DeployCommand, build_assets, shell_command, upload
+from .....copy import shell_command, upload
+from . import DeployCommand, build_assets
 
 
 LOGGER = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class Command(DeployCommand):
         DeployCommand.handle(self, *args, **options)
         build_assets()
         status = subprocess.check_output(['git', 'status', '--porcelain'])
-        if len(status) == 0:
+        if not status:
             sha1 = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         else:
             sha1 = "??"

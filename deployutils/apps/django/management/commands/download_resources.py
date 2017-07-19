@@ -27,7 +27,9 @@ from __future__ import absolute_import
 import logging, subprocess
 
 from ... import settings
-from . import ResourceCommand, download
+from .....copy import download
+from . import ResourceCommand
+
 
 class Command(ResourceCommand):
     help = "Download resouces from stage."

@@ -30,7 +30,8 @@ from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 
 from ... import settings
-from . import ResourceCommand, download, shell_command
+from .....copy import shell_command, download
+from . import ResourceCommand
 from .package_theme import package_theme
 
 

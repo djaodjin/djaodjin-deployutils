@@ -56,7 +56,7 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
     candidate = os.path.normpath(os.path.join(os.getcwd(), confname))
     if os.path.isfile(candidate):
         candidates += [candidate]
-    if len(candidates) > 0:
+    if candidates:
         if verbose:
             sys.stderr.write('config loaded from %s\n' % candidates[0])
         return candidates[0]

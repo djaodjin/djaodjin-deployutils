@@ -24,7 +24,8 @@
 
 import fabric.api as fab
 
-from . import DeployCommand, shell_command
+from .....copy import shell_command
+from . import DeployCommand
 
 
 class Command(DeployCommand):

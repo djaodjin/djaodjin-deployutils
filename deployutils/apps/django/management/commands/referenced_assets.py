@@ -27,7 +27,8 @@ import os, subprocess, sys
 from django.conf import settings as django_settings
 
 from ... import settings
-from . import ResourceCommand, list_local, shell_command
+from .....copy import shell_command
+from . import ResourceCommand, list_local
 
 
 class Command(ResourceCommand):

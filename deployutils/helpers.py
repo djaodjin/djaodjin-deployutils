@@ -47,4 +47,3 @@ def start_of_day(dtime_at=None):
     dtime_at = datetime_or_now(dtime_at)
     return datetime.datetime(dtime_at.year, dtime_at.month,
         dtime_at.day, tzinfo=tzlocal())
-

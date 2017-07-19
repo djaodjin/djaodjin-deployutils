@@ -43,7 +43,7 @@ class Command(BaseCommand):
             action='store', dest='bucket', default='deployutils',
             help='Print but do not execute')
         parser.add_argument('filenames', metavar='filenames', nargs='+',
-            help="config files to upload")
+            help="config files to download")
 
     def handle(self, *args, **options):
         app_name = options['app_name']

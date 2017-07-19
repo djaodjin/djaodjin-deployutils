@@ -70,32 +70,10 @@ class DeployCommand(ResourceCommand):
         ResourceCommand.handle(self, *args, **options)
         logging.basicConfig(level=logging.DEBUG, format="%(message)s")
         logging.info("-" * 72)
-        if len(args) > 0:
+        if args:
             fab.env.hosts = args
         else:
             fab.env.hosts = settings.DEPLOYED_SERVERS
-
-
-def _resources_files(abs_paths=False):
-    remotes = []
-    ignores = ['*~', '.DS_Store']
-    with open('.gitignore') as gitignore:
-        for line in gitignore.readlines():
-            if abs_paths:
-                pathname = os.path.join(os.getcwd(), line.strip())
-            else:
-                pathname = line.strip()
-            if pathname.endswith(os.sep):
-                # os.path.basename will not work as expected if pathname
-                # ends with a '/'.
-                pathname = pathname[:-1]
-                ignores += [pathname]
-            elif (os.path.exists(pathname)
-                and not os.path.basename(pathname).startswith('.')):
-                remotes += [pathname]
-            else:
-                ignores += [pathname]
-    return remotes, ignores
 
 
 def build_assets():
@@ -111,27 +89,6 @@ def build_assets():
     except ImportError:
         pass
     os.chdir(cwd)
-
-
-def download(remote_location, remotes=None, prefix="", dry_run=None):
-    """
-    Download resources from a stage server.
-    """
-    if dry_run is None:
-        dry_run = settings.DRY_RUN
-    if remotes is None:
-        remotes, _ = _resources_files(
-            abs_paths=remote_location.startswith('s3://'))
-    if remote_location.startswith('s3://'):
-        from deployutils.s3 import S3Backend
-        backend = S3Backend(remote_location, dry_run=dry_run)
-        backend.download(list_local(remotes, prefix), prefix)
-    else:
-        dest_root = '.'
-        shell_command([
-                '/usr/bin/rsync',
-                '-thrRvz', '--rsync-path', '/usr/bin/rsync',
-                '%s/./' % remote_location, dest_root], dry_run=dry_run)
 
 
 def get_template_search_path(app_name=None):
@@ -150,49 +107,3 @@ def get_template_search_path(app_name=None):
     for field_name in ['TEMPLATE_DIRS', 'TEMPLATES_DIRS']:
         template_dirs += list(getattr(django_settings, field_name, []))
     return template_dirs
-
-
-def shell_command(cmd, dry_run=None):
-    """
-    Run a shell command.
-    """
-    if dry_run is None:
-        dry_run = settings.DRY_RUN
-    if cmd[0] == '/usr/bin/rsync':
-        if dry_run:
-            cmd = [cmd[0], '-n'] + cmd[1:]
-        LOGGER.info('run: %s', ' '.join(cmd))
-        subprocess.check_call(cmd)
-    else:
-        LOGGER.info('run: %s', ' '.join(cmd))
-        if not dry_run:
-            subprocess.check_call(cmd)
-
-
-def upload(remote_location, remotes=None, ignores=None,
-           static_root=None, prefix="", dry_run=None):
-    # pylint:disable=too-many-arguments
-    """
-    Upload resources to a stage server.
-    """
-    if dry_run is None:
-        dry_run = settings.DRY_RUN
-    if static_root is None:
-        static_root = django_settings.STATIC_ROOT
-    if remotes is None:
-        remotes, ignores = _resources_files(
-            abs_paths=remote_location.startswith('s3://'))
-    if remote_location.startswith('s3://'):
-        from deployutils.s3 import S3Backend
-        backend = S3Backend(remote_location,
-            static_root=static_root, dry_run=dry_run)
-        backend.upload(list_local(remotes, prefix), prefix)
-    else:
-        excludes = []
-        if ignores:
-            for ignore in ignores:
-                excludes += ['--exclude', ignore]
-        # -O omit to set mod times on directories to avoid permissions error.
-        shell_command(['/usr/bin/rsync']
-            + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
-            + remotes + [remote_location], dry_run=dry_run)

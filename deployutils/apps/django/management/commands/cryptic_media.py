@@ -44,7 +44,7 @@ def cryptic_media(rootdir):
             cryptic_media(pathname)
         else:
             parts = os.path.splitext(os.path.basename(pathname))
-            if len(parts) > 0:
+            if parts:
                 ext = parts[-1]
                 if ext in ['.mp4']:
                     dirname = os.path.dirname(pathname)
