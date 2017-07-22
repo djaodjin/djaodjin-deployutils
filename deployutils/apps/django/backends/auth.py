@@ -62,18 +62,25 @@ class ProxyUserBackend(RemoteUserBackend):
                 user.id, user.username)
             self.users[user.id] = user
 
-    def authenticate(self, remote_user):
+    def authenticate(self, request, username=None):
         """
-        The username passed as ``remote_user`` is considered trusted.  This
+        The ``username`` passed here is considered trusted.  This
         method simply returns the ``User`` object with the given username.
+
+        In order to support older Django versions
+        (before commit 4b9330ccc04575f9e5126529ec355a450d12e77c), if username
+        is None, we will assume request is the ``remote_user`` parameter.
         """
-        if not remote_user:
-            return
-        username = self.clean_username(remote_user)
+        if not username:
+            username = request
+        if not username:
+            return None
+        username = self.clean_username(username)
         for user in six.itervalues(self.users):
             LOGGER.debug("match %s with User(id=%d, username=%s)",
                 username, user.id, user.username)
             if user.username == username:
+                LOGGER.debug("found %d %s", user.id, user.username)
                 return user
         return None
 

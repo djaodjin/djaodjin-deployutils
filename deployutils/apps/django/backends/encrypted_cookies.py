@@ -32,7 +32,8 @@ import logging, json
 
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
-from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY
+from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
+    SESSION_KEY)
 
 from .... import crypt
 from .. import settings
@@ -99,6 +100,7 @@ class SessionStore(SessionBase):
                 session_data[SESSION_KEY] = user.id
                 session_data[BACKEND_SESSION_KEY] = "%s.%s" % (
                      backend.__class__.__module__, backend.__class__.__name__)
+                session_data[HASH_SESSION_KEY] = user.get_session_auth_hash()
         except (IndexError, TypeError, ValueError) as _:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
