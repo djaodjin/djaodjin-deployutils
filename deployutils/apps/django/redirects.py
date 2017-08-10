@@ -43,7 +43,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     """
 
     slug_url_kwarg = 'organization'
-    template_name = 'account_redirects.html'
+    template_name = 'saas/organization_redirects.html'
     permanent = False
     create_more = False
     create_on_none = True
