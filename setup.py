@@ -49,7 +49,8 @@ setup(
               'deployutils.apps.django.management.commands',
               'deployutils.apps.django.templatetags'],
     package_data={'deployutils': [
-              'apps/django/templates/accounts/*.html']},
+              'apps/django/templates/accounts/*.html',
+              'apps/django/templates/saas/*.html']},
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,
