@@ -32,7 +32,11 @@ from django.views.generic import TemplateView
 from .views import SigninView, SignupView
 
 
+USERNAME_PAT = r'[\w.@+-]+'
+
 urlpatterns = [
+    url(r'^users/(?P<user>%s)/' % USERNAME_PAT,
+        TemplateView.as_view(), name='users_profile'),
     url(r'^register/',
         SignupView.as_view(), name='registration_register'),
     url(r'^logout/',
