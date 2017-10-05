@@ -76,6 +76,8 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 
     @staticmethod
     def process_response(request, response):
+        if request.user.is_authenticated():
+            response['User-Session'] = request.user.username
         if django_settings.DEBUG:
             # When DEBUG=False, Django will not store information regarding
             # the SQL queries performed so there is not point here.

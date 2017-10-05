@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-import logging, json, six
+import logging, json, os, six
 
 from django.views.debug import ExceptionReporter
 from pip.utils import get_installed_distributions
@@ -233,6 +233,8 @@ class JSONFormatter(logging.Formatter):
             if hasattr(record, from_key):
                 record_dict.update({to_key: getattr(record, from_key)})
 
+        record_dict.update({'process': os.getpid()})
+
         if hasattr(record, 'user'):
             user = record.user
         elif hasattr(record, 'request'):
@@ -251,6 +253,7 @@ class JSONFormatter(logging.Formatter):
                 'http_path': request.path_info,
                 'remote_addr': request.META.get('REMOTE_ADDR', '-'),
                 'http_version': request.META.get('SERVER_PROTOCOL', '-'),
+                'http_host': request.META.get('HTTP_HOST', '-'),
                 'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
             })
         else:
@@ -260,6 +263,7 @@ class JSONFormatter(logging.Formatter):
                 'http_path': "-",
                 'remote_addr': "-",
                 'http_version': "-",
+                'http_host': "-",
                 'http_user_agent': "-"
             })
 
@@ -268,7 +272,12 @@ class JSONFormatter(logging.Formatter):
                 record.exc_info, request=request)
             if exc_info_dict:
                 record_dict.update(exc_info_dict)
-        return json.dumps(record_dict, cls=crypt.JSONEncoder)
+
+        formatted = {}
+        formatted.update(record_dict)
+        formatted.update({
+            'message': json.dumps(record_dict, cls=crypt.JSONEncoder)})
+        return self._fmt % formatted
 
     def formatException(self, exc_info, request=None):
         #pylint:disable=too-many-locals,arguments-differ
@@ -322,6 +331,14 @@ class JSONFormatter(logging.Formatter):
                             settings_key, None)
                         if settings_value is not None:
                             value.update({settings_key: settings_value})
+                if key == 'frames':
+                    frames = value
+                    value = [] #pylint:disable=redefined-variable-type
+                    for frame in frames:
+                        frame_dict = {}
+                        for frame_key, frame_val in six.iteritems(frame):
+                            frame_dict.update({frame_key: str(frame_val)})
+                        value += [frame_dict]
                 filtered_traceback_data.update({key: value})
 
         # Pip packages
