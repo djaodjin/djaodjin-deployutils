@@ -76,18 +76,21 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 
     @staticmethod
     def process_response(request, response):
-        nb_queries = 0
-        duration = timedelta()
-        for connection in connections.all():
-            nb_queries += len(connection.queries)
-            for query in connection.queries:
-                convert = datetime.strptime(query['time'], "%S.%f")
-                duration += timedelta(
-                    0, convert.second, convert.microsecond)
-                    # days, seconds, microseconds
-        LOGGER.info("%s %s %d %s for %d SQL queries",
-            request.method, request.get_full_path(),
-            response.status_code, duration, nb_queries,
-            extra={'request': request, 'nb_queries': nb_queries,
-                'queries_duration': str(duration)})
+        if django_settings.DEBUG:
+            # When DEBUG=False, Django will not store information regarding
+            # the SQL queries performed so there is not point here.
+            logger = logging.getLogger('django.db.backends')
+            nb_queries = 0
+            duration = timedelta()
+            for connection in connections.all():
+                nb_queries += len(connection.queries)
+                for query in connection.queries:
+                    convert = datetime.strptime(query['time'], "%S.%f")
+                    duration += timedelta(
+                        0, convert.second, convert.microsecond)
+                        # days, seconds, microseconds
+            logger.debug("%s %s executed %d SQL queries in %s",
+                request.method, request.get_full_path(), nb_queries, duration,
+                extra={'request': request, 'nb_queries': nb_queries,
+                    'queries_duration': str(duration)})
         return response

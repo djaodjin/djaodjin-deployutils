@@ -27,11 +27,24 @@ Function to load site and credentials config files
 """
 from __future__ import unicode_literals
 
-import os, re, six, sys
+import logging, os, re, six, sys
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
 from . import crypt
+
+LOGGER = None
+
+def configure_logging():
+    # We don't want the message that loads the config files in settings.py
+    # to be lost so we go the extra length to find a natural logger for them.
+    global LOGGER #pylint:disable=global-statement
+    if LOGGER is None:
+        LOGGER = logging.getLogger(__name__)
+    if not LOGGER.handlers:
+        LOGGER = logging.getLogger('gunicorn.error')
+    if not LOGGER.handlers:
+        LOGGER = logging.getLogger()
 
 
 def locate_config(confname, app_name, prefix='etc', verbose=False):
@@ -58,11 +71,10 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
         candidates += [candidate]
     if candidates:
         if verbose:
-            sys.stderr.write('config loaded from %s\n' % candidates[0])
+            LOGGER.info("config loaded from '%s'", candidates[0])
         return candidates[0]
     else:
-        sys.stderr.write(
-            'warning: config %s was not found.\n' % confname)
+        LOGGER.warning("config '%s' was not found.", confname)
     return None
 
 
@@ -76,6 +88,8 @@ def load_config(app_name, *args, **kwargs):
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
+    configure_logging()
+
     # compatible with Python 2 and 3.
     prefix = kwargs.get('prefix', 'etc')
     verbose = kwargs.get('verbose', False)
@@ -97,8 +111,8 @@ def load_config(app_name, *args, **kwargs):
                     key = bucket.get_key(key_name)
                     content = key.get_contents_as_string()
                     if verbose:
-                        sys.stderr.write("config loaded from 's3://%s/%s'\n" % (
-                            bucket_name, key_name))
+                        LOGGER.info("config loaded from 's3://%s/%s'",
+                            bucket_name, key_name)
                 except (boto.exception.NoAuthHandlerFound,
                         boto.exception.S3ResponseError) as _:
                     pass
@@ -159,7 +173,6 @@ def update_settings(module, config):
                         os.makedirs(os.path.dirname(pathname))
                     with open(pathname, 'w') as _:
                         pass    # touch file
-                sys.stderr.write('logging app messages in %s\n' % pathname)
+                LOGGER.info("logging app messages in '%s'", pathname)
             except OSError:
-                sys.stderr.write(
-                    'warning: permission denied on %s\n' % pathname)
+                LOGGER.warning("permission denied on '%s'", pathname)
