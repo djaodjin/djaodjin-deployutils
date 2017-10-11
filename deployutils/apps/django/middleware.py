@@ -76,7 +76,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 
     @staticmethod
     def process_response(request, response):
-        if request.user.is_authenticated():
+        if hasattr(request, 'user') and request.user.is_authenticated():
             response['User-Session'] = request.user.username
         if django_settings.DEBUG:
             # When DEBUG=False, Django will not store information regarding

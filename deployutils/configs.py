@@ -25,6 +25,7 @@
 """
 Function to load site and credentials config files
 """
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging, os, re, six, sys
