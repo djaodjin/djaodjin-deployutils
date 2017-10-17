@@ -48,11 +48,6 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     create_more = False
     create_on_none = True
     new_account_url = '/app/new/'
-    redirect_roles = None
-
-    def get_redirect_roles(self, request):
-        #pylint:disable=unused-argument
-        return self.redirect_roles
 
     def get(self, request, *args, **kwargs):
         candidates = self.get_accessibles(

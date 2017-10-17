@@ -40,6 +40,13 @@ class AccessiblesMixin(object):
     Organizations accessibles by the ``request.user`` as defined
     in the session passed by the DjaoDjin proxy.
     """
+
+    redirect_roles = None
+
+    def get_redirect_roles(self, request):
+        #pylint:disable=unused-argument
+        return self.redirect_roles
+
     def accessibles(self, roles=None):
         """
         Returns the list of *slugs* for which the accounts are accessibles
@@ -65,7 +72,8 @@ class AccessiblesMixin(object):
         context = super(AccessiblesMixin, self).get_context_data(
             *args, **kwargs)
         urls = {'profiles': []}
-        for account in self.get_managed(self.request):
+        for account in self.get_accessibles(self.request,
+                        self.get_redirect_roles(self.request)):
             urls['profiles'] += [{
                 'location': site_prefixed('/profile/%s/' % account['slug']),
                 'printable_name': account.get('printable_name',
