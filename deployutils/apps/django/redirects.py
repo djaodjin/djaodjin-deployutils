@@ -49,19 +49,22 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     create_on_none = True
     new_account_url = '/app/new/'
 
+    def get_new_account_url(self, *args, **kwargs):
+        kwargs.update({
+            self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
+        next_url = super(AccountRedirectView, self).get_redirect_url(
+        *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
+            ':%s' % self.slug_url_kwarg)
+        return '%s?%s=%s' % (self.new_account_url,
+            REDIRECT_FIELD_NAME, next_url)
+
     def get(self, request, *args, **kwargs):
         candidates = self.get_accessibles(
             request, self.get_redirect_roles(request))
         count = len(candidates)
         if count == 0:
             if self.create_on_none:
-                kwargs.update({
-                    self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
-                next_url = super(AccountRedirectView, self).get_redirect_url(
-                *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
-                    ':%s' % self.slug_url_kwarg)
-                url = '%s?%s=%s' % (self.new_account_url,
-                    REDIRECT_FIELD_NAME, next_url)
+                url = self.get_new_account_url(args, kwargs)
                 if self.permanent:
                     return http.HttpResponsePermanentRedirect(url)
                 else:
