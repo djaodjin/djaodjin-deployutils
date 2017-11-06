@@ -26,11 +26,14 @@ import datetime
 
 from dateutil.tz import tzlocal
 from pytz import utc
+import six
 
 
 def datetime_or_now(dtime_at=None):
     if not dtime_at:
         return datetime.datetime.utcnow().replace(tzinfo=utc)
+    if isinstance(dtime_at, six.string_types):
+        dtime_at = datetime.datetime.strptime(dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
     if isinstance(dtime_at, datetime.date):
         dtime_at = datetime.datetime(
             dtime_at.year, dtime_at.month, dtime_at.day)
