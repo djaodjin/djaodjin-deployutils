@@ -77,7 +77,7 @@ class AccessiblesMixin(object):
             urls['profiles'] += [{
                 'location': site_prefixed('/profile/%s/' % account['slug']),
                 'printable_name': account.get('printable_name',
-                    account.get('full_name', account.get('slug')))}]
+                    account.get('slug'))}]
         self.update_context_urls(context, urls)
         return context
 

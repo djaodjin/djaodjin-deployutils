@@ -81,7 +81,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
             kwargs.update({self.slug_url_kwarg: org['slug']})
             url = super(AccountRedirectView, self).get_redirect_url(
                 *args, **kwargs)
-            print_name = org['full_name'] if org['full_name'] else org['slug']
+            print_name = org.get('printable_name', org.get('slug', ""))
             redirects += [(url, print_name)]
         kwargs.update({self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
         context = {'redirects': redirects,

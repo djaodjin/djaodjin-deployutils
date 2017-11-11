@@ -163,7 +163,8 @@ DEPLOYUTILS = {
         'donny': {
             'username': 'donny',
             'roles': {
-                'manager': [{'slug': 'testsite', 'full_name': 'Testsite'}]}},
+                'manager': [{
+                    'slug': 'testsite', 'printable_name': 'Testsite'}]}},
     },
     'ALLOWED_NO_SESSION': [
         STATIC_URL,
