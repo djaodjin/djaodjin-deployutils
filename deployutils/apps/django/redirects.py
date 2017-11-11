@@ -64,7 +64,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
         count = len(candidates)
         if count == 0:
             if self.create_on_none:
-                url = self.get_new_account_url(args, kwargs)
+                url = self.get_new_account_url(*args, **kwargs)
                 if self.permanent:
                     return http.HttpResponsePermanentRedirect(url)
                 else:
