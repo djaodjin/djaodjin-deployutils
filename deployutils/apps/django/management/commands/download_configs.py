@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,9 @@ from django.core.management.base import BaseCommand
 from ..... import crypt
 from ... import settings
 
+#pylint:disable=import-error
+from six.moves.urllib.parse import urlparse
+
 
 class Command(BaseCommand):
     help = "Download the config files from a S3 bucket and decrypt them."
@@ -39,21 +42,41 @@ class Command(BaseCommand):
         parser.add_argument('--app_name',
             action='store', dest='app_name', default=settings.APP_NAME,
             help='Name of the config file(s) project')
-        parser.add_argument('--bucket',
-            action='store', dest='bucket', default='deployutils',
-            help='Print but do not execute')
+        parser.add_argument('--location', action='store', dest='location',
+            default=None, help='Print but do not execute')
         parser.add_argument('filenames', metavar='filenames', nargs='+',
             help="config files to download")
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        passphrase = getpass.getpass('Passphrase:')
+        location = options['location']
+        if not location:
+            location = os.getenv("SETTINGS_LOCATION", None)
+        if not location:
+            self.stderr.write("a location argument must be passed on the "\
+            "command line or SETTINGS_LOCATION defined in the environment.\n")
+            return -1
+        is_local = not location.startswith('s3://')
+        _, bucket_name, prefix = urlparse(location)[:3]
+        if is_local:
+            self.stdout.write(
+                "download configs from local directory %s" % location)
+        else:
+            self.stdout.write(
+                "download configs from %s/%s" % (location, app_name))
         conn = boto.connect_s3()
-        bucket = conn.get_bucket(options['bucket'])
+        bucket = conn.get_bucket(bucket_name)
+        passphrase = getpass.getpass('Passphrase:')
         for confname in options['filenames']:
             content = None
-            key = bucket.get_key('%s/%s' % (app_name, confname))
-            encrypted = key.get_contents_as_string()
+            if is_local:
+                with open(os.path.join(location, confname),
+                          "rb") as download_file:
+                    encrypted = download_file.read()
+            else:
+                key = boto.s3.key.Key(bucket)
+                key.name = '%s/%s/%s' % (prefix, app_name, confname)
+                encrypted = key.get_contents_as_string()
             content = crypt.decrypt(encrypted, passphrase)
             with open(confname, 'w') as conffile:
                 conffile.write(content)
