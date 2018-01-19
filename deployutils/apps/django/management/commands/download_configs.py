@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getpass
+import getpass, os
 
 import boto
 from django.core.management.base import BaseCommand
@@ -47,7 +47,7 @@ class Command(BaseCommand):
         parser.add_argument('filenames', metavar='filenames', nargs='+',
             help="config files to download")
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options): #pylint:disable=too-many-locals
         app_name = options['app_name']
         location = options['location']
         if not location:

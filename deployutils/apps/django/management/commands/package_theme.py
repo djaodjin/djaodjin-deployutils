@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,14 +45,14 @@ LOGGER = logging.getLogger(__name__)
 
 class URLRewriteWrapper(object):
 
-    def __init__(self, file_obj, app_name=None):
+    def __init__(self, file_obj, path_prefix=None):
         self.wrapped = file_obj
-        self.app_name = app_name
+        self.path_prefix = path_prefix
 
     def write(self, text):
-        if self.app_name:
+        if self.path_prefix:
             text = text.replace(
-                '="/static', '="/%s/static' % self.app_name)
+                '="/static', '="/%s/static' % self.path_prefix)
         return self.wrapped.write(text)
 
 
@@ -104,8 +104,9 @@ class AssetsParser(Parser):
                         # not get propagated.
                         # Lost in webassets.bundle.resolve_contents
                         token.contents += ' debug=False'
-                        self.dest_stream.write(
+                        assets_string = str(
                             assets(self, token).render(self.context))
+                        self.dest_stream.write(assets_string)
                     except TemplateSyntaxError as err:
                         if hasattr(self, 'error'):
                             raise self.error(token, err)
@@ -175,6 +176,9 @@ class Command(ResourceCommand):
         parser.add_argument('--app_name', action='store', dest='app_name',
             default=django_settings.APP_NAME,
             help='overrides the destination site name')
+        parser.add_argument('--path_prefix', action='store',
+            dest='path_prefix', default=None,
+            help='Adds a prefix to all URLs for static assets')
         parser.add_argument('--build_dir',
             action='store', dest='build_dir', default=None,
             help='set the directory root where temporary files are created.')
@@ -193,13 +197,14 @@ class Command(ResourceCommand):
             install_dir=options['install_dir'],
             build_dir=options['build_dir'],
             excludes=options['excludes'],
-            includes=options['includes'])
+            includes=options['includes'],
+            path_prefix=options['path_prefix'])
         sys.stdout.write('package built: %s\n' % zip_path)
 
 
 def package_theme(app_name, install_dir=None, build_dir=None,
-                  excludes=None, includes=None):
-    #pylint:disable=too-many-locals
+                  excludes=None, includes=None, path_prefix=None):
+    #pylint:disable=too-many-locals,too-many-arguments
     if not build_dir:
         build_dir = os.path.join(os.getcwd(), 'build')
     if not install_dir:
@@ -226,7 +231,7 @@ def package_theme(app_name, install_dir=None, build_dir=None,
         if (templates_dest
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest,
-                excludes=excludes, includes=includes, app_name=app_name)
+                excludes=excludes, includes=includes, path_prefix=path_prefix)
 
     # Copy local resources (not under source control) to resources_dest.
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store',
@@ -275,8 +280,8 @@ def fill_package(zip_file, srcroot, prefix=''):
             fill_package(zip_file, srcroot, prefix=pathname)
 
 
-def install_templates(srcroot, destroot,
-                      prefix='', excludes=None, includes=None, app_name=None):
+def install_templates(srcroot, destroot, prefix='', excludes=None,
+                      includes=None, path_prefix=None):
     #pylint:disable=too-many-arguments
     """
     Expand link to compiled assets all templates in *srcroot*
@@ -316,7 +321,7 @@ def install_templates(srcroot, destroot,
                 _, libraries, builtins = get_html_engine()
                 with open(dest_name, 'w') as dest:
                     parser = AssetsParser(tokens,
-                        URLRewriteWrapper(dest, app_name),
+                        URLRewriteWrapper(dest, path_prefix),
                         libraries=libraries,
                         builtins=builtins,
                         origin=None)
@@ -346,4 +351,4 @@ def install_templates(srcroot, destroot,
                     "from unicode or UTF-8 strings.", source_name)
         elif os.path.isdir(source_name):
             install_templates(srcroot, destroot, prefix=pathname,
-                excludes=excludes, includes=includes, app_name=app_name)
+                excludes=excludes, includes=includes, path_prefix=path_prefix)
