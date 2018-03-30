@@ -50,7 +50,13 @@ class SessionMiddleware(BaseMiddleware):
 
     def process_request(self, request):
         engine = import_module(django_settings.SESSION_ENGINE)
-        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
+        # temp hack
+        if engine.__name__ == 'deployutils.apps.django.backends.jwt_session_store':
+            session_key = request.META.get('HTTP_AUTHORIZATION')
+            if session_key:
+                session_key = session_key.split(' ')[1]
+        else:
+            session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
         request.session = engine.SessionStore(session_key)
         if not session_key:
             found = False
