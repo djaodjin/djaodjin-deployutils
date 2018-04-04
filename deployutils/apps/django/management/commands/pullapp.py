@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        if len(args) > 0:
+        if args:
             up_commit = args[0]
         else:
             up_commit = 'master'
@@ -155,7 +155,7 @@ def _south_migrate_all():
             app_module = models.get_app(app) #pylint: disable=no-member
                                              # South only used with Django < 1.7
             clsmembers = inspect.getmembers(app_module, is_model_class)
-            if len(clsmembers) > 0:
+            if clsmembers:
                 migrations_dir = os.path.join(
                     os.path.dirname(app_module.__file__), 'migrations')
                 if os.path.isdir(migrations_dir):
@@ -214,4 +214,4 @@ def migrate_all():
 
     migrate_cmd = migrate.Command()
     sys.stderr.write("MIGRATE ALL!\n")
-    migrate_cmd.run_from_argv([sys.executable, 'migrate'])
+    return migrate_cmd.run_from_argv([sys.executable, 'migrate'])

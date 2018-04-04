@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -91,3 +91,4 @@ class Command(BaseCommand):
                 key.name = '%s/%s/%s' % (prefix, app_name, confname)
                 key.set_contents_from_string(encrypted, headers,
                     replace=True, policy=default_acl)
+        return 0

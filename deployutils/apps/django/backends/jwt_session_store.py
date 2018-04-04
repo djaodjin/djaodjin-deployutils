@@ -61,7 +61,7 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        serialized = json.dumps(session_data, indent=2, cls=JSONEncoder)
+        serialized = json.dumps(session_data, indent=2, cls=crypt.JSONEncoder)
         return encode({'payload': serialized}, passphrase)
 
     def load(self):
@@ -89,7 +89,8 @@ class SessionStore(SessionBase):
                 session_data[BACKEND_SESSION_KEY] = "%s.%s" % (
                      backend.__class__.__module__, backend.__class__.__name__)
                 session_data[HASH_SESSION_KEY] = user.get_session_auth_hash()
-        except:
+        except Exception as err: #pylint:disable=broad-except
+            LOGGER.debug("Unable to decode session (%s)", err)
             return {}
         return session_data
 

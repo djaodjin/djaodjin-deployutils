@@ -49,6 +49,8 @@ LOGGER = logging.getLogger(__name__)
 class SessionMiddleware(BaseMiddleware):
 
     def process_request(self, request):
+        #pylint:disable=invalid-name
+        # XXX temporary disable invalid-name until code is refactored.
         JWT_SESSION_STORE = \
             'deployutils.apps.django.backends.jwt_session_store'
         JWT_HEADER_NAME = 'HTTP_AUTHORIZATION'

@@ -131,7 +131,7 @@ class SignupView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
             # we assume a full_name was passed instead.
             full_name = cleaned_data['full_name']
             name_parts = full_name.split(' ')
-            if len(name_parts) > 0:
+            if name_parts:
                 first_name = name_parts[0]
                 last_name = ' '.join(name_parts[1:])
             else:

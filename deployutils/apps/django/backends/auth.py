@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,8 @@ class ProxyUserBackend(RemoteUserBackend):
             self.users[user.id] = user
 
     def authenticate(self, request, username=None):
+        #pylint:disable=arguments-differ
+        # Django <=1.8 and >=1.9 have different signatures.
         """
         The ``username`` passed here is considered trusted.  This
         method simply returns the ``User`` object with the given username.

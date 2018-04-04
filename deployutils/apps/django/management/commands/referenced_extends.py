@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ class Command(ResourceCommand):
 
     def _create_tree(self):
         roots = {}
-        while len(self.edges) > 0:
+        while self.edges:
             # Find leaf nodes
             sources = set([])
             targets = set([])

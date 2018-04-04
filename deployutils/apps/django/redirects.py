@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2018, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -108,8 +108,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
                 url = self.get_new_account_url(*args, **kwargs)
                 if self.permanent:
                     return http.HttpResponsePermanentRedirect(url)
-                else:
-                    return http.HttpResponseRedirect(url)
+                return http.HttpResponseRedirect(url)
             else:
                 raise http.Http404("No account")
         if count == 1 and not self.create_more:

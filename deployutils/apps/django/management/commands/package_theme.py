@@ -237,7 +237,7 @@ def package_theme(app_name, install_dir=None, build_dir=None,
     excludes = ['--exclude', '*~', '--exclude', '.DS_Store',
         '--exclude', '.webassets-cache']
     app_static_root = django_settings.STATIC_ROOT
-    assert app_static_root is not None and len(app_static_root) > 0
+    assert app_static_root is not None and app_static_root
     # When app_static_root ends with the static_url, we will want
     # to insert the app_name prefix.
     static_root_parts = app_static_root.split(os.sep)
@@ -332,7 +332,7 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                 cmd.wait()
                 # Non-zero error codes are ok here. That's how diff
                 # indicates the files are different.
-                if len(lines) > 0:
+                if lines:
                     verb = 'compile'
                 else:
                     verb = 'install'

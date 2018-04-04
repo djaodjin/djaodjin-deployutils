@@ -80,3 +80,4 @@ class Command(BaseCommand):
             content = crypt.decrypt(encrypted, passphrase)
             with open(confname, 'w') as conffile:
                 conffile.write(content)
+        return 0
