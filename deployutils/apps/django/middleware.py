@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2018, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,8 +49,23 @@ LOGGER = logging.getLogger(__name__)
 class SessionMiddleware(BaseMiddleware):
 
     def process_request(self, request):
+        JWT_SESSION_STORE = \
+            'deployutils.apps.django.backends.jwt_session_store'
+        JWT_HEADER_NAME = 'HTTP_AUTHORIZATION'
+        JWT_SCHEME = 'bearer'
+
         engine = import_module(django_settings.SESSION_ENGINE)
-        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME, None)
+        session_key = None
+        if django_settings.SESSION_ENGINE == JWT_SESSION_STORE:
+            jwt_header = request.META.get(JWT_HEADER_NAME)
+            if jwt_header:
+                jwt_values = jwt_header.split(' ')
+                if len(jwt_values) > 1 and \
+                    jwt_values[0].lower() == JWT_SCHEME:
+                    session_key = jwt_values[1]
+        else:
+            session_key = \
+            request.COOKIES.get(settings.SESSION_COOKIE_NAME)
         request.session = engine.SessionStore(session_key)
         if not session_key:
             found = False
