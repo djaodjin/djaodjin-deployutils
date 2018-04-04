@@ -61,7 +61,7 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        serialized = json.dumps(session_data, indent=2, cls=crypt.JSONEncoder)
+        serialized = json.dumps(session_data, cls=crypt.JSONEncoder)
         return encode({'payload': serialized}, passphrase)
 
     def load(self):
