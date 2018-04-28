@@ -50,12 +50,12 @@ class RequestFilter(logging.Filter):
             meta = getattr(request, 'META', {})
             record.remote_addr = meta.get('REMOTE_ADDR', '-')
             record.http_user_agent = meta.get('HTTP_USER_AGENT', '-')
+            if not hasattr(record, 'request'):
+                record.request = request
         else:
             record.username = '-'
             record.remote_addr = '-'
             record.http_user_agent = '-'
-        if not hasattr(record, 'request'):
-            record.request = request
         return True
 
 
