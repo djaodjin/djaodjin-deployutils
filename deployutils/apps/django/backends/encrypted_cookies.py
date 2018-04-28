@@ -87,9 +87,8 @@ class SessionStore(SessionBase):
         try:
             session_text = crypt.decrypt(self.session_key,
                 passphrase=settings.DJAODJIN_SECRET_KEY)
-            LOGGER.debug("session text: %s<%s>",
-                session_text, session_text.__class__)
             session_data = json.loads(session_text)
+            LOGGER.debug("session data: %s", session_data)
             # We have been able to decode the session data, let's
             # create Users and session keys expected by Django
             # contrib.auth backend.
@@ -101,9 +100,10 @@ class SessionStore(SessionBase):
                 session_data[BACKEND_SESSION_KEY] = "%s.%s" % (
                      backend.__class__.__module__, backend.__class__.__name__)
                 session_data[HASH_SESSION_KEY] = user.get_session_auth_hash()
-        except (IndexError, TypeError, ValueError) as _:
+        except (IndexError, TypeError, ValueError) as err:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
+            LOGGER.debug("error: while loading session, %s", err)
             return {}
         return session_data
 

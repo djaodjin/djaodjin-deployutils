@@ -82,16 +82,30 @@ class AccessiblesMixin(object):
         return context
 
     def get_managed(self, request):
+        """
+        Returns the list of *dictionnaries* for which the accounts are
+        managed by ``request.user``.
+        """
         return self.get_accessibles(request, roles=['manager'])
 
     @property
     def managed_accounts(self):
+        """
+        Returns a list of account *slugs* for ``request.user`` is a manager
+        of the account.
+        """
         return self.accessibles(roles=['manager'])
 
     def manages(self, account):
+        """
+        Returns ``True`` if the ``request.user`` is a manager for ``account``.
+        ``account`` will be converted to a string and compared
+        to an organization slug.
+        """
+        account_slug = str(account)
         for organization in self.request.session.get(
                 'roles', {}).get('manager', []):
-            if account == organization['slug']:
+            if account_slug == organization['slug']:
                 return True
         return False
 

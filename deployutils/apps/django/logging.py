@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2018, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@ from __future__ import absolute_import
 
 import logging, json, os, six
 
+from django.core.handlers.wsgi import WSGIRequest
 from django.views.debug import ExceptionReporter
 from pip.utils import get_installed_distributions
 
@@ -53,6 +54,8 @@ class RequestFilter(logging.Filter):
             record.username = '-'
             record.remote_addr = '-'
             record.http_user_agent = '-'
+        if not hasattr(record, 'request'):
+            record.request = request
         return True
 
 
@@ -246,25 +249,26 @@ class JSONFormatter(logging.Formatter):
         elif not 'username' in record_dict:
             record_dict.update({'username': '-'})
 
-        if hasattr(record, 'request'):
+        if (hasattr(record, 'request') and
+            isinstance(record.request, WSGIRequest)):
             request = record.request
             record_dict.update({
-                'http_method': request.method,
-                'http_path': request.path_info,
-                'remote_addr': request.META.get('REMOTE_ADDR', '-'),
+                'http_method': getattr(request, 'method', "-"),
+                'http_path': getattr(request, 'path_info', "-"),
                 'http_version': request.META.get('SERVER_PROTOCOL', '-'),
                 'http_host': request.META.get('HTTP_HOST', '-'),
-                'http_user_agent': request.META.get('HTTP_USER_AGENT', '-')
+                'http_user_agent': request.META.get('HTTP_USER_AGENT', '-'),
+                'remote_addr': request.META.get('REMOTE_ADDR', '-'),
             })
         else:
             request = None
             record_dict.update({
                 'http_method': "-",
                 'http_path': "-",
-                'remote_addr': "-",
                 'http_version': "-",
                 'http_host': "-",
-                'http_user_agent': "-"
+                'http_user_agent': record_dict.get('http_user_agent', "-"),
+                'remote_addr': record_dict.get('remote_addr', "-"),
             })
 
         if record.exc_info:
