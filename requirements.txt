@@ -1,9 +1,9 @@
 Fabric3>=1.13.1
 boto>=2.36.0
-pip>=8.1.2
-# With native library
-pycrypto>=2.6.1
+cryptography>=2.2.2
+pip>=8.1.2,<10.0
 six>=1.10.0
+PyJWT>=1.6.1
 
 # For datetime-related helpers
 # pytz>=2017.2

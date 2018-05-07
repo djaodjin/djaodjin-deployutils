@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2018, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,13 @@ Encryption and Decryption functions
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import json, logging, six
+import json, logging, os, six
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
-from Crypto import Random
-from Crypto.Cipher import AES
-from Crypto.Hash import MD5
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import hashes
 
 LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,9 @@ def _openssl_key_iv(passphrase, salt):
             passwd = passphrase
         prev = b''
         while req > 0:
-            prev = MD5.new(prev + passwd + salt).digest()
+            digest = hashes.Hash(hashes.MD5(), backend=default_backend())
+            digest.update(prev + passwd + salt)
+            prev = digest.finalize()
             req -= 16
             yield prev
     assert passphrase is not None
@@ -104,8 +106,11 @@ def decrypt(source_text, passphrase):
     salt = full_encrypted[8:16]
     encrypted_text = full_encrypted[16:]
     key, iv_ = _openssl_key_iv(passphrase, salt)
-    cipher = AES.new(key, AES.MODE_CBC, iv_)
-    plain_text = cipher.decrypt(encrypted_text)
+    cipher = Cipher(
+        algorithms.AES(key), modes.CBC(iv_), default_backend()
+    ).decryptor()
+    plain_text = cipher.update(encrypted_text)
+    plain_text += cipher.finalize()
     # PKCS#5 padding
     if six.PY2:
         padding = ord(plain_text[-1])
@@ -132,21 +137,25 @@ def encrypt(source_text, passphrase):
         _source_text_
     """
     prefix = b'Salted__'
-    salt = Random.new().read(AES.block_size - len(prefix))
+    salt = os.urandom(algorithms.AES.block_size - len(prefix))
     key, iv_ = _openssl_key_iv(passphrase, salt)
-    cipher = AES.new(key, AES.MODE_CBC, iv_)
+    cipher = Cipher(
+        algorithms.AES(key), modes.CBC(iv_), default_backend()
+    ).encryptor()
+
     # PKCS#5 padding
     if hasattr(source_text, 'encode'):
         source_utf8 = source_text.encode('utf-8')
     else:
         source_utf8 = str(source_text)
-    padding = AES.block_size - len(source_utf8) % AES.block_size
+    padding = (algorithms.AES.block_size
+        - len(source_utf8) % algorithms.AES.block_size)
     if six.PY2:
         padding = chr(padding) * padding
     else:
         padding = bytes([padding for _ in range(padding)])
     plain_text = source_utf8 + padding
-    encrypted_text = cipher.encrypt(plain_text)
+    encrypted_text = cipher.update(plain_text) + cipher.finalize()
     full_encrypted = b64encode(prefix + salt + encrypted_text)
     _log_debug(salt, key, iv_, full_encrypted, source_text)
     return full_encrypted
