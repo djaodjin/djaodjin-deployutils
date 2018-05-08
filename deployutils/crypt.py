@@ -151,7 +151,6 @@ def encrypt(source_text, passphrase):
     else:
         source_utf8 = str(source_text)
     padding = (IV_BLOCK_SIZE - len(source_utf8) % IV_BLOCK_SIZE)
-    print("XXX %d AES block size, salt of %d bytes, padding of %d bytes" % (IV_BLOCK_SIZE, IV_BLOCK_SIZE - len(prefix), padding))
     if six.PY2:
         padding = chr(padding) * padding
     else:
