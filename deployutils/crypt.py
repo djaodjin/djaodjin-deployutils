@@ -38,6 +38,8 @@ from cryptography.hazmat.primitives import hashes
 
 LOGGER = logging.getLogger(__name__)
 
+IV_BLOCK_SIZE = 16
+
 
 class JSONEncoder(json.JSONEncoder):
 
@@ -82,13 +84,13 @@ def _openssl_key_iv(passphrase, salt):
             digest = hashes.Hash(hashes.MD5(), backend=default_backend())
             digest.update(prev + passwd + salt)
             prev = digest.finalize()
-            req -= 16
+            req -= IV_BLOCK_SIZE
             yield prev
     assert passphrase is not None
     assert salt is not None
     # AES key: 32 bytes, IV: 16 bytes
-    mat = b''.join([x for x in _openssl_kdf(32 + 16)])
-    return mat[0:32], mat[32:48]
+    mat = b''.join([x for x in _openssl_kdf(32 + IV_BLOCK_SIZE)])
+    return mat[0:32], mat[32:32 + IV_BLOCK_SIZE]
 
 
 def decrypt(source_text, passphrase):
@@ -103,8 +105,8 @@ def decrypt(source_text, passphrase):
         _full_encrypted_
     """
     full_encrypted = b64decode(source_text)
-    salt = full_encrypted[8:16]
-    encrypted_text = full_encrypted[16:]
+    salt = full_encrypted[8:IV_BLOCK_SIZE]
+    encrypted_text = full_encrypted[IV_BLOCK_SIZE:]
     key, iv_ = _openssl_key_iv(passphrase, salt)
     cipher = Cipher(
         algorithms.AES(key), modes.CBC(iv_), default_backend()
@@ -137,7 +139,7 @@ def encrypt(source_text, passphrase):
         _source_text_
     """
     prefix = b'Salted__'
-    salt = os.urandom(algorithms.AES.block_size - len(prefix))
+    salt = os.urandom(IV_BLOCK_SIZE - len(prefix))
     key, iv_ = _openssl_key_iv(passphrase, salt)
     cipher = Cipher(
         algorithms.AES(key), modes.CBC(iv_), default_backend()
@@ -148,8 +150,8 @@ def encrypt(source_text, passphrase):
         source_utf8 = source_text.encode('utf-8')
     else:
         source_utf8 = str(source_text)
-    padding = (algorithms.AES.block_size
-        - len(source_utf8) % algorithms.AES.block_size)
+    padding = (IV_BLOCK_SIZE - len(source_utf8) % IV_BLOCK_SIZE)
+    print("XXX %d AES block size, salt of %d bytes, padding of %d bytes" % (IV_BLOCK_SIZE, IV_BLOCK_SIZE - len(prefix), padding))
     if six.PY2:
         padding = chr(padding) * padding
     else:
