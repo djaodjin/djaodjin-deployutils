@@ -26,43 +26,25 @@ from __future__ import absolute_import
 
 import logging, random, six
 
-from django.conf import settings as django_settings
 from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
+from django.db.utils import DatabaseError
 
+from ....helpers import full_name_natural_split
 
 # Beware that if you are using `deployutils.apps.django.logging.RequestFilter`
 # to add `%(username)s` to log entries, there will be a recursive loop through
 # django.contrib.auth calls coming here.
 LOGGER = logging.getLogger(__name__)
 
+UserModel = get_user_model() #pylint:disable=invalid-name
+
 
 class ProxyUserBackend(RemoteUserBackend):
 
     users = {}
 
-    def create_user(self, session_data):
-        user = None
-        username = session_data['username']
-        UserModel = get_user_model() #pylint:disable=invalid-name
-        if ('django.contrib.auth.backends.ModelBackend'
-            in django_settings.AUTHENTICATION_BACKENDS):
-            LOGGER.debug(
-                "attempt to load User(username='%s') from database.", username)
-            try:
-                #pylint:disable=protected-access
-                user = UserModel._default_manager.get_by_natural_key(username)
-            except UserModel.DoesNotExist:
-                LOGGER.debug("'%s' is not in database.", username)
-        else:
-            user = UserModel(
-                id=random.randint(1, (1 << 32) - 1), username=username)
-        if user is not None:
-            LOGGER.debug("add User(id=%d, username=%s) to cache.",
-                user.id, user.username)
-            self.users[user.id] = user
-
-    def authenticate(self, request, username=None):
+    def authenticate(self, request, remote_user=None):
         #pylint:disable=arguments-differ
         # Django <=1.8 and >=1.9 have different signatures.
         """
@@ -73,18 +55,65 @@ class ProxyUserBackend(RemoteUserBackend):
         (before commit 4b9330ccc04575f9e5126529ec355a450d12e77c), if username
         is None, we will assume request is the ``remote_user`` parameter.
         """
-        if not username:
-            username = request
-        if not username:
+        if not remote_user:
+            remote_user = request
+        if not remote_user:
             return None
-        username = self.clean_username(username)
-        for user in six.itervalues(self.users):
-            LOGGER.debug("match %s with User(id=%d, username=%s)",
-                username, user.id, user.username)
-            if user.username == username:
-                LOGGER.debug("found %d %s", user.id, user.username)
-                return user
-        return None
+
+        user = None
+        username = self.clean_username(remote_user)
+        try:
+            #pylint:disable=protected-access
+            if self.create_unknown_user:
+                defaults = {}
+                if isinstance(request, dict):
+                    session_data = request
+                    if 'full_name' in session_data:
+                        first_name, _, last_name = full_name_natural_split(
+                            session_data['full_name'])
+                        defaults.update({
+                            'first_name': first_name,
+                            'last_name': last_name
+                        })
+                    for key in ('email', 'first_name', 'last_name'):
+                        if key in session_data:
+                            defaults.update({key: session_data[key]})
+                user, created = UserModel._default_manager.get_or_create(**{
+                    UserModel.USERNAME_FIELD: username,
+                    'defaults': defaults,
+                })
+                if created:
+                    LOGGER.debug("created user '%s' in database.", username)
+                    user = self.configure_user(user)
+            else:
+                try:
+                    user = UserModel._default_manager.get_by_natural_key(
+                        username)
+                except UserModel.DoesNotExist:
+                    pass
+        except DatabaseError:
+            LOGGER.debug("User table missing from database?")
+            # We don't have a auth_user table, so let's build a hash in memory.
+            for user in six.itervalues(self.users):
+                LOGGER.debug("match %s with User(id=%d, username=%s)",
+                    username, user.id, user.username)
+                if user.username == username:
+                    LOGGER.debug("found %d %s", user.id, user.username)
+                    return user
+            # Not found in memory dict
+            user = UserModel(
+                id=random.randint(1, (1 << 32) - 1), username=username)
+            LOGGER.debug("add User(id=%d, username=%s) to cache.",
+                user.id, user.username)
+            self.users[user.id] = user
+        return user
 
     def get_user(self, user_id):
-        return self.users.get(user_id, None)
+        try:
+            #pylint:disable=protected-access
+            user = UserModel._default_manager.get(pk=user_id)
+        except UserModel.DoesNotExist:
+            return None
+        except DatabaseError:
+            user = self.users.get(user_id, None)
+        return user if self.user_can_authenticate(user) else None

@@ -101,10 +101,10 @@ Clone the repository in a virtualenv and install the prerequisites
     $ pip install -r testsite/requirements.txt
 
 
-Create the credentials file with a ``DJAODJIN_SECRET_KEY``
+Create the credentials file with a ``DJAODJIN_SECRET_KEY`` and the empty db.
 
 
-    $ make install-conf
+    $ make initdb
 
 
 Run the web application

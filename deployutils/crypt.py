@@ -51,6 +51,7 @@ class JSONEncoder(json.JSONEncoder):
 
 def _log_debug(salt, key, iv_, encrypted_text, plain_text,
                passphrase=None, debug_stmt=None):
+    #pylint:disable=too-many-arguments
     if six.PY2:
         hex_salt = ''.join(["%X" % ord(c) for c in salt])
     else:

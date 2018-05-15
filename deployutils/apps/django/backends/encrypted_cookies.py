@@ -30,6 +30,7 @@ from __future__ import absolute_import
 
 import logging, json
 
+from django.contrib.auth import authenticate
 from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
@@ -37,7 +38,7 @@ from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
 
 from .... import crypt
 from .. import settings
-from .auth import ProxyUserBackend
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,12 +106,12 @@ class SessionStore(SessionBase):
             # create Users and session keys expected by Django
             # contrib.auth backend.
             if 'username' in session_data:
-                backend = ProxyUserBackend()
-                backend.create_user(session_data)
-                user = backend.authenticate(session_data['username'])
+                user = authenticate(
+                    request=session_data, remote_user=session_data['username'])
+                if not user:
+                    raise ValueError("Cannot authenticate user.")
                 session_data[SESSION_KEY] = user.id
-                session_data[BACKEND_SESSION_KEY] = "%s.%s" % (
-                     backend.__class__.__module__, backend.__class__.__name__)
+                session_data[BACKEND_SESSION_KEY] = user.backend
                 session_data[HASH_SESSION_KEY] = user.get_session_auth_hash()
         except (IndexError, TypeError, ValueError) as err:
             # Incorrect padding in b64decode, incorrect block size in AES,

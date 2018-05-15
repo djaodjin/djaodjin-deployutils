@@ -15,6 +15,12 @@ SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import choice ; sys
 
 DJAODJIN_SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import choice ; sys.stdout.write("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@\#$%^*-_=+") for i in range(50)]))' )
 
+# Django 1.7,1.8 sync tables without migrations by default while Django 1.9
+# requires a --run-syncdb argument.
+# Implementation Note: We have to wait for the config files to be installed
+# before running the manage.py command (else missing SECRECT_KEY).
+RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(PYTHON) manage.py migrate --help 2>/dev/null)),--run-syncdb,)
+
 scripts := djd
 
 install::
@@ -22,6 +28,10 @@ install::
 		build -b $(CURDIR)/build install
 
 install-conf:: $(srcDir)/credentials
+
+initdb: install-conf
+	-rm -f $(srcDir)/db.sqlite
+	cd $(srcDir) && $(PYTHON) ./manage.py migrate $(RUNSYNCDB) --noinput
 
 $(srcDir)/credentials: $(srcDir)/testsite/etc/credentials
 	[ -f $@ ] || \

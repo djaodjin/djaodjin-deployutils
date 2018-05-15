@@ -63,6 +63,10 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+#        'django.db.backends': {
+#           'handlers': ['logfile'],
+#           'level': 'DEBUG',
+#        },
         # This is the root logger. Apparently setting the level has no effect
         # ... anymore?
         '': {
@@ -123,7 +127,7 @@ STATIC_URL = '/static/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite'),
     }
 }
 
@@ -163,6 +167,7 @@ SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
 #            backend = load_backend(backend_path)
 AUTHENTICATION_BACKENDS = (
     'deployutils.apps.django.backends.auth.ProxyUserBackend',
+#    'django.contrib.auth.backends.RemoteUserBackend',
 )
 
 DEPLOYUTILS = {
@@ -170,6 +175,8 @@ DEPLOYUTILS = {
     'MOCKUP_SESSIONS': {
         'donny': {
             'username': 'donny',
+            'email': 'donny@example.com',
+            'full_name': 'Donny Deploy',
             'roles': {
                 'manager': [{
                     'slug': 'testsite', 'printable_name': 'Testsite'}]}},
