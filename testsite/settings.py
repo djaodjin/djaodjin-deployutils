@@ -4,7 +4,7 @@ Django settings for deployutils testsite project.
 
 import os, sys
 
-from django.core.urlresolvers import reverse_lazy
+from deployutils.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
 
 
@@ -74,16 +74,24 @@ LOGGING = {
 
 
 # HTTP Pipeline
-MIDDLEWARE_CLASSES = [
+if DEBUG:
+    MIDDLEWARE = tuple([
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ])
+else:
+    MIDDLEWARE = ()
+
+MIDDLEWARE += (
     'django.middleware.security.SecurityMiddleware',
     'deployutils.apps.django.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+)
+
+MIDDLEWARE_CLASSES = MIDDLEWARE
 
 ROOT_URLCONF = 'testsite.urls'
 WSGI_APPLICATION = 'testsite.wsgi.application'

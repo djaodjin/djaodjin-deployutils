@@ -22,26 +22,12 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-URLs for deployutils testsite.
-"""
+#pylint: disable=no-name-in-module,unused-import
 
-from django.conf import settings
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-
-if settings.DEBUG:
-    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-    import debug_toolbar
-
-    urlpatterns = staticfiles_urlpatterns()
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
-else:
-    urlpatterns = []
-
-urlpatterns += [
-    url(r'^', include('deployutils.apps.django.mockup.urls')),
-    url(r'^$', TemplateView.as_view(template_name='index.html'), name='index'),
-]
+try:
+    from django.urls import NoReverseMatch, reverse, reverse_lazy
+except ImportError: # <= Django 1.10, Python<3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
+except ModuleNotFoundError: #pylint:disable=undefined-variable
+    # <= Django 1.10, Python>=3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy

@@ -2,11 +2,12 @@ DjaoDjin deployutils
 ====================
 
 This Django app enables a Django project to seamlessly integrate behind
-the [DjaoDjin HTTP session manager reverse proxy](https://djaodjin.com/docs/technical/).
+the [DjaoDjin HTTP session manager reverse proxy](https://github.com/djaodjin/djaoapp).
 It will replace the default ``django.contrib.sessions``
 and ``AUTHENTICATION_BACKENDS`` to decode sessions forwarded to your Django
 project by the HTTP session manager.
 
+[More technical documentation](https://djaodjin.com/docs/technical/)
 
 Install
 -------
@@ -92,7 +93,7 @@ Development
 Clone the repository in a virtualenv and install the prerequisites
 
 
-    $ virtualenv-2.7 _installTop_
+    $ virtualenv _installTop_
     $ cd _installTop_
     $ source bin/activate
     $ git clone https://github.com/djaodjin/djaodjin-deployutils.git
@@ -103,7 +104,7 @@ Clone the repository in a virtualenv and install the prerequisites
 Create the credentials file with a ``DJAODJIN_SECRET_KEY``
 
 
-    $ make initdb
+    $ make install-conf
 
 
 Run the web application
@@ -147,4 +148,4 @@ Using configuration files from a S3 bucket
 ------------------------------------------
 
 
-    $ python manage.py upload_configs credentials site.conf
+    $ python manage.py upload_configs --location s3://__example__ credentials site.conf

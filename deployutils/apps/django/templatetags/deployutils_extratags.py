@@ -66,7 +66,7 @@ def wraplines(text):
     text = str(text)
     line_length = 80
     text_length = len(text)
-    nb_lines = text_length / line_length
+    nb_lines = text_length // line_length
     if text_length % line_length > 0:
         nb_lines += 1
     lines = [text[first * line_length:(first + 1) * line_length]

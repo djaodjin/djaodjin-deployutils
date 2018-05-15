@@ -49,21 +49,26 @@ class JSONEncoder(json.JSONEncoder):
         return super(JSONEncoder, self).default(obj)
 
 
-def _log_debug(salt, key, iv_, encrypted_text, plain_text):
+def _log_debug(salt, key, iv_, encrypted_text, plain_text,
+               passphrase=None, debug_stmt=None):
     if six.PY2:
         hex_salt = ''.join(["%X" % ord(c) for c in salt])
     else:
         hex_salt = ''.join(["%X" % c for c in salt])
     try:
-        LOGGER.debug('==========================================')
-        LOGGER.debug('salt:    %s', hex_salt)
-        LOGGER.debug('key:     %s', hexlify(key).upper())
-        LOGGER.debug('iv:      %s', hexlify(iv_).upper())
-        LOGGER.debug("encrypt: '%s'", encrypted_text)
+        if debug_stmt:
+            LOGGER.debug('=========== %s', debug_stmt)
+        else:
+            LOGGER.debug('==========================================')
+        LOGGER.debug('passphrase:    %s', passphrase)
+        LOGGER.debug('salt:          %s', hex_salt)
+        LOGGER.debug('key:           %s', hexlify(key).upper())
+        LOGGER.debug('iv:            %s', hexlify(iv_).upper())
+        LOGGER.debug('encrypt:       %s', encrypted_text)
         if plain_text:
             if hasattr(plain_text, 'encode'):
                 plain_text.encode('utf-8')
-            LOGGER.debug("plain:   '%s'", plain_text)
+            LOGGER.debug("plain:         '%s'", plain_text)
     except UnicodeDecodeError:
         LOGGER.debug('decryption failed')
     LOGGER.debug('*****************************************')
@@ -93,7 +98,7 @@ def _openssl_key_iv(passphrase, salt):
     return mat[0:32], mat[32:32 + IV_BLOCK_SIZE]
 
 
-def decrypt(source_text, passphrase):
+def decrypt(source_text, passphrase, debug_stmt=None):
     """
     Returns plain text from *source_text*, a base64 AES encrypted string
     as generated with openssl.
@@ -104,6 +109,8 @@ def decrypt(source_text, passphrase):
         iv=...
         _full_encrypted_
     """
+    if debug_stmt is None:
+        debug_stmt = "decrypt"
     full_encrypted = b64decode(source_text)
     salt = full_encrypted[8:IV_BLOCK_SIZE]
     encrypted_text = full_encrypted[IV_BLOCK_SIZE:]
@@ -121,11 +128,12 @@ def decrypt(source_text, passphrase):
     plain_text = plain_text[:-padding]
     if hasattr(plain_text, 'decode'):
         plain_text = plain_text.decode('utf-8')
-    _log_debug(salt, key, iv_, source_text, plain_text)
+    _log_debug(salt, key, iv_, source_text, plain_text,
+        passphrase=passphrase, debug_stmt=debug_stmt)
     return plain_text
 
 
-def encrypt(source_text, passphrase):
+def encrypt(source_text, passphrase, debug_stmt=None):
     """
     Returns *source_text* as a base64 AES encrypted string.
 
@@ -138,6 +146,8 @@ def encrypt(source_text, passphrase):
         iv=...
         _source_text_
     """
+    if debug_stmt is None:
+        debug_stmt = "encrypt"
     prefix = b'Salted__'
     salt = os.urandom(IV_BLOCK_SIZE - len(prefix))
     key, iv_ = _openssl_key_iv(passphrase, salt)
@@ -158,5 +168,6 @@ def encrypt(source_text, passphrase):
     plain_text = source_utf8 + padding
     encrypted_text = cipher.update(plain_text) + cipher.finalize()
     full_encrypted = b64encode(prefix + salt + encrypted_text)
-    _log_debug(salt, key, iv_, full_encrypted, source_text)
+    _log_debug(salt, key, iv_, full_encrypted, source_text,
+        passphrase=passphrase, debug_stmt=debug_stmt)
     return full_encrypted

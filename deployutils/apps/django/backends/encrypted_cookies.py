@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2018, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -68,8 +68,19 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        return crypt.encrypt(json.dumps(session_data, cls=crypt.JSONEncoder),
-            passphrase=passphrase)
+        encrypted = crypt.encrypt(
+            json.dumps(session_data, cls=crypt.JSONEncoder),
+            passphrase=passphrase,
+            debug_stmt="encrypted_cookies.SessionStore.prepare")
+        # b64encode will return `bytes` (Py3) but Django 2.0 is expecting
+        # a `str` to add to the cookie header, otherwise it wraps those
+        # `bytes` into a b'***' and adds that to the cookie.
+        # Note that Django 1.11 will add those `bytes` to the cookie "as-is".
+        if hasattr(encrypted, 'decode'):
+            as_text = encrypted.decode('utf-8')
+        else:
+            as_text = encrypted
+        return as_text
 
     def load(self):
         """
@@ -86,7 +97,8 @@ class SessionStore(SessionBase):
         session_data = {}
         try:
             session_text = crypt.decrypt(self.session_key,
-                passphrase=settings.DJAODJIN_SECRET_KEY)
+                passphrase=settings.DJAODJIN_SECRET_KEY,
+                debug_stmt="encrypted_cookies.SessionStore.load")
             session_data = json.loads(session_text)
             LOGGER.debug("session data: %s", session_data)
             # We have been able to decode the session data, let's
