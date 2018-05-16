@@ -35,6 +35,7 @@ from django.contrib.sessions.backends.signed_cookies import SessionStore \
     as SessionBase
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
     SESSION_KEY)
+from django.utils import six
 
 from .... import crypt
 from .. import settings
@@ -77,8 +78,8 @@ class SessionStore(SessionBase):
         # a `str` to add to the cookie header, otherwise it wraps those
         # `bytes` into a b'***' and adds that to the cookie.
         # Note that Django 1.11 will add those `bytes` to the cookie "as-is".
-        if hasattr(encrypted, 'decode'):
-            as_text = encrypted.decode('utf-8')
+        if not isinstance(encrypted, six.string_types):
+            as_text = encrypted.decode('ascii')
         else:
             as_text = encrypted
         return as_text

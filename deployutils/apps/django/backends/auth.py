@@ -44,6 +44,14 @@ class ProxyUserBackend(RemoteUserBackend):
 
     users = {}
 
+    def user_can_authenticate(self, user):
+        """
+        Reject users with is_active=False. Custom user models that don't have
+        that attribute are allowed.
+        """
+        is_active = getattr(user, 'is_active', None)
+        return is_active or is_active is None
+
     def authenticate(self, request, remote_user=None):
         #pylint:disable=arguments-differ
         # Django <=1.8 and >=1.9 have different signatures.
@@ -106,7 +114,7 @@ class ProxyUserBackend(RemoteUserBackend):
             LOGGER.debug("add User(id=%d, username=%s) to cache.",
                 user.id, user.username)
             self.users[user.id] = user
-        return user
+        return user if self.user_can_authenticate(user) else None
 
     def get_user(self, user_id):
         try:
