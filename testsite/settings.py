@@ -4,7 +4,7 @@ Django settings for deployutils testsite project.
 
 import os, sys
 
-from deployutils.compat import reverse_lazy
+from deployutils.apps.django.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
 
 
