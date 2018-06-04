@@ -25,6 +25,15 @@
 #pylint: disable=no-name-in-module,unused-import,import-error
 
 try:
+    from django.urls import NoReverseMatch, reverse, reverse_lazy
+except ImportError: # <= Django 1.10, Python<3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
+except ModuleNotFoundError: #pylint:disable=undefined-variable
+    # <= Django 1.10, Python>=3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
+
+
+try:
     from django.template.base import DebugLexer
 except ImportError: # django < 1.8
     from django.template.debug import DebugLexer as BaseDebugLexer
@@ -66,3 +75,9 @@ try:
 except ImportError: # django < 1.11
     class MiddlewareMixin(object):
         pass
+
+
+def is_authenticated(request):
+    if callable(request.user.is_authenticated):
+        return request.user.is_authenticated()
+    return request.user.is_authenticated

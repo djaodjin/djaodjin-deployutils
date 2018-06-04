@@ -26,14 +26,16 @@ from django import template
 from django.contrib.messages.api import get_messages
 from django.forms import BaseForm
 
+from ..compat import is_authenticated as is_authenticated_base
 from .deployutils_prefixtags import site_prefixed
+
 
 register = template.Library()
 
 
 @register.filter()
 def is_authenticated(request):
-    return request.user.is_authenticated()
+    return is_authenticated_base(request)
 
 
 @register.filter()
@@ -52,11 +54,22 @@ def messages(obj):
 
 
 @register.filter()
+def no_cache(asset_url):
+    """
+    Removes query parameters
+    """
+    pos = asset_url.rfind('?')
+    if pos > 0:
+        asset_url = asset_url[:pos]
+    return asset_url
+
+
+@register.filter()
 def url_profile(request): #pylint:disable=unused-argument
     """
     *Mockup*: access the user profile.
     """
-    if hasattr(request, 'user') and request.user.is_authenticated():
+    if hasattr(request, 'user') and is_authenticated_base(request):
         return site_prefixed("users/%s/" % request.user)
     return None
 

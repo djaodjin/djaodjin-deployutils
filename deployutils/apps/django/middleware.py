@@ -39,7 +39,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import connections
 
 from . import settings
-from .compat import MiddlewareMixin
+from .compat import MiddlewareMixin, is_authenticated
 from .thread_local import clear_cache, set_request
 
 
@@ -93,7 +93,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 
     @staticmethod
     def process_response(request, response):
-        if hasattr(request, 'user') and request.user.is_authenticated():
+        if hasattr(request, 'user') and is_authenticated(request):
             response['User-Session'] = request.user.username
         if django_settings.DEBUG:
             # When DEBUG=False, Django will not store information regarding
