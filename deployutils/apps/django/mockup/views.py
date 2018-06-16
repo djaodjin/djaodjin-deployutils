@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2018, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,8 @@ Mockup login view used in testing.
 """
 from __future__ import unicode_literals
 
+from importlib import import_module
+
 from django.conf import settings as django_settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
     get_user_model)
@@ -36,7 +38,6 @@ from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.edit import FormMixin, ProcessFormView
 
 from ..import settings
-from ..backends.encrypted_cookies import SessionStore
 from .forms import SignupForm
 
 #pylint:disable=no-name-in-module,import-error
@@ -97,14 +98,14 @@ class SigninView(TemplateResponseMixin, RedirectFormMixin, ProcessFormView):
     template_name = 'accounts/login.html'
 
     def form_valid(self, form):
-        session_store = SessionStore(settings.DJAODJIN_SECRET_KEY)
+        engine = import_module(django_settings.SESSION_ENGINE)
+        session_store = engine.SessionStore()
         #pylint:disable=protected-access
         session_store._session_key = session_store.prepare(
             settings.MOCKUP_SESSIONS[form.cleaned_data['username']],
             settings.DJAODJIN_SECRET_KEY)
         session_store.modified = True
         self.request.session = session_store
-
         return super(SigninView, self).form_valid(form)
 
 

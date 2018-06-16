@@ -22,28 +22,21 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-URLs for deployutils testsite.
-"""
-
 from django.conf import settings
-from django.conf.urls import url, include
+from django.views.generic import TemplateView
+from deployutils.apps.django.compat import is_authenticated
 
-from .views import IndexView
 
+class IndexView(TemplateView):
 
-if settings.DEBUG:
-    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-    import debug_toolbar
+    template_name = 'index.html'
 
-    urlpatterns = staticfiles_urlpatterns()
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
-else:
-    urlpatterns = []
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+        context.update({'SESSION_ENGINE': settings.SESSION_ENGINE})
+        return context
 
-urlpatterns += [
-    url(r'^', include('deployutils.apps.django.mockup.urls')),
-    url(r'^$', IndexView.as_view(), name='index'),
-]
+    def get(self, request, *args, **kwargs):
+        if is_authenticated(self.request):
+            self.request.session['mydata'] = 'dummy'
+        return super(IndexView, self).get(request, *args, **kwargs)

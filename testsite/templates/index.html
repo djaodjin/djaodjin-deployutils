@@ -12,13 +12,23 @@ Welcome to the testsite for djaodjin-deployutils!
     </p>
     <div>
         <div>
+            <h4>SessionEngine</h4>
+            <pre><code>{{SESSION_ENGINE}}</code></pre>
+        </div>
+        <div>
             <h4>As HTTP Cookie Header</h4>
             <pre><code>{{request.session.session_key|wraplines}}</code></pre>
         </div>
         <div>
-            <h4>Session Data</h4>
-            <pre><code>{{request.session.data|wraplines}}</code></pre>
+            <h4>Session Data (From proxy)</h4>
+            <pre><code>{{request.session.session_key_data|wraplines}}</code></pre>
         </div>
+        {% if request.session.local_data %}
+        <div>
+            <h4>Session Data (Local)</h4>
+            <pre><code>{{request.session.local_data|wraplines}}</code></pre>
+        </div>
+        {% endif %}
     </div>
     <div>
         <p>

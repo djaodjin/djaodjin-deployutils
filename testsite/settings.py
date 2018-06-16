@@ -150,6 +150,7 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME':
 # but just to be sure:
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
+#SESSION_ENGINE = 'deployutils.apps.django.backends.jwt_session_store'
 
 # The Django Middleware expects to find the authentication backend
 # before returning an authenticated user model.
@@ -184,7 +185,8 @@ DEPLOYUTILS = {
     'ALLOWED_NO_SESSION': [
         STATIC_URL,
         reverse_lazy('login'), reverse_lazy('registration_register'),
-        reverse_lazy('index')]
+        reverse_lazy('index')],
+    'BACKEND_SESSION_STORE': 'django.contrib.sessions.backends.db.SessionStore',
 }
 
 # User settings

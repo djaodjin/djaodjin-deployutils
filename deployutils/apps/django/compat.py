@@ -25,6 +25,12 @@
 #pylint: disable=no-name-in-module,unused-import,import-error
 
 try:
+    from django.utils.module_loading import import_string
+except ImportError: # django < 1.7
+    from django.utils.module_loading import import_by_path as import_string
+
+
+try:
     from django.urls import NoReverseMatch, reverse, reverse_lazy
 except ImportError: # <= Django 1.10, Python<3.6
     from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy

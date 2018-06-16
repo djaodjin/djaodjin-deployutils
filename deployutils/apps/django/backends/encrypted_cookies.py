@@ -30,15 +30,13 @@ from __future__ import absolute_import
 
 import logging, json
 
-from django.contrib.auth import authenticate
-from django.contrib.sessions.backends.signed_cookies import SessionStore \
-    as SessionBase
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
-    SESSION_KEY)
+    SESSION_KEY, authenticate)
 from django.utils import six
 
 from .... import crypt
 from .. import settings
+from .session_base import SessionStore as SessionBase
 
 
 LOGGER = logging.getLogger(__name__)
@@ -48,10 +46,15 @@ class SessionStore(SessionBase):
 
     def __init__(self, session_key=None):
         super(SessionStore, self).__init__(session_key=session_key)
+        self._session_key_data = {}
 
     @property
     def data(self):
         return self._session
+
+    @property
+    def session_key_data(self):
+        return self._session_key_data
 
     @staticmethod
     def prepare(session_data={}, #pylint: disable=dangerous-default-value
@@ -102,7 +105,8 @@ class SessionStore(SessionBase):
                 passphrase=settings.DJAODJIN_SECRET_KEY,
                 debug_stmt="encrypted_cookies.SessionStore.load")
             session_data = json.loads(session_text)
-            LOGGER.debug("session data: %s", session_data)
+            self._session_key_data.update(session_data)
+            LOGGER.debug("session data (from proxy): %s", session_data)
             # We have been able to decode the session data, let's
             # create Users and session keys expected by Django
             # contrib.auth backend.
@@ -114,6 +118,10 @@ class SessionStore(SessionBase):
                 session_data[SESSION_KEY] = user.id
                 session_data[BACKEND_SESSION_KEY] = user.backend
                 session_data[HASH_SESSION_KEY] = user.get_session_auth_hash()
+                if self._local:
+                    session_data_local = self._local.load()
+                    LOGGER.debug("session data (local): %s", session_data_local)
+                    session_data.update(session_data_local)
         except (IndexError, TypeError, ValueError) as err:
             # Incorrect padding in b64decode, incorrect block size in AES,
             # incorrect PKCS#5 padding or malformed json will end-up here.
