@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin Inc.
+# Copyright (c) 2018, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,6 @@ setup(
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,
     license='BSD',
-    description='Management commands to deploy Django webapps',
+    description='Deploy webapps running behind djaoapp session manager',
     long_description=open('README.md').read(),
 )
