@@ -24,6 +24,8 @@
 
 #pylint: disable=no-name-in-module,unused-import,import-error
 
+from django.utils import six
+
 try:
     from django.utils.module_loading import import_string
 except ImportError: # django < 1.7
@@ -68,7 +70,11 @@ def get_html_engine():
         from django.template import engines
         from django.template.utils import InvalidTemplateEngineError
         try:
-            return engines['html'], None, None
+            try:
+                builtins = engines['html'].engine.template_builtins
+            except AttributeError:
+                builtins = None
+            return engines['html'], None, builtins
         except InvalidTemplateEngineError:
             engine = engines['django'].engine
             return engine, engine.template_libraries, engine.template_builtins

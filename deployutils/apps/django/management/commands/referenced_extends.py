@@ -24,7 +24,8 @@
 
 import os, re, six, sys
 
-from . import ResourceCommand, get_template_search_path
+from . import ResourceCommand
+from ...themes import get_template_search_path
 
 
 class Command(ResourceCommand):

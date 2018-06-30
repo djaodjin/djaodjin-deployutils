@@ -121,7 +121,7 @@ def decrypt(source_text, passphrase, debug_stmt=None):
     ).decryptor()
     plain_text = cipher.update(encrypted_text)
     plain_text += cipher.finalize()
-    # PKCS#5 padding
+    # PKCS#7 padding
     if six.PY2:
         padding = ord(plain_text[-1])
     else:
@@ -156,7 +156,7 @@ def encrypt(source_text, passphrase, debug_stmt=None):
         algorithms.AES(key), modes.CBC(iv_), default_backend()
     ).encryptor()
 
-    # PKCS#5 padding
+    # PKCS#7 padding
     if hasattr(source_text, 'encode'):
         source_utf8 = source_text.encode('utf-8')
     else:

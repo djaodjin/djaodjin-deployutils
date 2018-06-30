@@ -25,101 +25,13 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, re, shutil, subprocess, sys, zipfile
+import sys
 
 from django.conf import settings as django_settings
-from django.contrib.staticfiles.templatetags.staticfiles import do_static
-from django.template.base import (Parser, NodeList,
-    TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK, TOKEN_COMMENT, TemplateSyntaxError)
-from django.template.context import Context
-from django.utils.encoding import force_text
-from django.utils import six
-from django_assets.templatetags.assets import assets
 
-from ...compat import DebugLexer, get_html_engine
-from .....copy import shell_command
-from . import ResourceCommand, get_template_search_path
-
-LOGGER = logging.getLogger(__name__)
-
-
-class URLRewriteWrapper(object):
-
-    def __init__(self, file_obj, path_prefix=None):
-        self.wrapped = file_obj
-        self.path_prefix = path_prefix
-
-    def write(self, text):
-        if self.path_prefix:
-            text = text.replace(
-                '="/static', '="/%s/static' % self.path_prefix)
-        return self.wrapped.write(text)
-
-
-class Template(object):
-
-    def __init__(self, engine):
-        self.engine = engine
-
-
-class AssetsParser(Parser):
-
-    def __init__(self, tokens, dest_stream,
-                 libraries=None, builtins=None, origin=None):
-        #pylint:disable=too-many-arguments
-        super(AssetsParser, self).__init__(tokens,
-            libraries=libraries, builtins=builtins, origin=origin)
-        self.dest_stream = dest_stream
-        self.context = Context()
-        engine, _, _ = get_html_engine()
-        self.context.template = Template(engine)
-
-    def parse_through(self, parse_until=None):
-        if parse_until is None:
-            parse_until = []
-        nodelist = NodeList()
-        while self.tokens:
-            token = self.next_token()
-            if six.PY2:
-                contents = token.contents.encode('utf8')
-            else:
-                contents = token.contents
-            if token.token_type == TOKEN_TEXT:
-                self.dest_stream.write(contents)
-            elif token.token_type == TOKEN_VAR:
-                self.dest_stream.write("{{%s}}" % contents)
-            elif token.token_type == TOKEN_BLOCK:
-                try:
-                    command = token.contents.split()[0]
-                except IndexError:
-                    self.empty_block_tag(token)
-                if command in parse_until:
-                    # put token back on token list so calling
-                    # code knows why it terminated
-                    self.prepend_token(token)
-                    return nodelist
-                if command == 'assets':
-                    try:
-                        # XXX This should work but for some reason debug does
-                        # not get propagated.
-                        # Lost in webassets.bundle.resolve_contents
-                        token.contents += ' debug=False'
-                        assets_string = str(
-                            assets(self, token).render(self.context))
-                        self.dest_stream.write(assets_string)
-                    except TemplateSyntaxError as err:
-                        if hasattr(self, 'error'):
-                            raise self.error(token, err)
-                        # Django < 1.8
-                        elif not self.compile_function_error(token, err):
-                            raise
-                elif command == 'static':
-                    self.dest_stream.write(
-                        do_static(self, token).render(self.context))
-                else:
-                    self.dest_stream.write("{%% %s %%}" % contents)
-            elif token.token_type == TOKEN_COMMENT:
-                pass
+from . import ResourceCommand
+from ...themes import (init_build_and_install_dirs, package_assets,
+    package_theme, fill_package)
 
 
 class Command(ResourceCommand):
@@ -193,162 +105,15 @@ class Command(ResourceCommand):
 
     def handle(self, *args, **options):
         app_name = options['app_name']
-        zip_path = package_theme(app_name,
-            install_dir=options['install_dir'],
+        build_dir, install_dir = init_build_and_install_dirs(app_name,
             build_dir=options['build_dir'],
+            install_dir=options['install_dir'])
+        package_theme(app_name, build_dir,
             excludes=options['excludes'],
             includes=options['includes'],
             path_prefix=options['path_prefix'])
+        package_assets(app_name, build_dir=build_dir)
+        zip_path = fill_package(app_name,
+            build_dir=build_dir,
+            install_dir=install_dir)
         sys.stdout.write('package built: %s\n' % zip_path)
-
-
-def package_theme(app_name, install_dir=None, build_dir=None,
-                  excludes=None, includes=None, path_prefix=None):
-    #pylint:disable=too-many-locals,too-many-arguments
-    if not build_dir:
-        build_dir = os.path.join(os.getcwd(), 'build')
-    if not install_dir:
-        install_dir = os.getcwd()
-    build_dir = os.path.join(
-        os.path.normpath(os.path.abspath(build_dir)), app_name)
-    install_dir = os.path.normpath(os.path.abspath(install_dir))
-    templates_dest = os.path.join(build_dir, 'templates')
-    resources_dest = os.path.join(build_dir, 'public')
-    # override STATIC_URL to prefix APP_NAME.
-    orig_static_url = django_settings.STATIC_URL
-    if (app_name != django_settings.APP_NAME
-        and not django_settings.STATIC_URL.startswith('/' + app_name)):
-        django_settings.STATIC_URL = '/' + app_name + orig_static_url
-    if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
-    os.makedirs(build_dir)
-    if not os.path.exists(templates_dest):
-        os.makedirs(templates_dest)
-    template_dirs = get_template_search_path(app_name)
-    for template_dir in template_dirs:
-        # The first of template_dirs usually contains the most specialized
-        # templates (ie. the ones we truely want to install).
-        if (templates_dest
-            and not os.path.samefile(template_dir, templates_dest)):
-            install_templates(template_dir, templates_dest,
-                excludes=excludes, includes=includes, path_prefix=path_prefix)
-
-    # Copy local resources (not under source control) to resources_dest.
-    excludes = ['--exclude', '*~', '--exclude', '.DS_Store',
-        '--exclude', '.webassets-cache']
-    app_static_root = django_settings.STATIC_ROOT
-    assert app_static_root is not None and app_static_root
-    # When app_static_root ends with the static_url, we will want
-    # to insert the app_name prefix.
-    static_root_parts = app_static_root.split(os.sep)
-    root_parts_idx = len(static_root_parts)
-    root_idx = len(app_static_root)
-    found = False
-    for url_part in reversed(orig_static_url.split('/')):
-        found = True # With ``break`` later on to default to False
-                     # when zero iteration.
-        if url_part:
-            root_parts_idx = root_parts_idx - 1
-            root_idx = root_idx - len(static_root_parts[root_parts_idx]) - 1
-            if url_part != static_root_parts[root_parts_idx]:
-                found = False
-                break
-    if found:
-        app_static_root = os.path.join(
-            app_static_root[:root_idx], django_settings.STATIC_URL[1:-1])
-        # static_url is required per-Django to start and ends with a '/'
-        # (i.e. '/static/').
-        # If we have a trailing '/', rsync will copy the content
-        # of the directory instead of the directory itself.
-    shell_command(['/usr/bin/rsync']
-        + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
-        + [app_static_root, resources_dest])
-    if not os.path.isdir(install_dir):
-        os.makedirs(install_dir)
-    zip_path = os.path.join(install_dir, '%s.zip' % app_name)
-    with zipfile.ZipFile(zip_path, 'w') as zip_file:
-        fill_package(zip_file, os.path.dirname(build_dir), prefix=app_name)
-    return zip_path
-
-def fill_package(zip_file, srcroot, prefix=''):
-    for pathname in os.listdir(os.path.join(srcroot, prefix)):
-        pathname = os.path.join(prefix, pathname)
-        full_path = os.path.join(srcroot, pathname)
-        if os.path.isfile(full_path):
-            zip_file.write(full_path, pathname)
-        if os.path.isdir(full_path):
-            fill_package(zip_file, srcroot, prefix=pathname)
-
-
-def install_templates(srcroot, destroot, prefix='', excludes=None,
-                      includes=None, path_prefix=None):
-    #pylint:disable=too-many-arguments
-    """
-    Expand link to compiled assets all templates in *srcroot*
-    and its subdirectories.
-    """
-    #pylint: disable=too-many-locals
-    if not os.path.exists(os.path.join(prefix, destroot)):
-        os.makedirs(os.path.join(prefix, destroot))
-    for pathname in os.listdir(os.path.join(srcroot, prefix)):
-        pathname = os.path.join(prefix, pathname)
-        excluded = False
-        for pat in excludes:
-            if re.match(pat, pathname):
-                excluded = True
-                break
-        if excluded:
-            for pat in includes:
-                if re.match(pat, pathname):
-                    excluded = False
-                    break
-        if excluded:
-            LOGGER.debug("skip %s", pathname)
-            continue
-        source_name = os.path.join(srcroot, pathname)
-        dest_name = os.path.join(destroot, pathname)
-        if os.path.isfile(source_name) and not os.path.exists(dest_name):
-            # We don't want to overwrite specific theme files by generic ones.
-            with open(source_name) as source:
-                template_string = source.read()
-            try:
-                template_string = force_text(template_string)
-                lexer = DebugLexer(template_string)
-                tokens = lexer.tokenize()
-                if not os.path.isdir(os.path.dirname(dest_name)):
-                    os.makedirs(os.path.dirname(dest_name))
-                from django.template.backends.django import DjangoTemplates
-                _, libraries, builtins = get_html_engine()
-                with open(dest_name, 'w') as dest:
-                    parser = AssetsParser(tokens,
-                        URLRewriteWrapper(dest, path_prefix),
-                        libraries=libraries,
-                        builtins=builtins,
-                        origin=None)
-                    parser.parse_through()
-                cmdline = ['diff', '-u', source_name, dest_name]
-                cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
-                lines = cmd.stdout.readlines()
-                cmd.wait()
-                # Non-zero error codes are ok here. That's how diff
-                # indicates the files are different.
-                if lines:
-                    verb = 'compile'
-                else:
-                    verb = 'install'
-                sys.stdout.write("%s %s to %s\n" % (verb,
-                    source_name.replace(
-                        django_settings.BASE_DIR, '*APP_ROOT*'),
-                    dest_name.replace(destroot,
-                        '*MULTITIER_TEMPLATES_ROOT*')))
-                LOGGER.info("%s %s to %s", verb,
-                    source_name.replace(
-                        django_settings.BASE_DIR, '*APP_ROOT*'),
-                    dest_name.replace(destroot,
-                        '*MULTITIER_TEMPLATES_ROOT*'))
-            except UnicodeDecodeError:
-                LOGGER.warning("%s: Templates can only be constructed "
-                    "from unicode or UTF-8 strings.", source_name)
-        elif os.path.isdir(source_name):
-            install_templates(srcroot, destroot, prefix=pathname,
-                excludes=excludes, includes=includes, path_prefix=path_prefix)
