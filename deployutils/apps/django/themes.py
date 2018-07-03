@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, re, shutil, subprocess, sys, zipfile
+import logging, os, re, shutil, subprocess, zipfile
 
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.templatetags.staticfiles import do_static
@@ -275,7 +275,8 @@ def package_assets(app_name, build_dir):#pylint:disable=unused-argument
 
 
 def package_theme(app_name, build_dir,
-                  excludes=None, includes=None, path_prefix=None):
+                  excludes=None, includes=None, path_prefix=None,
+                  template_dirs=None):
     """
     Package resources and templates for a multi-tier environment
     into a zip file.
@@ -293,7 +294,8 @@ def package_theme(app_name, build_dir,
         django_settings.STATIC_URL = '/' + app_name + orig_static_url
     if not os.path.exists(templates_dest):
         os.makedirs(templates_dest)
-    template_dirs = get_template_search_path(app_name)
+    if template_dirs is None:
+        template_dirs = get_template_search_path(app_name)
     for template_dir in template_dirs:
         # The first of template_dirs usually contains the most specialized
         # templates (ie. the ones we truely want to install).
@@ -436,11 +438,7 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                     verb = 'install'
                 dest_multitier_name = dest_name.replace(destroot,
                         '*MULTITIER_TEMPLATES_ROOT*')
-                sys.stdout.write("%s %s to %s\n" % (verb,
-                    source_name.replace(
-                        django_settings.BASE_DIR, '*APP_ROOT*'),
-                    dest_multitier_name))
-                LOGGER.info("%s %s to %s", verb,
+                LOGGER.debug("%s %s to %s", verb,
                     source_name.replace(
                         django_settings.BASE_DIR, '*APP_ROOT*'),
                     dest_multitier_name)
