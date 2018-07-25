@@ -48,15 +48,14 @@ def configure_logging():
         LOGGER = logging.getLogger()
 
 
-def locate_config(confname, app_name, prefix='etc', verbose=False):
+def locate_config(confname, app_name,
+                  location=None, prefix='etc', verbose=False):
     """
     Returns absolute path on the filesystem to a config file named *confname*.
     """
     candidates = []
-    app_config_dir = ('%s_CONFIG_DIR' % app_name).upper()
-    if app_config_dir in os.environ:
-        candidate = os.path.normpath(
-            os.path.join(os.environ[app_config_dir], confname))
+    if location:
+        candidate = os.path.normpath(os.path.join(location, confname))
         if os.path.isfile(candidate):
             candidates += [candidate]
     candidate = os.path.normpath(os.path.join(
@@ -79,7 +78,6 @@ def locate_config(confname, app_name, prefix='etc', verbose=False):
     return None
 
 
-# Read environment variable first
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
 def load_config(app_name, *args, **kwargs):
     """
@@ -95,8 +93,17 @@ def load_config(app_name, *args, **kwargs):
     prefix = kwargs.get('prefix', 'etc')
     verbose = kwargs.get('verbose', False)
     location = kwargs.get('location', None)
-    passphrase = kwargs.get('passphrase', None)
+    passphrase = kwargs.get('passphrase',
+        os.getenv("%s_SETTINGS_CRYPT_KEY" % app_name.upper(),
+            os.getenv("SETTINGS_CRYPT_KEY", None)))
     confnames = args
+
+    if not location:
+        location = os.getenv("%s_SETTINGS_LOCATION" % app_name.upper(), None)
+    if not location:
+        location = os.getenv("SETTINGS_LOCATION", None)
+        if location:
+            location = "%s/%s" % (location, app_name)
 
     config = {}
     for confname in confnames:
@@ -108,7 +115,7 @@ def load_config(app_name, *args, **kwargs):
                 try:
                     conn = boto.connect_s3()
                     bucket = conn.get_bucket(bucket_name)
-                    key_name = '%s/%s/%s' % (prefix, app_name, confname)
+                    key_name = '%s/%s' % (prefix, confname)
                     key = bucket.get_key(key_name)
                     content = key.get_contents_as_string()
                     if verbose:
@@ -123,7 +130,8 @@ def load_config(app_name, *args, **kwargs):
         # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
         if not content:
             confpath = locate_config(
-                confname, app_name, prefix=prefix, verbose=verbose)
+                confname, app_name, location=location,
+                prefix=prefix, verbose=verbose)
             if confpath:
                 with open(confpath, 'rb') as conffile:
                     content = conffile.read()

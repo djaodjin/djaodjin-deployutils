@@ -1,15 +1,16 @@
-Fabric3>=1.13.1
 boto>=2.36.0
 cryptography>=2.2.2
+Fabric3>=1.13.1
 pip>=8.1.2,<10.0
-six>=1.10.0
 PyJWT>=1.6.1
+six>=1.10.0
 
 # For datetime-related helpers
 # pytz>=2017.2
 
 # When used with Django
 # django-assets>=0.10
+# jinja2==2.8.1
 # python-dateutil>=2.4.2
 
 # When used with Flask
