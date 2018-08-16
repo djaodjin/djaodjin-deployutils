@@ -46,10 +46,11 @@ def site_prefixed(path):
     """
     if path is None:
         path = ''
+    path_prefix = ''
     if settings.DEBUG and hasattr(settings, 'APP_NAME'):
-        path_prefix = '/%s' % settings.APP_NAME
-    else:
-        path_prefix = ''
+        candidate = '/%s' % settings.APP_NAME
+        if not path.startswith(candidate):
+            path_prefix = candidate
     if path:
         # We have an actual path instead of generating a prefix that will
         # be placed in front of static urls (ie. {{'pricing'|site_prefixed}}
