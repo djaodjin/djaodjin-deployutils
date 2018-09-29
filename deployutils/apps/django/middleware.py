@@ -41,7 +41,7 @@ from django.db import connections
 from . import settings
 from .compat import MiddlewareMixin, is_authenticated
 from .thread_local import clear_cache, set_request
-
+from ...helpers import datetime_or_now
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
     def process_request(request):
         clear_cache()
         set_request(request)
+        request.starts_at = datetime_or_now()
 
     @staticmethod
     def process_response(request, response):
@@ -104,8 +105,12 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                     duration += timedelta(
                         0, convert.second, convert.microsecond)
                         # days, seconds, microseconds
-            logger.debug("%s %s executed %d SQL queries in %s",
+            request_duration = datetime_or_now() - request.starts_at
+            logger.debug(
+                "%s %s executed %d SQL queries in %s (request duration: %s)",
                 request.method, request.get_full_path(), nb_queries, duration,
+                request_duration,
                 extra={'request': request, 'nb_queries': nb_queries,
-                    'queries_duration': str(duration)})
+                    'queries_duration': str(duration),
+                    'request_duration': request_duration})
         return response
