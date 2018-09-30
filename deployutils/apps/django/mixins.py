@@ -166,7 +166,7 @@ class AccountMixin(object):
                 except self.account_queryset.model.DoesNotExist:
                     #pylint: disable=protected-access
                     raise Http404(_("No %(verbose_name)s found matching"\
-                        "the query") % {'verbose_name':
+                        " the query") % {'verbose_name':
                         self.account_queryset.model._meta.verbose_name})
             else:
                 self._account = None
