@@ -23,10 +23,10 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from django import template
-from django.conf import settings
 #pylint:disable=no-name-in-module,import-error
 from django.utils.six.moves.urllib.parse import urljoin
 
+from .. import settings
 
 register = template.Library()
 

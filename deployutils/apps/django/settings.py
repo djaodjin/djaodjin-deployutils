@@ -40,8 +40,10 @@ from django.conf import settings
 
 _SETTINGS = {
     'ALLOWED_NO_SESSION': [],
-    'APP_NAME': getattr(settings, 'APP_NAME', None),
+    'APP_NAME': getattr(settings, 'APP_NAME',
+        os.path.basename(settings.BASE_DIR)),
     'BACKEND_SESSION_STORE': None,
+    'DEBUG': getattr(settings, 'DEBUG', None),
     'DEPLOYED_WEBAPP_ROOT': '/var/www',
     'DEPLOYED_SERVERS': None,
     'DJAODJIN_SECRET_KEY': getattr(settings, 'DJAODJIN_SECRET_KEY', None),
@@ -61,6 +63,7 @@ _SETTINGS.update(getattr(settings, 'DEPLOYUTILS', {}))
 ALLOWED_NO_SESSION = _SETTINGS.get('ALLOWED_NO_SESSION')
 APP_NAME = _SETTINGS.get('APP_NAME')
 BACKEND_SESSION_STORE = _SETTINGS.get('BACKEND_SESSION_STORE')
+DEBUG = _SETTINGS.get('DEBUG')
 DEPLOYED_WEBAPP_ROOT = _SETTINGS.get('DEPLOYED_WEBAPP_ROOT')
 DEPLOYED_SERVERS = _SETTINGS.get('DEPLOYED_SERVERS')
 DJAODJIN_SECRET_KEY = _SETTINGS.get('DJAODJIN_SECRET_KEY')

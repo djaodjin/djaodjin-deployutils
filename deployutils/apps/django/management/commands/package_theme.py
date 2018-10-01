@@ -27,9 +27,8 @@ from __future__ import unicode_literals
 
 import sys
 
-from django.conf import settings as django_settings
-
 from . import ResourceCommand
+from ... import settings
 from ...themes import (init_build_and_install_dirs, package_assets,
     package_theme, fill_package)
 
@@ -86,7 +85,7 @@ class Command(ResourceCommand):
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--app_name', action='store', dest='app_name',
-            default=django_settings.APP_NAME,
+            default=settings.APP_NAME,
             help='overrides the destination site name')
         parser.add_argument('--path_prefix', action='store',
             dest='path_prefix', default=None,
