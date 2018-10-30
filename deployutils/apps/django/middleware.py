@@ -105,12 +105,14 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                     duration += timedelta(
                         0, convert.second, convert.microsecond)
                         # days, seconds, microseconds
-            request_duration = datetime_or_now() - request.starts_at
-            logger.debug(
-                "%s %s executed %d SQL queries in %s (request duration: %s)",
-                request.method, request.get_full_path(), nb_queries, duration,
-                request_duration,
-                extra={'request': request, 'nb_queries': nb_queries,
-                    'queries_duration': str(duration),
-                    'request_duration': request_duration})
+            if hasattr(request, 'starts_at'):
+                request_duration = datetime_or_now() - request.starts_at
+                logger.debug(
+                  "%s %s executed %d SQL queries in %s (request duration: %s)",
+                    request.method, request.get_full_path(),
+                    nb_queries, duration, request_duration,
+                    extra={'request': request,
+                        'nb_queries': nb_queries,
+                        'queries_duration': str(duration),
+                        'request_duration': request_duration})
         return response

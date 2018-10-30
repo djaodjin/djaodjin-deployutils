@@ -99,8 +99,8 @@ class ProxyUserBackend(RemoteUserBackend):
                         username)
                 except UserModel.DoesNotExist:
                     pass
-        except DatabaseError:
-            LOGGER.debug("User table missing from database?")
+        except DatabaseError as err:
+            LOGGER.debug("User table missing from database? (err:%s)", err)
             # We don't have a auth_user table, so let's build a hash in memory.
             for user in six.itervalues(self.users):
                 LOGGER.debug("match %s with User(id=%d, username=%s)",
