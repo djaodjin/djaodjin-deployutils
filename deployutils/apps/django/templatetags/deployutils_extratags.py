@@ -22,9 +22,13 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import json
+
 from django import template
 from django.contrib.messages.api import get_messages
 from django.forms import BaseForm
+from django.utils import six
+from django.utils.safestring import mark_safe
 
 from ..compat import is_authenticated as is_authenticated_base
 from .deployutils_prefixtags import site_prefixed
@@ -62,6 +66,13 @@ def no_cache(asset_url):
     if pos > 0:
         asset_url = asset_url[:pos]
     return asset_url
+
+
+@register.filter
+def to_json(value):
+    if isinstance(value, six.string_types):
+        return value
+    return mark_safe(json.dumps(value))
 
 
 @register.filter()
