@@ -28,7 +28,7 @@ Encryption and Decryption functions
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import json, logging, os, six
+import decimal, json, logging, os, six
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
@@ -46,6 +46,8 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj): #pylint: disable=method-hidden
         if hasattr(obj, 'isoformat'):
             return obj.isoformat()
+        elif isinstance(obj, decimal.Decimal):
+            return float(obj)
         return super(JSONEncoder, self).default(obj)
 
 
