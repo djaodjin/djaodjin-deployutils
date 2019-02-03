@@ -51,6 +51,17 @@ except ImportError: # django < 1.8
         def __init__(self, template_string):
             super(DebugLexer, self).__init__(template_string, origin=None)
 
+try:
+    from django.template.base import TokenType
+except ImportError: # django < 2.1
+    from django.template.base import (TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK,
+        TOKEN_COMMENT)
+    class TokenType(object):
+        TEXT = TOKEN_TEXT
+        VAR = TOKEN_VAR
+        BLOCK = TOKEN_BLOCK
+        COMMENT = TOKEN_COMMENT
+
 
 class DjangoTemplate(object):
 

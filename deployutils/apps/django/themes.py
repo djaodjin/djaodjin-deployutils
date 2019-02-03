@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,7 @@ import logging, os, re, shutil, subprocess, zipfile
 
 from django.conf import settings as django_settings
 from django.contrib.staticfiles.templatetags.staticfiles import do_static
-from django.template.base import (Parser, NodeList,
-    TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK, TOKEN_COMMENT, TemplateSyntaxError)
+from django.template.base import (Parser, NodeList, TemplateSyntaxError)
 from django.template.backends.django import DjangoTemplates
 from django.template.context import Context
 from django.utils.encoding import force_text
@@ -40,7 +39,7 @@ from jinja2.lexer import Lexer
 from webassets import Bundle
 
 from . import settings
-from .compat import DebugLexer, get_html_engine
+from .compat import DebugLexer, TokenType, get_html_engine
 from ...copy import shell_command
 
 #pylint:disable=no-name-in-module,import-error
@@ -95,11 +94,11 @@ class AssetsParser(Parser):
                 contents = token.contents.encode('utf8')
             else:
                 contents = token.contents
-            if token.token_type == TOKEN_TEXT:
+            if token.token_type == TokenType.TEXT:
                 self.dest_stream.write(contents)
-            elif token.token_type == TOKEN_VAR:
+            elif token.token_type == TokenType.VAR:
                 self.dest_stream.write("{{%s}}" % contents)
-            elif token.token_type == TOKEN_BLOCK:
+            elif token.token_type == TokenType.BLOCK:
                 try:
                     command = token.contents.split()[0]
                 except IndexError:
@@ -129,7 +128,7 @@ class AssetsParser(Parser):
                         do_static(self, token).render(self.context))
                 else:
                     self.dest_stream.write("{%% %s %%}" % contents)
-            elif token.token_type == TOKEN_COMMENT:
+            elif token.token_type == TokenType.COMMENT:
                 pass
 
 
