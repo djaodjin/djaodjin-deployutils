@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2019, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-import json
+import json, os
 
 from flask.sessions import SessionInterface as FlaskSessionInterface
 from flask.sessions import SessionMixin
@@ -149,7 +149,8 @@ class Session(object):
     @staticmethod
     def _get_interface(app):
         config = app.config.copy()
-        config.setdefault('DJAODJIN_SECRET_KEY', "")
+        config.setdefault('DJAODJIN_SECRET_KEY',
+            os.getenv('DJAODJIN_SECRET_KEY', ""))
         config.setdefault('ALLOWED_NO_SESSION', [])
         return DjaoDjinSessionInterface(
             secret_key=config['DJAODJIN_SECRET_KEY'],

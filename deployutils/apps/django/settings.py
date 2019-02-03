@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,8 @@ _SETTINGS = {
     'DEBUG': getattr(settings, 'DEBUG', None),
     'DEPLOYED_WEBAPP_ROOT': '/var/www',
     'DEPLOYED_SERVERS': None,
-    'DJAODJIN_SECRET_KEY': getattr(settings, 'DJAODJIN_SECRET_KEY', None),
+    'DJAODJIN_SECRET_KEY': os.getenv('DJAODJIN_SECRET_KEY',
+        getattr(settings, 'DJAODJIN_SECRET_KEY', None)),
     'DRY_RUN': getattr(settings, 'DEPLOYUTILS_DRY_RUN', False),
     'INSTALLED_APPS': getattr(settings, 'DEPLOYUTILS_INSTALLED_APPS',
         settings.INSTALLED_APPS),

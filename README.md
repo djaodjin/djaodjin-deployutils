@@ -69,7 +69,8 @@ Update your settings.py
     +}
 
 
-Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``
+Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
+(You can also pass ``DJAODJIN_SECRET_KEY`` as a shell environment variable.)
 
 
     $ cat ./credentials
