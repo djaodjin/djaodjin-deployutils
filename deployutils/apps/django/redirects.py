@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2019, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -88,7 +88,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     permanent = False
     create_more = False
     create_on_none = True
-    new_account_url = '/app/new/'
+    new_account_url = '/profile/new/' # i.e. reverse('saas_organization_create')
 
     def get_new_account_url(self, *args, **kwargs):
         kwargs.update({
