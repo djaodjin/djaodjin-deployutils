@@ -252,7 +252,12 @@ def package_assets(app_name, build_dir):#pylint:disable=unused-argument
     root_idx = len(app_static_root)
     found = False
     orig_static_url = django_settings.STATIC_URL
-    for url_part in reversed(orig_static_url.split('/')):
+    orig_static_url_parts = orig_static_url.split('/')
+    if not orig_static_url_parts[0]:
+        orig_static_url_parts = orig_static_url_parts[1:]
+    if orig_static_url_parts[0] == app_name:
+        orig_static_url_parts = orig_static_url_parts[1:]
+    for url_part in reversed(orig_static_url_parts):
         found = True # With ``break`` later on to default to False
                      # when zero iteration.
         if url_part:
@@ -268,9 +273,11 @@ def package_assets(app_name, build_dir):#pylint:disable=unused-argument
         # (i.e. '/static/').
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-    shell_command(['/usr/bin/rsync']
+    cmdline = (['/usr/bin/rsync']
         + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
         + [app_static_root, resources_dest])
+    LOGGER.info(' '.join(cmdline))
+    shell_command(cmdline)
 
 
 def package_theme(app_name, build_dir,

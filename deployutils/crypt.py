@@ -112,27 +112,33 @@ def decrypt(source_text, passphrase, debug_stmt=None):
         iv=...
         _full_encrypted_
     """
+    salt = ""
+    key = b""
+    iv_ = b""
+    plain_text = ""
     if debug_stmt is None:
         debug_stmt = "decrypt"
-    full_encrypted = b64decode(source_text)
-    salt = full_encrypted[8:IV_BLOCK_SIZE]
-    encrypted_text = full_encrypted[IV_BLOCK_SIZE:]
-    key, iv_ = _openssl_key_iv(passphrase, salt)
-    cipher = Cipher(
-        algorithms.AES(key), modes.CBC(iv_), default_backend()
-    ).decryptor()
-    plain_text = cipher.update(encrypted_text)
-    plain_text += cipher.finalize()
-    # PKCS#7 padding
-    if six.PY2:
-        padding = ord(plain_text[-1])
-    else:
-        padding = plain_text[-1]
-    plain_text = plain_text[:-padding]
-    if hasattr(plain_text, 'decode'):
-        plain_text = plain_text.decode('utf-8')
-    _log_debug(salt, key, iv_, source_text, plain_text,
-        passphrase=passphrase, debug_stmt=debug_stmt)
+    try:
+        full_encrypted = b64decode(source_text)
+        salt = full_encrypted[8:IV_BLOCK_SIZE]
+        encrypted_text = full_encrypted[IV_BLOCK_SIZE:]
+        key, iv_ = _openssl_key_iv(passphrase, salt)
+        cipher = Cipher(
+            algorithms.AES(key), modes.CBC(iv_), default_backend()
+        ).decryptor()
+        plain_text = cipher.update(encrypted_text)
+        plain_text += cipher.finalize()
+        # PKCS#7 padding
+        if six.PY2:
+            padding = ord(plain_text[-1])
+        else:
+            padding = plain_text[-1]
+        plain_text = plain_text[:-padding]
+        if hasattr(plain_text, 'decode'):
+            plain_text = plain_text.decode('utf-8')
+    finally:
+        _log_debug(salt, key, iv_, source_text, plain_text,
+            passphrase=passphrase, debug_stmt=debug_stmt)
     return plain_text
 
 

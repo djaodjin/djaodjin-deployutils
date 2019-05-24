@@ -42,29 +42,60 @@ from . import settings
 from .compat import MiddlewareMixin, is_authenticated
 from .thread_local import clear_cache, set_request
 from ...helpers import datetime_or_now
+from .backends.jwt_session_store import SessionStore as JWTSessionEngine
+from .backends.encrypted_cookies import (
+    SessionStore as EncryptedCookieSessionEngine)
 
 LOGGER = logging.getLogger(__name__)
 
 
 class SessionMiddleware(BaseMiddleware):
 
-    def process_request(self, request):
-        #pylint:disable=invalid-name
-        JWT_HEADER_NAME = 'HTTP_AUTHORIZATION'
-        JWT_SCHEME = 'bearer'
+    JWT_HEADER_NAME = 'HTTP_AUTHORIZATION'
+    JWT_SCHEME = 'bearer'
 
+    def check_jwt_session_store(self, request):
         session_key = None
-        engine = import_module(django_settings.SESSION_ENGINE)
-        # Check the Authorization header
-        jwt_header = request.META.get(JWT_HEADER_NAME)
+        jwt_header = request.META.get(self.JWT_HEADER_NAME)
         if jwt_header:
             jwt_values = jwt_header.split(' ')
             if len(jwt_values) > 1 and \
-                jwt_values[0].lower() == JWT_SCHEME:
+                jwt_values[0].lower() == self.JWT_SCHEME:
                 session_key = jwt_values[1]
-        # Check the Cookie header
-        if not session_key:
-            session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+        if session_key:
+            request.session = JWTSessionEngine(session_key)
+            # trigger ``load()``
+            if not request.session._session: #pylint: disable=protected-access
+                session_key = None
+        return session_key
+
+    def check_encrypted_cookies(self, request):
+        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+        if session_key:
+            request.session = EncryptedCookieSessionEngine(session_key)
+            # trigger ``load()``
+            if not request.session._session: #pylint: disable=protected-access
+                session_key = None
+        return session_key
+
+    def process_request(self, request):
+        #pylint:disable=invalid-name
+        session_key = None
+        engine = import_module(django_settings.SESSION_ENGINE)
+        if isinstance(engine, JWTSessionEngine):
+            # Check the Authorization header
+            session_key = self.check_jwt_session_store(request)
+            # Fall back to the Cookie header
+            if not session_key:
+                session_key = self.check_encrypted_cookies(request)
+        else:
+            # Check the Cookie header
+            session_key = self.check_encrypted_cookies(request)
+            # Fall back to the Authorization header
+            if not session_key:
+                session_key = self.check_jwt_session_store(request)
+
+        # No or incorrect session
         if not session_key:
             found = False
             for path in settings.ALLOWED_NO_SESSION:
@@ -75,9 +106,6 @@ class SessionMiddleware(BaseMiddleware):
                 LOGGER.debug("%s not found in %s", request.path,
                     [str(url) for url in settings.ALLOWED_NO_SESSION])
                 raise PermissionDenied("No DjaoDjin session key")
-        request.session = engine.SessionStore(session_key)
-        # trigger ``load()``
-        _ = request.session._session #pylint: disable=protected-access
 
 
 class RequestLoggingMiddleware(MiddlewareMixin):
