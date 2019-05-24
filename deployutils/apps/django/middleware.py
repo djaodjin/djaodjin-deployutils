@@ -62,20 +62,22 @@ class SessionMiddleware(BaseMiddleware):
             if len(jwt_values) > 1 and \
                 jwt_values[0].lower() == self.JWT_SCHEME:
                 session_key = jwt_values[1]
-        if session_key:
-            request.session = JWTSessionEngine(session_key)
-            # trigger ``load()``
-            if not request.session._session: #pylint: disable=protected-access
-                session_key = None
+
+        # Without a session field, `AuthenticationMiddleware` will complain.
+        request.session = JWTSessionEngine(session_key)
+        # trigger ``load()``
+        if not request.session._session: #pylint: disable=protected-access
+            session_key = None
         return session_key
 
     def check_encrypted_cookies(self, request):
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
-        if session_key:
-            request.session = EncryptedCookieSessionEngine(session_key)
-            # trigger ``load()``
-            if not request.session._session: #pylint: disable=protected-access
-                session_key = None
+
+        # Without a session field, `AuthenticationMiddleware` will complain.
+        request.session = EncryptedCookieSessionEngine(session_key)
+        # trigger ``load()``
+        if not request.session._session: #pylint: disable=protected-access
+            session_key = None
         return session_key
 
     def process_request(self, request):
