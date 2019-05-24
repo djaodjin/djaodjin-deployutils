@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin Inc.
+# Copyright (c) 2019, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,8 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 
 import deployutils
 
@@ -57,4 +58,5 @@ setup(
     license='BSD',
     description='Deploy webapps running behind djaoapp session manager',
     long_description=open('README.md').read(),
+    long_description_content_type="text/markdown"
 )
