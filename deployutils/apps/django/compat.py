@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,11 @@
 #pylint: disable=no-name-in-module,unused-import,import-error
 
 from django.utils import six
+
+try:
+    from pip._internal.utils.misc import get_installed_distributions
+except ImportError: # pip < 10
+    from pip.utils import get_installed_distributions
 
 try:
     from django.utils.module_loading import import_string

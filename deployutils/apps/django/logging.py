@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,9 @@ import logging, json, os, six
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.views.debug import ExceptionReporter
-from pip.utils import get_installed_distributions
 
 from ... import crypt
+from .compat import get_installed_distributions
 from .thread_local import get_request
 
 
