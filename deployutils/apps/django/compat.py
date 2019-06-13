@@ -22,9 +22,25 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pylint: disable=no-name-in-module,unused-import,import-error
+#pylint: disable=no-name-in-module,unused-import,import-error,bad-except-order
 
 from django.utils import six
+
+
+try:
+    from inspect import signature
+
+    def check_signature(func, *args):
+        sig = signature(func)
+        sig.bind(*args)
+
+except ImportError: # Python<3.3
+
+    import inspect
+
+    def check_signature(func, *args):
+        inspect.getcallargs(func, *args) #pylint:disable=deprecated-method
+
 
 try:
     from pip._internal.utils.misc import get_installed_distributions
@@ -106,6 +122,16 @@ except ImportError: # django < 1.11
 
 
 def is_authenticated(request):
-    if callable(request.user.is_authenticated):
-        return request.user.is_authenticated()
-    return request.user.is_authenticated
+    if hasattr(request, 'user'):
+        if callable(request.user.is_authenticated):
+            return request.user.is_authenticated()
+        return request.user.is_authenticated
+    return False
+
+
+def is_anonymous(request):
+    if hasattr(request, 'user'):
+        if callable(request.user.is_anonymous):
+            return request.user.is_anonymous()
+        return request.user.is_anonymous
+    return False

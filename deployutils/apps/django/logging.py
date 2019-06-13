@@ -30,7 +30,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.views.debug import ExceptionReporter
 
 from ... import crypt
-from .compat import get_installed_distributions
+from .compat import get_installed_distributions, is_anonymous
 from .thread_local import get_request
 
 
@@ -38,12 +38,12 @@ class RequestFilter(logging.Filter):
 
     def filter(self, record):
         """
-        Adds user and remote_addr to the record.
+        Adds username, remote_addr and http_user_agent to the record.
         """
         request = get_request()
         if request:
             user = getattr(request, 'user', None)
-            if user and not user.is_anonymous():
+            if user and not is_anonymous(request):
                 record.username = user.username
             else:
                 record.username = '-'
@@ -238,15 +238,11 @@ class JSONFormatter(logging.Formatter):
 
         record_dict.update({'process': os.getpid()})
 
-        if hasattr(record, 'user'):
-            user = record.user
-        elif hasattr(record, 'request'):
+        if hasattr(record, 'request'):
             user = getattr(record.request, 'user', None)
-        else:
-            user = None
-        if user and not user.is_anonymous():
-            record_dict.update({'username': user.username})
-        elif not 'username' in record_dict:
+            if user and not is_anonymous(record.request):
+                record_dict.update({'username': user.username})
+        if not 'username' in record_dict:
             record_dict.update({'username': '-'})
 
         if (hasattr(record, 'request') and
@@ -337,7 +333,7 @@ class JSONFormatter(logging.Formatter):
                             value.update({settings_key: settings_value})
                 if key == 'frames':
                     frames = value
-                    value = [] #pylint:disable=redefined-variable-type
+                    value = []
                     for frame in frames:
                         frame_dict = {}
                         for frame_key, frame_val in six.iteritems(frame):

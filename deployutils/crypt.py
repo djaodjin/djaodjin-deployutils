@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2019, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ IV_BLOCK_SIZE = 16
 class JSONEncoder(json.JSONEncoder):
 
     def default(self, obj): #pylint: disable=method-hidden
+        # parameter is called `o` in json.JSONEncoder.
         if hasattr(obj, 'isoformat'):
             return obj.isoformat()
         elif isinstance(obj, decimal.Decimal):

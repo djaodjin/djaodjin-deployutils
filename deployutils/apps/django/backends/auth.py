@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@ from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
 from django.db.utils import DatabaseError
 
+from ..compat import check_signature
 from ....helpers import full_name_natural_split
 
 # Beware that if you are using `deployutils.apps.django.logging.RequestFilter`
@@ -92,7 +93,12 @@ class ProxyUserBackend(RemoteUserBackend):
                 })
                 if created:
                     LOGGER.debug("created user '%s' in database.", username)
-                    user = self.configure_user(user)
+                    args = (request, user)
+                    try:
+                        check_signature(self.configure_user, *args)
+                    except TypeError:
+                        args = (user,)
+                    user = self.configure_user(*args)
             else:
                 try:
                     user = UserModel._default_manager.get_by_natural_key(

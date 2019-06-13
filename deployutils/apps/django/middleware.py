@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2019, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,8 @@ class SessionMiddleware(BaseMiddleware):
             session_key = None
         return session_key
 
-    def check_encrypted_cookies(self, request):
+    @staticmethod
+    def check_encrypted_cookies(request):
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
 
         # Without a session field, `AuthenticationMiddleware` will complain.
