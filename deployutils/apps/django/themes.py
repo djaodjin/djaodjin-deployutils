@@ -422,6 +422,8 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                                         dest.write("%s" % ''.join([token[2]
                                             for token in buffered_tokens]))
                                     buffered_tokens = []
+                                elif six.PY2:
+                                    dest.write("%s" % token[2].encode('utf-8'))
                                 else:
                                     dest.write("%s" % str(token[2]))
                             else:
