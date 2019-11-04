@@ -38,6 +38,9 @@ def _resources_files(abs_paths=False):
     ignores = ['*~', '.DS_Store']
     with open('.gitignore') as gitignore:
         for line in gitignore.readlines():
+            if line.startswith('#'):
+                # ignore comment lines
+                continue
             if abs_paths:
                 pathname = os.path.join(os.getcwd(), line.strip())
             else:

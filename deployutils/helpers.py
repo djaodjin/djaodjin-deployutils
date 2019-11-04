@@ -22,21 +22,29 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime
+import datetime, logging
 
 from dateutil.tz import tzlocal
 from pytz import utc
 import six
 
+LOGGER = logging.getLogger(__name__)
+
 
 def datetime_or_now(dtime_at=None):
-    if not dtime_at:
-        return datetime.datetime.utcnow().replace(tzinfo=utc)
     if isinstance(dtime_at, six.string_types):
-        dtime_at = datetime.datetime.strptime(dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+        try:
+            # XXX `parse_datetime`
+            dtime_at = datetime.datetime.strptime(
+                dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+        except ValueError as err:
+            LOGGER.warning(err)
+            dtime_at = None
     if isinstance(dtime_at, datetime.date):
         dtime_at = datetime.datetime(
             dtime_at.year, dtime_at.month, dtime_at.day)
+    if not dtime_at:
+        dtime_at = datetime.datetime.utcnow().replace(tzinfo=utc)
     if dtime_at.tzinfo is None:
         dtime_at = dtime_at.replace(tzinfo=utc)
     return dtime_at
