@@ -25,7 +25,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, subprocess
+import logging, os, shutil, subprocess, zipfile
+import requests
 
 from .filesys import list_local
 
@@ -115,3 +116,51 @@ def upload(remote_location, remotes=None, ignores=None,
         shell_command(['/usr/bin/rsync']
             + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
             + remotes + [remote_location], dry_run=dry_run)
+
+
+def upload_theme(args, base_url, api_key, prefix=None):
+    """
+    Uploads a new theme for a project.
+    """
+    def zipdir(path, ziph, prefix=None):
+        # ziph is zipfile handle
+        for root, dirs, files in os.walk(path):
+            for filename in files:
+                if not filename.endswith('~'):
+                    pathname = os.path.join(root, filename)
+                    if prefix:
+                        arcname = os.path.join(prefix, pathname)
+                    else:
+                        arcname = pathname
+                    ziph.write(pathname, arcname)
+
+    if not args:
+        raise ValueError(
+            "A single zip file or a list of directories must be present")
+
+    src = args[0]
+    if os.path.isfile(src) and zipfile.is_zipfile(src):
+        if len(args) != 1:
+            raise ValueError(
+                "You should specify a single zip file only.")
+        zip_filename = src
+    elif os.path.isdir(src):
+        if prefix:
+            zip_filename = "%s.zip" % prefix
+        else:
+            zip_filename  = "%s.zip" % os.path.basename(os.path.normpath(src))
+        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for src in args:
+                base_name = os.path.abspath(os.path.normpath(src))
+                root_dir = os.path.dirname(base_name)
+                base_dir = os.path.basename(base_name)
+                cwd = os.getcwd()
+                os.chdir(root_dir)
+                zipdir(base_dir, zipf, prefix=prefix)
+                os.chdir(cwd)
+    else:
+        raise ValueError("%s is neither a single zip nor a list of directoies"
+            % str(args))
+    files = {'file': (os.path.basename(zip_filename), open(zip_filename, 'rb'))}
+    requests.post(base_url + '/api/themes/', files=files,
+        auth=(api_key, ""))

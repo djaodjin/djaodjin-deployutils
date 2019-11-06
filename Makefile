@@ -21,7 +21,6 @@ DJAODJIN_SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import cho
 # before running the manage.py command (else missing SECRECT_KEY).
 RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(PYTHON) manage.py migrate --help 2>/dev/null)),--run-syncdb,)
 
-scripts := djd
 
 install::
 	cd $(srcDir) && $(PYTHON) ./setup.py --quiet \

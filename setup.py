@@ -52,6 +52,7 @@ setup(
     package_data={'deployutils': [
               'apps/django/templates/accounts/*.html',
               'apps/django/templates/saas/*.html']},
+    scripts=['src/djd'],
     url='https://github.com/djaodjin/djaodjin-deployutils/',
     download_url='https://github.com/djaodjin/djaodjin-deployutils/tarball/%s' \
         % deployutils.__version__,
