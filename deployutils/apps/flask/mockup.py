@@ -22,18 +22,28 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask.config import Config, ConfigAttribute
+import datetime, logging
 
-class Settings(object):
+from flask import current_app as app, request, jsonify
+import jwt
 
-    config = Config(__name__)
-
-    DEBUG = ConfigAttribute('DEBUG')
-    APP_NAME = ConfigAttribute('APP_NAME')
-    DJAODJIN_SECRET_KEY = ConfigAttribute('DJAODJIN_SECRET_KEY')
-
-    def update(self, **updates):
-        return self.config.update(updates)
+from ...helpers import as_timestamp, datetime_or_now
 
 
-settings = Settings() #pylint:disable=invalid-name
+LOGGER = logging.getLogger(__name__)
+JWT_ALGORITHM = 'HS256'
+
+def api():
+    return jsonify({'version': "1.0"})
+
+
+def api_login():
+    content = request.json
+    username = content.get('username')
+    password = content.get('password')
+    exp = as_timestamp(datetime_or_now() + datetime.timedelta(days=1))
+    payload = app.config['MOCKUP_SESSIONS'].get(username)
+    payload.update({'exp': exp})
+    token = jwt.encode(payload,
+        app.config['DJAODJIN_SECRET_KEY'], JWT_ALGORITHM).decode('utf-8')
+    return jsonify({'token': token})

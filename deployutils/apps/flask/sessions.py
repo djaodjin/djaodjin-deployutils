@@ -24,13 +24,18 @@
 
 from __future__ import absolute_import
 
-import json, os
+import json, logging, os
 
 from flask.sessions import SessionInterface as FlaskSessionInterface
 from flask.sessions import SessionMixin
+from jwt import InvalidSignatureError, decode
 from werkzeug.datastructures import CallbackDict
 
 from ... import crypt
+
+
+LOGGER = logging.getLogger(__name__)
+JWT_ALGORITHM = 'HS256'
 
 
 class PermissionDenied(Exception):
@@ -62,6 +67,8 @@ class DjaoDjinSessionInterface(FlaskSessionInterface):
     *allowed_no_session* lists the paths which are allowed to procede
     when no session data can be found in the http request.
     """
+    JWT_HEADER_NAME = 'AUTHORIZATION'
+    JWT_SCHEME = 'bearer'
 
     session_class = DjaoDjinSession
 
@@ -82,7 +89,31 @@ class DjaoDjinSessionInterface(FlaskSessionInterface):
           iv=...
           _full_encrypted_
         """
-        session_key = request.cookies.get(app.session_cookie_name)
+        session_data = {}
+        session_key = None
+
+        jwt_header = request.headers.get(self.JWT_HEADER_NAME)
+        if jwt_header:
+            jwt_values = jwt_header.split(' ')
+            if len(jwt_values) > 1 and \
+                jwt_values[0].lower() == self.JWT_SCHEME:
+                session_key = jwt_values[1]
+                try:
+                    session_data = decode(
+                        session_key, self.secret_key, JWT_ALGORITHM)
+                except (InvalidSignatureError, TypeError, ValueError) as _:
+                    pass
+
+        if not session_key:
+            session_key = request.cookies.get(app.session_cookie_name)
+            try:
+                session_data = json.loads(crypt.decrypt(
+                    session_key, passphrase=self.secret_key))
+            except (IndexError, TypeError, ValueError) as _:
+                # Incorrect padding in b64decode, incorrect block size in AES,
+                # incorrect PKCS#5 padding or malformed json will end-up here.
+                pass
+
         if not session_key:
             found = False
             for path in self.allowed_no_session:
@@ -94,14 +125,7 @@ class DjaoDjinSessionInterface(FlaskSessionInterface):
                     [str(url) for url in self.allowed_no_session])
                 raise PermissionDenied("No DjaoDjin session key")
 
-        session_data = {}
-        try:
-            session_data = json.loads(crypt.decrypt(
-                session_key, passphrase=self.secret_key))
-        except (IndexError, TypeError, ValueError) as _:
-            # Incorrect padding in b64decode, incorrect block size in AES,
-            # incorrect PKCS#5 padding or malformed json will end-up here.
-            pass
+        LOGGER.debug("decoded session data: %s", session_data)
         return self.session_class(initial=session_data, session_key=session_key)
 
     @staticmethod
@@ -151,7 +175,8 @@ class Session(object):
         config = app.config.copy()
         config.setdefault('DJAODJIN_SECRET_KEY',
             os.getenv('DJAODJIN_SECRET_KEY', ""))
-        config.setdefault('ALLOWED_NO_SESSION', [])
+        config.setdefault('ALLOWED_NO_SESSION',
+            ['/api', '/api/auth/'])
         return DjaoDjinSessionInterface(
             secret_key=config['DJAODJIN_SECRET_KEY'],
             allowed_no_session=config['ALLOWED_NO_SESSION'])
