@@ -47,3 +47,21 @@ def api_login():
     token = jwt.encode(payload,
         app.config['DJAODJIN_SECRET_KEY'], JWT_ALGORITHM).decode('utf-8')
     return jsonify({'token': token})
+
+
+def api_tokens():
+    content = request.json
+    token = content.get('token')
+    payload = jwt.decode(
+        token,
+        app.config['DJAODJIN_SECRET_KEY'],
+        True, # verify
+        options={'verify_exp': True},
+        algorithms=[JWT_ALGORITHM])
+    username = payload.get('username', None)
+    exp = as_timestamp(datetime_or_now() + datetime.timedelta(days=1))
+    payload = app.config['MOCKUP_SESSIONS'].get(username)
+    payload.update({'exp': exp})
+    token = jwt.encode(payload,
+        app.config['DJAODJIN_SECRET_KEY'], JWT_ALGORITHM).decode('utf-8')
+    return jsonify({'token': token})
