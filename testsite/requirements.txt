@@ -1,4 +1,4 @@
-Django==1.11.20
+Django==1.11.23
 jinja2==2.8.1
 pip==19.1.1
 python-dateutil==2.8.0
