@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2019, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -161,6 +161,8 @@ def upload_theme(args, base_url, api_key, prefix=None):
     else:
         raise ValueError("%s is neither a single zip nor a list of directoies"
             % str(args))
+    api_themes_url = base_url + '/api/themes/'
     files = {'file': (os.path.basename(zip_filename), open(zip_filename, 'rb'))}
-    requests.post(base_url + '/api/themes/', files=files,
-        auth=(api_key, ""))
+    resp = requests.post(api_themes_url, files=files, auth=(api_key, ""))
+    LOGGER.info("POST %s returns %d %s",
+        api_themes_url, resp.status_code, resp.text)

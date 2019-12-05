@@ -158,11 +158,34 @@ def load_config(app_name, *args, **kwargs):
                             # for this:
                             # http://www.voidspace.org.uk/python/configobj.html
                             #pylint:disable=eval-used
-                            config.update({look.group(1).upper():
-                                eval(look.group(2), {}, {})})
+                            varname = look.group(1).upper()
+                            varvalue = os.getenv(varname)
+                            if varvalue is None:
+                                # Environment variables override the config file
+                                varvalue =  eval(look.group(2), {}, {})
+                            config.update({varname: varvalue})
                         except Exception:
                             raise
-
+            # Adds both, concat and split, versions of database URI.
+            if 'DB_LOCATION' in config:
+                parts = urlparse(config['DB_LOCATION'])
+                config.update({
+                    'DB_ENGINE': parts.scheme,
+                    'DB_USER': parts.username,
+                    'DB_PASSWORD': parts.password,
+                    'DB_HOST': parts.hostname,
+                    'DB_NAME': parts.path[1:] if parts.path else None,
+                })
+            elif ('DB_ENGINE' in config and 'DB_NAME' in config and
+                  'DB_USER' in config and 'DB_PASSWORD' in config and
+                  'DB_HOST' in config):
+                config.update({'DB_LOCATION': "%s://%s:%s@%s/%s" % (
+                    config['DB_ENGINE'],
+                    config['DB_USER'], config['DB_PASSWORD'],
+                    config['DB_HOST'], config['DB_NAME'])})
+            elif 'DB_ENGINE' in config and 'DB_NAME' in config:
+                config.update({'DB_LOCATION': "%s:///%s" % (
+                    config['DB_ENGINE'], config['DB_NAME'])})
     return config
 
 

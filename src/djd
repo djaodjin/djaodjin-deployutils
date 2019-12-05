@@ -29,10 +29,11 @@ Command-line utillity to deploy to djaodjin
 
 import argparse, configparser, inspect, json, logging, os, sys
 
+import requests
+
+from deployutils import __version__
 from deployutils.copy import download, upload, upload_theme
 
-
-__version__ = None
 
 LOGGER = logging.getLogger(__name__)
 CONFIG = configparser.ConfigParser()
@@ -112,6 +113,22 @@ def get_project_config(base_url="", api_key="", project=""):
         api_key = input("Please enter the API Key to access %s:" % project)
     return base_url, api_key, project
 
+def pub_deploy(args, base_url="", api_key="", project=""):
+    """Deploy container for a project.
+    """
+    base_url, api_key, _ = get_project_config(
+        base_url="https://djaodjin.com", api_key=api_key, project="djaodjin")
+    _, _, project = get_project_config(
+        base_url=base_url, api_key=api_key, project=project)
+    api_container_url = \
+        "%(base_url)s/api/containers/%(organization)s/apps/%(app)s/" % {
+            'base_url': base_url,
+            'organization': str(project),
+            'app': str(project)}
+    resp = requests.post(api_container_url, auth=(api_key, ""))
+    LOGGER.info("POST %s returns %d %s",
+            api_container_url, resp.status_code, resp.text)
+
 
 def pub_download(args, location=None, prefix=""):
     """Download theme packages from the stage *location*.
@@ -185,4 +202,5 @@ def main(args):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level='INFO')
     main(sys.argv)
