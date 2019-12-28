@@ -39,17 +39,19 @@ def as_timestamp(dtime_at=None):
 
 
 def datetime_or_now(dtime_at=None):
-    if isinstance(dtime_at, six.string_types):
-        try:
-            # XXX `parse_datetime`
-            dtime_at = datetime.datetime.strptime(
-                dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError as err:
-            LOGGER.warning(err)
-            dtime_at = None
-    if isinstance(dtime_at, datetime.date):
-        dtime_at = datetime.datetime(
-            dtime_at.year, dtime_at.month, dtime_at.day)
+    if not isinstance(dtime_at, datetime.datetime):
+        # `datetime.datetime` is a subclass of `datetime.date`.
+        if isinstance(dtime_at, six.string_types):
+            try:
+                # XXX `parse_datetime`
+                dtime_at = datetime.datetime.strptime(
+                    dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+            except ValueError as err:
+                LOGGER.warning(err)
+                dtime_at = None
+        elif isinstance(dtime_at, datetime.date):
+            dtime_at = datetime.datetime(
+                dtime_at.year, dtime_at.month, dtime_at.day)
     if not dtime_at:
         dtime_at = datetime.datetime.utcnow().replace(tzinfo=utc)
     if dtime_at.tzinfo is None:
