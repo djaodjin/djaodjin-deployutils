@@ -101,7 +101,7 @@ class SessionStore(SessionBase):
         """
         session_data = {}
         try:
-            session_text = crypt.decrypt(self.session_key,
+            session_text = crypt.decrypt(self._session_key,
                 passphrase=settings.DJAODJIN_SECRET_KEY,
                 debug_stmt="encrypted_cookies.SessionStore.load")
             session_data = json.loads(session_text)

@@ -16,8 +16,8 @@ Welcome to the testsite for djaodjin-deployutils!
             <pre><code>{{SESSION_ENGINE}}</code></pre>
         </div>
         <div>
-            <h4>As HTTP Cookie Header</h4>
-            <pre><code>{{request.session.session_key|wraplines}}</code></pre>
+            <h4>As HTTP {% if SESSION_ENGINE == 'deployutils.apps.django.backends.jwt_session_store' %}Authorization{% else %}Cookie{% endif %} Header</h4>
+            <pre><code>{{request.session.session_key_content|wraplines}}</code></pre>
         </div>
         <div>
             <h4>Session Data (From proxy)</h4>

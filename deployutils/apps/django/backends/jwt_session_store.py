@@ -77,7 +77,7 @@ class SessionStore(SessionBase):
         """
         session_data = {}
         try:
-            session_data = decode(self.session_key,
+            session_data = decode(self._session_key,
                 settings.DJAODJIN_SECRET_KEY)
             self._session_key_data.update(session_data)
             LOGGER.debug("session data (from proxy): %s", session_data)
@@ -97,7 +97,9 @@ class SessionStore(SessionBase):
                     LOGGER.debug("session data (local): %s", session_data_local)
                     session_data.update(session_data_local)
         except Exception as err: #pylint:disable=broad-except
-            LOGGER.debug("error: while loading session, %s", err)
+            LOGGER.debug("error: %s - while loading session_key %s"\
+                " with secret %s", err, self._session_key,
+                settings.DJAODJIN_SECRET_KEY)
             return {}
         return session_data
 

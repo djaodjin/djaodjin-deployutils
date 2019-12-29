@@ -85,17 +85,24 @@ class SessionMiddleware(BaseMiddleware):
         #pylint:disable=invalid-name
         session_key = None
         engine = import_module(django_settings.SESSION_ENGINE)
-        if isinstance(engine, JWTSessionEngine):
+        if issubclass(engine.SessionStore, JWTSessionEngine):
             # Check the Authorization header
+            LOGGER.debug("trying JWTSessionEngine with Authorization header.")
             session_key = self.check_jwt_session_store(request)
             # Fall back to the Cookie header
             if not session_key:
+                LOGGER.debug("trying fallback EncryptedCookieSessionEngine"\
+                    " with Cookie header.")
                 session_key = self.check_encrypted_cookies(request)
         else:
             # Check the Cookie header
+            LOGGER.debug("trying EncryptedCookieSessionEngine"\
+                " with Cookie header.")
             session_key = self.check_encrypted_cookies(request)
             # Fall back to the Authorization header
             if not session_key:
+                LOGGER.debug("trying fallback JWTSessionEngine"\
+                    " with Authorization header.")
                 session_key = self.check_jwt_session_store(request)
 
         # No or incorrect session

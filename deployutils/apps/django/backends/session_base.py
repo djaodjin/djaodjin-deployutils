@@ -41,6 +41,10 @@ class SessionStore(SessionBase):
             local_cls = import_string(settings.BACKEND_SESSION_STORE)
             self._local = local_cls()
 
+    @property
+    def session_key_content(self):
+        return self._session_key
+
     def __getitem__(self, key):
         return self._session[key]
 
