@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2020, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@ import logging
 
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
     SESSION_KEY, authenticate)
+from django.utils import six
 from jwt import encode, decode
 
 from .... import crypt
@@ -60,13 +61,22 @@ class SessionStore(SessionBase):
     def prepare(session_data={}, #pylint: disable=dangerous-default-value
                 passphrase=None):
         """
-        Returns *session_dict* as a base64 encrypted json string.
+        Returns *session_dict* as a base64 encoded json string.
 
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        return encode(session_data, passphrase,
+        encoded = encode(session_data, passphrase,
             json_encoder=crypt.JSONEncoder)
+        # b64encode will return `bytes` (Py3) but Django 2.0 is expecting
+        # a `str` to add to the cookie header, otherwise it wraps those
+        # `bytes` into a b'***' and adds that to the cookie.
+        # Note that Django 1.11 will add those `bytes` to the cookie "as-is".
+        if not isinstance(encoded, six.string_types):
+            as_text = encoded.decode('ascii')
+        else:
+            as_text = encoded
+        return as_text
 
     def load(self):
         """
