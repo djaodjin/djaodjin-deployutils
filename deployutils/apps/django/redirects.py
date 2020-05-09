@@ -1,4 +1,4 @@
-# Copyright (c) 2019, DjaoDjin inc.
+# Copyright (c) 2020, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@ from django.views.generic.base import TemplateResponseMixin
 from django.utils import six
 
 from .mixins import AccessiblesMixin
+from .templatetags.deployutils_prefixtags import site_prefixed
 
 
 def _get_accept_list(request):
@@ -88,7 +89,8 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     permanent = False
     create_more = False
     create_on_none = True
-    new_account_url = '/profile/new/' # i.e. reverse('saas_organization_create')
+    new_account_url = site_prefixed('/profile/new/') # i.e. reverse(
+                                                 # 'saas_organization_create')
 
     def get_new_account_url(self, *args, **kwargs):
         kwargs.update({
