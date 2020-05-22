@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin Inc.
+# Copyright (c) 2020, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@ Function to load site and credentials config files
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, re, six, sys
+import io, logging, os, re, six, sys
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
@@ -73,9 +73,29 @@ def locate_config(confname, app_name,
         if verbose:
             LOGGER.info("config loaded from '%s'", candidates[0])
         return candidates[0]
-    else:
-        LOGGER.warning("config '%s' was not found.", confname)
+
+    LOGGER.warning("config '%s' was not found.", confname)
     return None
+
+
+def locate_config_dir(app_name, **kwargs):
+    """
+    Returns location and passphrase
+    """
+    # compatible with Python 2 and 3.
+    location = kwargs.get('location', None)
+    passphrase = kwargs.get('passphrase',
+        os.getenv("%s_SETTINGS_CRYPT_KEY" % app_name.upper(),
+            os.getenv("SETTINGS_CRYPT_KEY", None)))
+
+    if not location:
+        location = os.getenv("%s_SETTINGS_LOCATION" % app_name.upper(), None)
+    if not location:
+        location = os.getenv("SETTINGS_LOCATION", None)
+        if location:
+            location = "%s/%s" % (location, app_name)
+
+    return location, passphrase
 
 
 #pylint: disable=too-many-arguments,too-many-locals,too-many-statements
@@ -87,42 +107,91 @@ def load_config(app_name, *args, **kwargs):
     Quiet by default. Set verbose to True to see the absolute path to the config
     files printed on stderr.
     """
-    configure_logging()
+    config = {}
+    #pylint:disable=too-many-nested-blocks
+    for content in six.itervalues(
+            read_config(app_name, *args, **kwargs)):
+        for line in content.split('\n'):
+            if not line.startswith('#'):
+                look = re.match(r'(\w+)\s*=\s*(.*)', line)
+                if look:
+                    try:
+                        # We used to parse the file line by line.
+                        # Once Django 1.5 introduced ALLOWED_HOSTS
+                        # (a tuple that definitely belongs to the site.conf
+                        # set), we had no choice other than resort
+                        # to eval(value, {}, {}).
+                        # We are not resorting to import conf module yet
+                        # but that might be necessary once we use
+                        # dictionary configs for some of the apps...
+                        # TODO: consider using something like ConfigObj
+                        # for this:
+                        # http://www.voidspace.org.uk/python/configobj.html
+                        #pylint:disable=eval-used
+                        varname = look.group(1).upper()
+                        varvalue = os.getenv(varname)
+                        if varvalue is None:
+                            # Environment variables override the config file
+                            varvalue = eval(look.group(2), {}, {})
+                        config.update({varname: varvalue})
+                    except Exception:
+                        raise
+        # Adds both, concat and split, versions of database URI.
+        if 'DB_LOCATION' in config:
+            parts = urlparse(config['DB_LOCATION'])
+            config.update({
+                'DB_ENGINE': parts.scheme,
+                'DB_USER': parts.username,
+                'DB_PASSWORD': parts.password,
+                'DB_HOST': parts.hostname,
+                'DB_NAME': parts.path[1:] if parts.path else None,
+            })
+        elif ('DB_ENGINE' in config and 'DB_NAME' in config and
+              'DB_USER' in config and 'DB_PASSWORD' in config and
+              'DB_HOST' in config):
+            config.update({'DB_LOCATION': "%s://%s:%s@%s/%s" % (
+                config['DB_ENGINE'],
+                config['DB_USER'], config['DB_PASSWORD'],
+                config['DB_HOST'], config['DB_NAME'])})
+        elif 'DB_ENGINE' in config and 'DB_NAME' in config:
+            config.update({'DB_LOCATION': "%s:///%s" % (
+                config['DB_ENGINE'], config['DB_NAME'])})
+    return config
 
-    # compatible with Python 2 and 3.
+
+def read_config(app_name, *args, **kwargs):
+    """
+    Given a list of config names in `args`, returns a dict of text content
+    indexed by config name.
+
+    Quiet by default. Set verbose to True to see the absolute path to the config
+    files printed on stderr.
+    """
+    config = {}
+    confnames = args
     prefix = kwargs.get('prefix', 'etc')
     verbose = kwargs.get('verbose', False)
-    location = kwargs.get('location', None)
-    passphrase = kwargs.get('passphrase',
-        os.getenv("%s_SETTINGS_CRYPT_KEY" % app_name.upper(),
-            os.getenv("SETTINGS_CRYPT_KEY", None)))
-    confnames = args
 
-    if not location:
-        location = os.getenv("%s_SETTINGS_LOCATION" % app_name.upper(), None)
-    if not location:
-        location = os.getenv("SETTINGS_LOCATION", None)
-        if location:
-            location = "%s/%s" % (location, app_name)
+    configure_logging()
+    location, passphrase = locate_config_dir(app_name, **kwargs)
 
-    config = {}
     for confname in confnames:
         content = None
         if location and location.startswith('s3://'):
             try:
-                import boto
+                import botocore, boto3
                 _, bucket_name, prefix = urlparse(location)[:3]
                 try:
-                    conn = boto.connect_s3()
-                    bucket = conn.get_bucket(bucket_name)
+                    s3_resource = boto3.resource('s3')
+                    bucket = s3_resource.Bucket(bucket_name)
                     key_name = '%s/%s' % (prefix, confname)
-                    key = bucket.get_key(key_name)
-                    content = key.get_contents_as_string()
+                    data = io.BytesIO()
+                    bucket.download_fileobj(key_name, data)
+                    content = data.getvalue()
                     if verbose:
                         LOGGER.info("config loaded from 's3://%s/%s'",
                             bucket_name, key_name)
-                except (boto.exception.NoAuthHandlerFound,
-                        boto.exception.S3ResponseError) as _:
+                except botocore.exceptions.ClientError:
                     pass
             except ImportError:
                 pass
@@ -141,51 +210,8 @@ def load_config(app_name, *args, **kwargs):
                 content = crypt.decrypt(content, passphrase)
             if hasattr(content, 'decode'):
                 content = content.decode('utf-8')
-            for line in content.split('\n'):
-                if not line.startswith('#'):
-                    look = re.match(r'(\w+)\s*=\s*(.*)', line)
-                    if look:
-                        try:
-                            # We used to parse the file line by line.
-                            # Once Django 1.5 introduced ALLOWED_HOSTS
-                            # (a tuple that definitely belongs to the site.conf
-                            # set), we had no choice other than resort
-                            # to eval(value, {}, {}).
-                            # We are not resorting to import conf module yet
-                            # but that might be necessary once we use
-                            # dictionary configs for some of the apps...
-                            # TODO: consider using something like ConfigObj
-                            # for this:
-                            # http://www.voidspace.org.uk/python/configobj.html
-                            #pylint:disable=eval-used
-                            varname = look.group(1).upper()
-                            varvalue = os.getenv(varname)
-                            if varvalue is None:
-                                # Environment variables override the config file
-                                varvalue =  eval(look.group(2), {}, {})
-                            config.update({varname: varvalue})
-                        except Exception:
-                            raise
-            # Adds both, concat and split, versions of database URI.
-            if 'DB_LOCATION' in config:
-                parts = urlparse(config['DB_LOCATION'])
-                config.update({
-                    'DB_ENGINE': parts.scheme,
-                    'DB_USER': parts.username,
-                    'DB_PASSWORD': parts.password,
-                    'DB_HOST': parts.hostname,
-                    'DB_NAME': parts.path[1:] if parts.path else None,
-                })
-            elif ('DB_ENGINE' in config and 'DB_NAME' in config and
-                  'DB_USER' in config and 'DB_PASSWORD' in config and
-                  'DB_HOST' in config):
-                config.update({'DB_LOCATION': "%s://%s:%s@%s/%s" % (
-                    config['DB_ENGINE'],
-                    config['DB_USER'], config['DB_PASSWORD'],
-                    config['DB_HOST'], config['DB_NAME'])})
-            elif 'DB_ENGINE' in config and 'DB_NAME' in config:
-                config.update({'DB_LOCATION': "%s:///%s" % (
-                    config['DB_ENGINE'], config['DB_NAME'])})
+                config[confname] = content
+
     return config
 
 

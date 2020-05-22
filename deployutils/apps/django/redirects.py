@@ -31,8 +31,8 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.exceptions import PermissionDenied
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateResponseMixin
-from django.utils import six
 
+from .compat import six
 from .mixins import AccessiblesMixin
 from .templatetags.deployutils_prefixtags import site_prefixed
 
@@ -111,8 +111,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
                 if self.permanent:
                     return http.HttpResponsePermanentRedirect(url)
                 return http.HttpResponseRedirect(url)
-            else:
-                raise http.Http404("No account")
+            raise http.Http404("No account")
         if count == 1 and not self.create_more:
             organization = candidates[0]
             kwargs.update({self.slug_url_kwarg: organization['slug']})

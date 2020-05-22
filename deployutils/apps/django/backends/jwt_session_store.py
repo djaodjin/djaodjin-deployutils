@@ -32,11 +32,11 @@ import logging
 
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
     SESSION_KEY, authenticate)
-from django.utils import six
 from jwt import encode, decode
 
 from .... import crypt
 from .. import settings
+from ..compat import six
 from .session_base import SessionStore as SessionBase
 
 

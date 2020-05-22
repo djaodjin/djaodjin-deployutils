@@ -47,7 +47,7 @@ class JSONEncoder(json.JSONEncoder):
         # parameter is called `o` in json.JSONEncoder.
         if hasattr(obj, 'isoformat'):
             return obj.isoformat()
-        elif isinstance(obj, decimal.Decimal):
+        if isinstance(obj, decimal.Decimal):
             return float(obj)
         return super(JSONEncoder, self).default(obj)
 

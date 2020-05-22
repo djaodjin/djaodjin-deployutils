@@ -1,4 +1,4 @@
-# Copyright (c) 2019, DjaoDjin inc.
+# Copyright (c) 2020, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,11 @@ import dateutil, dateutil.relativedelta
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
-from django.utils import six
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import ugettext as _
 
 from ...helpers import datetime_or_now, start_of_day, update_context_urls
+from .compat import six
 from .templatetags.deployutils_prefixtags import site_prefixed
 
 

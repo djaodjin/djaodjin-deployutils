@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,13 +24,13 @@
 
 from __future__ import absolute_import
 
-import logging, random, six
+import logging, random
 
 from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth import get_user_model
 from django.db.utils import DatabaseError
 
-from ..compat import check_signature
+from ..compat import check_signature, six
 from ....helpers import full_name_natural_split
 
 # Beware that if you are using `deployutils.apps.django.logging.RequestFilter`

@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2020, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,10 +38,8 @@ from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.edit import FormMixin, ProcessFormView
 
 from ..import settings
+from ..compat import urlparse, urlunparse
 from .forms import SignupForm
-
-#pylint:disable=no-name-in-module,import-error
-from django.utils.six.moves.urllib.parse import urlparse, urlunparse
 
 
 class RedirectFormMixin(FormMixin):
