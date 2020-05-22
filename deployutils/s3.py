@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,9 @@
 
 from __future__ import absolute_import
 
-import datetime, logging, time, mimetypes, os, socket, sys
+import datetime, logging, time, mimetypes, os
 
-import boto
+import boto3
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
@@ -39,8 +39,8 @@ class S3Backend(object):
     def __init__(self, remote_location, static_root=None, dry_run=False):
         self.dry_run = dry_run
         self.static_root = static_root
-        self.conn = boto.connect_s3()
-        self.bucket = self.conn.get_bucket(urlparse(remote_location).netloc)
+        s3_resource = boto3.resource('s3')
+        self.bucket = s3_resource.Bucket(urlparse(remote_location).netloc)
         # self.boto_datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
         # XXX boto seems to have changed the datetime format returned
         #     when reading a S3 key.
@@ -51,7 +51,7 @@ class S3Backend(object):
         Returns a list of all files (recursively) present in a bucket
         with their timestamp.
         """
-        return self.bucket.list()
+        return self.bucket.objects.all()
 
     def _index_by_key(self):
         index = {}
@@ -98,12 +98,9 @@ class S3Backend(object):
                 dry_run = ""
             LOGGER.info("%sdownload %s to %s", dry_run, filename, pathname)
             if not self.dry_run:
-                s3_key = self.bucket.get_key(filename)
-                content = s3_key.get_contents_as_string()
                 if not os.path.exists(os.path.dirname(pathname)):
                     os.makedirs(os.path.dirname(pathname))
-                with open(pathname, 'wb') as file_obj:
-                    file_obj.write(content)
+                self.bucket.download_file(filename, pathname)
 
     def upload(self, local_files, prefix=""):
         _, uploads = self._updated_s3_keys(local_files)
@@ -124,13 +121,10 @@ class S3Backend(object):
             LOGGER.info("%supload %s to %s%s", dry_run, pathname,
                 "s3://%s/%s" % (self.bucket.name, filename),
                 "(%s)" % policy if policy else "")
+            extra_args = {}
+            extra_args.update(headers)
+            if policy:
+                extra_args.update({'ACL': policy})
             if not self.dry_run:
-                with open(pathname, 'rb') as file_obj:
-                    try:
-                        s3_key = boto.s3.key.Key(self.bucket)
-                        s3_key.name = filename
-                        s3_key.set_contents_from_string(file_obj.read(),
-                            headers, replace=True, policy=policy)
-                    except socket.error as err:
-                        sys.stderr.write("error: '%s' while uploading %s\n"
-                            % (err, filename))
+                self.bucket.upload_file(pathname, filename,
+                    ExtraArgs=extra_args)

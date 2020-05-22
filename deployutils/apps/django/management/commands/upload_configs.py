@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,14 +24,12 @@
 
 import getpass, mimetypes, os
 
-import boto
+import boto3
 from django.core.management.base import BaseCommand
 
 from ..... import configs, crypt
 from ... import settings
-
-#pylint:disable=import-error
-from six.moves.urllib.parse import urlparse
+from ...compat import urlparse
 
 
 class Command(BaseCommand):
@@ -65,8 +63,8 @@ class Command(BaseCommand):
         else:
             self.stdout.write("upload configs to %s/%s" % (location, app_name))
         passphrase = getpass.getpass('Passphrase:')
-        conn = boto.connect_s3()
-        bucket = conn.get_bucket(bucket_name)
+        s3_resource = boto3.resource('s3')
+        bucket = s3_resource.Bucket(bucket_name)
         for confname in options['filenames']:
             if os.path.exists(confname):
                 conf_path = confname
@@ -75,7 +73,7 @@ class Command(BaseCommand):
                 conf_path = configs.locate_config(confname, app_name)
             content_type = mimetypes.guess_type(conf_path)[0]
             if content_type:
-                headers = {'Content-Type': content_type}
+                headers = {'ContentType': content_type}
             else:
                 headers = {}
             content = None
@@ -87,8 +85,9 @@ class Command(BaseCommand):
                     os.path.join(location, confname), "wb") as upload_file:
                     upload_file.write(encrypted)
             else:
-                key = boto.s3.key.Key(bucket)
-                key.name = '%s/%s/%s' % (prefix, app_name, confname)
-                key.set_contents_from_string(encrypted, headers,
-                    replace=True, policy=default_acl)
+                bucket.put_object(
+                    Key='%s/%s/%s' % (prefix, app_name, confname),
+                    ACL=default_acl,
+                    Body=encrypted,
+                    **headers)
         return 0

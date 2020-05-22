@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, shutil, subprocess, zipfile
+import logging, os, subprocess, zipfile
 import requests
 
 from .filesys import list_local
@@ -148,7 +148,7 @@ def upload_theme(args, base_url, api_key, prefix=None):
         if prefix:
             zip_filename = "%s.zip" % prefix
         else:
-            zip_filename  = "%s.zip" % os.path.basename(os.path.normpath(src))
+            zip_filename = "%s.zip" % os.path.basename(os.path.normpath(src))
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for src in args:
                 base_name = os.path.abspath(os.path.normpath(src))

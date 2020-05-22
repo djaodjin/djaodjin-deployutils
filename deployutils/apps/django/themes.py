@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,18 @@ from __future__ import unicode_literals
 import logging, os, re, shutil, subprocess, zipfile
 
 from django.conf import settings as django_settings
-from django.contrib.staticfiles.templatetags.staticfiles import do_static
 from django.template.base import (Parser, NodeList, TemplateSyntaxError)
 from django.template.backends.django import DjangoTemplates
 from django.template.context import Context
 from django.utils.encoding import force_text
-from django.utils import six
 from django_assets.templatetags.assets import assets
 from jinja2.lexer import Lexer
 from webassets import Bundle
 
 from . import settings
-from .compat import DebugLexer, TokenType, get_html_engine
+from .compat import (DebugLexer, TokenType, do_static, get_html_engine,
+    six, urlparse, urlunparse)
 from ...copy import shell_command
-
-#pylint:disable=no-name-in-module,import-error
-from django.utils.six.moves.urllib.parse import urlparse, urlunparse
 
 
 LOGGER = logging.getLogger(__name__)
@@ -121,7 +117,7 @@ class AssetsParser(Parser):
                         if hasattr(self, 'error'):
                             raise self.error(token, err)
                         # Django < 1.8
-                        elif not self.compile_function_error(token, err):
+                        if not self.compile_function_error(token, err):
                             raise
                 elif command == 'static':
                     self.dest_stream.write(

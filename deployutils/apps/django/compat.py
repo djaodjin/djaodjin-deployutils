@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,10 +22,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pylint: disable=no-name-in-module,unused-import,import-error,bad-except-order
-
-from django.utils import six
-
+#pylint: disable=unused-import,import-error,import-outside-toplevel
+#pylint: disable=no-name-in-module,bad-except-order
+import six
+from six.moves.urllib.parse import urljoin, urlparse, urlunparse
 
 try:
     from inspect import signature
@@ -46,6 +46,11 @@ try:
     from pip._internal.utils.misc import get_installed_distributions
 except ImportError: # pip < 10
     from pip.utils import get_installed_distributions
+
+try:
+    from django.templatetags.static import do_static
+except ImportError: # django < 2.1
+    from django.contrib.staticfiles.templatetags import do_static
 
 try:
     from django.utils.module_loading import import_string

@@ -20,7 +20,7 @@ Install deployutils into your environment
 
 Update your settings.py
 
-
+``` python
     +from deployutils.configs import load_config
 
      BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,7 +67,7 @@ Update your settings.py
     +    'ALLOWED_NO_SESSION': [
     +        STATIC_URL, reverse_lazy('login')]
     +}
-
+```
 
 Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
 (You can also pass ``DJAODJIN_SECRET_KEY`` as a shell environment variable.)

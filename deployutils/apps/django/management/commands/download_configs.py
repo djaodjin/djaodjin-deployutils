@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,16 +22,13 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getpass, os
+import getpass
 
-import boto
 from django.core.management.base import BaseCommand
 
-from ..... import crypt
 from ... import settings
-
-#pylint:disable=import-error
-from six.moves.urllib.parse import urlparse
+from ...compat import six
+from .....configs import read_config
 
 
 class Command(BaseCommand):
@@ -50,34 +47,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options): #pylint:disable=too-many-locals
         app_name = options['app_name']
         location = options['location']
-        if not location:
-            location = os.getenv("SETTINGS_LOCATION", None)
-        if not location:
-            self.stderr.write("a location argument must be passed on the "\
-            "command line or SETTINGS_LOCATION defined in the environment.\n")
-            return -1
-        is_local = not location.startswith('s3://')
-        _, bucket_name, prefix = urlparse(location)[:3]
-        if is_local:
-            self.stdout.write(
-                "download configs from local directory %s" % location)
-        else:
-            self.stdout.write(
-                "download configs from %s/%s" % (location, app_name))
-        conn = boto.connect_s3()
-        bucket = conn.get_bucket(bucket_name)
         passphrase = getpass.getpass('Passphrase:')
-        for confname in options['filenames']:
-            content = None
-            if is_local:
-                with open(os.path.join(location, confname),
-                          "rb") as download_file:
-                    encrypted = download_file.read()
-            else:
-                key = boto.s3.key.Key(bucket)
-                key.name = '%s/%s/%s' % (prefix, app_name, confname)
-                encrypted = key.get_contents_as_string()
-            content = crypt.decrypt(encrypted, passphrase)
+
+        for confname, content in six.iteritems(read_config(
+                app_name, options['filenames'],
+                location=location, passphrase=passphrase)):
             with open(confname, 'w') as conffile:
                 conffile.write(content)
         return 0

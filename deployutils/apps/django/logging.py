@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,13 +24,13 @@
 
 from __future__ import absolute_import
 
-import logging, json, os, six
+import logging, json, os
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.views.debug import ExceptionReporter
 
 from ... import crypt
-from .compat import get_installed_distributions, is_anonymous
+from .compat import get_installed_distributions, is_anonymous, six
 from .thread_local import get_request
 
 

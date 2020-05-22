@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2020, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,6 @@ from __future__ import absolute_import
 
 import datetime, logging, os, subprocess, sys
 
-import fabric.api as fab
 from optparse import make_option
 from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
@@ -55,25 +54,6 @@ class ResourceCommand(BaseCommand):
 
     def handle(self, *args, **options):
         settings.DRY_RUN = options['no_execute']
-        fab.env.use_ssh_config = True
-
-
-class DeployCommand(ResourceCommand):
-    """Commands intended to interact with the deployed servers."""
-
-    args = '[host ...]'
-
-    def __init__(self):
-        ResourceCommand.__init__(self)
-
-    def handle(self, *args, **options):
-        ResourceCommand.handle(self, *args, **options)
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-        logging.info("-" * 72)
-        if args:
-            fab.env.hosts = args
-        else:
-            fab.env.hosts = settings.DEPLOYED_SERVERS
 
 
 def build_assets():
