@@ -64,9 +64,10 @@ Update your settings.py
     +            'manager': [{
     +               'slug': 'testsite', 'printable_name': 'Testsite'}]}},
     +    },
-    +    'ALLOWED_NO_SESSION': [
-    +        STATIC_URL, reverse_lazy('login')]
+    +    'ALLOWED_NO_SESSION': (
+    +        STATIC_URL, reverse_lazy('login'),)
     +}
+
 ```
 
 Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
@@ -81,11 +82,13 @@ Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
 (for stand-alone testing) Add the mockup views in urls.py
 
 
+``` python
      urlpatterns = [
      ...
     +    url(r'^', include('deployutils.apps.django.mockup.urls')),
      ...
      ]
+```
 
 
 Development
