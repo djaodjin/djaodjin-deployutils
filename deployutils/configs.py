@@ -185,6 +185,8 @@ def read_config(app_name, *args, **kwargs):
                     s3_resource = boto3.resource('s3')
                     bucket = s3_resource.Bucket(bucket_name)
                     key_name = '%s/%s' % (prefix, confname)
+                    if key_name.startswith('/'):
+                        key_name = key_name[1:]
                     data = io.BytesIO()
                     bucket.download_fileobj(key_name, data)
                     content = data.getvalue()
@@ -210,7 +212,7 @@ def read_config(app_name, *args, **kwargs):
                 content = crypt.decrypt(content, passphrase)
             if hasattr(content, 'decode'):
                 content = content.decode('utf-8')
-                config[confname] = content
+            config[confname] = content
 
     return config
 
