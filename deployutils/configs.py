@@ -28,24 +28,11 @@ Function to load site and credentials config files
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import io, logging, os, re, six, sys
+import io, os, re, six, sys
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
 from . import crypt
-
-LOGGER = None
-
-def configure_logging():
-    # We don't want the message that loads the config files in settings.py
-    # to be lost so we go the extra length to find a natural logger for them.
-    global LOGGER #pylint:disable=global-statement
-    if LOGGER is None:
-        LOGGER = logging.getLogger(__name__)
-    if not LOGGER.handlers:
-        LOGGER = logging.getLogger('gunicorn.error')
-    if not LOGGER.handlers:
-        LOGGER = logging.getLogger()
 
 
 def locate_config(confname, app_name,
@@ -71,10 +58,10 @@ def locate_config(confname, app_name,
         candidates += [candidate]
     if candidates:
         if verbose:
-            LOGGER.info("config loaded from '%s'", candidates[0])
+            sys.stderr.write("config loaded from '%s'\n" % candidates[0])
         return candidates[0]
 
-    LOGGER.warning("config '%s' was not found.", confname)
+    sys.stderr.write("warning: config '%s' was not found.\n" % confname)
     return None
 
 
@@ -134,7 +121,8 @@ def load_config(app_name, *args, **kwargs):
                             # Environment variables override the config file
                             varvalue = eval(look.group(2), {}, {})
                         config.update({varname: varvalue})
-                    except Exception:
+                    except Exception as err:
+                        sys.sterr.write('error: %s\n' % str(err))
                         raise
         # Adds both, concat and split, versions of database URI.
         if 'DB_LOCATION' in config:
@@ -172,7 +160,6 @@ def read_config(app_name, *args, **kwargs):
     prefix = kwargs.get('prefix', 'etc')
     verbose = kwargs.get('verbose', False)
 
-    configure_logging()
     location, passphrase = locate_config_dir(app_name, **kwargs)
 
     for confname in confnames:
@@ -191,12 +178,14 @@ def read_config(app_name, *args, **kwargs):
                     bucket.download_fileobj(key_name, data)
                     content = data.getvalue()
                     if verbose:
-                        LOGGER.info("config loaded from 's3://%s/%s'",
-                            bucket_name, key_name)
-                except botocore.exceptions.ClientError:
-                    pass
-            except ImportError:
-                pass
+                        sys.stderr.write("config loaded from 's3://%s/%s'\n" %
+                            (bucket_name, key_name))
+                except botocore.exceptions.ClientError as err:
+                    if verbose:
+                        sys.stderr.write("warning: %s\n" % str(err))
+            except ImportError as err:
+                if verbose:
+                    sys.stderr.write("warning: %s\n" % str(err))
 
         # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
         if not content:
@@ -233,6 +222,7 @@ def update_settings(module, config):
                         os.makedirs(os.path.dirname(pathname))
                     with open(pathname, 'w') as _:
                         pass    # touch file
-                LOGGER.info("logging app messages in '%s'", pathname)
+                sys.stderr.write("logging app messages in '%s'\n" % pathname)
             except OSError:
-                LOGGER.warning("permission denied on '%s'", pathname)
+                sys.stderr.write("warning: permission denied on '%s'\n" %
+                    pathname)

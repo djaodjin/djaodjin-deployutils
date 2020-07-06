@@ -50,7 +50,7 @@ class Command(BaseCommand):
         passphrase = getpass.getpass('Passphrase:')
 
         for confname, content in six.iteritems(read_config(
-                app_name, options['filenames'],
+                app_name, *options['filenames'],
                 location=location, passphrase=passphrase)):
             with open(confname, 'w') as conffile:
                 conffile.write(content)
