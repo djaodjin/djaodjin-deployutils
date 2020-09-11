@@ -58,6 +58,8 @@ class Command(BaseCommand):
             return -1
         upload_local = not location.startswith('s3://')
         _, bucket_name, prefix = urlparse(location)[:3]
+        if prefix.startswith('/'):
+            prefix = prefix[1:]
         if upload_local:
             self.stdout.write('upload configs to local directory %s' % location)
         else:

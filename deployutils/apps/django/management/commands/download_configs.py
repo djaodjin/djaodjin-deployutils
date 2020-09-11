@@ -36,6 +36,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
+        parser.add_argument('--verbose',
+            action='store_true', dest='verbose', default=False,
+            help='Verbose display')
         parser.add_argument('--app_name',
             action='store', dest='app_name', default=settings.APP_NAME,
             help='Name of the config file(s) project')
@@ -48,9 +51,8 @@ class Command(BaseCommand):
         app_name = options['app_name']
         location = options['location']
         passphrase = getpass.getpass('Passphrase:')
-
         for confname, content in six.iteritems(read_config(
-                app_name, *options['filenames'],
+                app_name, verbose=options['verbose'], *options['filenames'],
                 location=location, passphrase=passphrase)):
             with open(confname, 'w') as conffile:
                 conffile.write(content)

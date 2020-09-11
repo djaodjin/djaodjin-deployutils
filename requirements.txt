@@ -10,6 +10,7 @@ requests>=2.22.0
 
 # When used with Django
 # django-assets>=0.10
+# djangorestframework>=3.3.1
 # jinja2==2.8.1
 
 # When used with Flask

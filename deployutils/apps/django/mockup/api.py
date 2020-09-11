@@ -23,30 +23,25 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Mockup login URL used in testing.
+Mockup APIs used in stand-alone development.
 """
+from __future__ import unicode_literals
 
-from django.conf.urls import url
-from django.views.generic import TemplateView
+from django.http import Http404
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.response import Response
 
-from .api import ProfileDetailAPIView
-from .views import SigninView, SignupView
+from .. import settings
+from ..compat import six
 
 
-USERNAME_PAT = r'[\w.@+-]+'
-SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
+class ProfileDetailAPIView(RetrieveAPIView):
 
-urlpatterns = [
-    url(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
-        ProfileDetailAPIView.as_view(), name='api_profile'),
-    url(r'^users/(?P<user>%s)/' % USERNAME_PAT,
-        TemplateView.as_view(), name='users_profile'),
-    url(r'^register/',
-        SignupView.as_view(), name='registration_register'),
-    url(r'^logout/',
-        TemplateView.as_view(template_name='accounts/logout.html'),
-        name='logout'),
-    url(r'^login/recover/',
-        TemplateView.as_view(), name='password_reset'),
-    url(r'^login/', SigninView.as_view(), name='login'),
-]
+    def get(self, request, *args, **kwargs):
+        profile_slug = self.kwargs.get('profile')
+        for _, session_data in six.iteritems(settings.MOCKUP_SESSIONS):
+            for _, role_data in six.iteritems(session_data.get('roles', {})):
+                for profile in role_data:
+                    if profile.get('slug') == profile_slug:
+                        return Response(profile)
+        raise Http404

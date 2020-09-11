@@ -161,7 +161,6 @@ def read_config(app_name, *args, **kwargs):
     verbose = kwargs.get('verbose', False)
 
     location, passphrase = locate_config_dir(app_name, **kwargs)
-
     for confname in confnames:
         content = None
         if location and location.startswith('s3://'):
@@ -174,6 +173,10 @@ def read_config(app_name, *args, **kwargs):
                     key_name = '%s/%s' % (prefix, confname)
                     if key_name.startswith('/'):
                         key_name = key_name[1:]
+                    if verbose:
+                        sys.stderr.write(
+                            "attempt to load config from 's3://%s/%s'\n" %
+                            (bucket_name, key_name))
                     data = io.BytesIO()
                     bucket.download_fileobj(key_name, data)
                     content = data.getvalue()
@@ -214,7 +217,7 @@ def update_settings(module, config):
             value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
         setattr(module, key.upper(), value)
 
-    if hasattr(module, 'LOG_FILE'):
+    if hasattr(module, 'LOG_FILE') and module.LOG_FILE:
         for pathname in [module.LOG_FILE]:
             try:
                 if not os.path.exists(pathname):

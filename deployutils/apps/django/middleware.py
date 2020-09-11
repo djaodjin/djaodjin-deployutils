@@ -133,7 +133,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         if django_settings.DEBUG:
             # When DEBUG=False, Django will not store information regarding
             # the SQL queries performed so there is not point here.
-            logger = logging.getLogger('django.db.backends')
+            logger = logging.getLogger('deployutils.perf')
             nb_queries = 0
             duration = timedelta()
             for connection in connections.all():
@@ -145,7 +145,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                         # days, seconds, microseconds
             if hasattr(request, 'starts_at'):
                 request_duration = datetime_or_now() - request.starts_at
-                logger.debug(
+                logger.info(
                   "%s %s executed %d SQL queries in %s (request duration: %s)",
                     request.method, request.get_full_path(),
                     nb_queries, duration, request_duration,

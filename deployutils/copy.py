@@ -78,6 +78,16 @@ def download(remote_location, remotes=None, prefix="", dry_run=False):
                 '%s/./' % remote_location, dest_root], dry_run=dry_run)
 
 
+def download_theme(args, base_url, api_key, prefix=None):
+    """
+    Downloads a project theme.
+    """
+    api_themes_url = base_url + '/api/themes/'
+    resp = requests.get(api_themes_url, auth=(api_key, ""))
+    LOGGER.info("GET %s returns %d %s",
+        api_themes_url, resp.status_code, resp.text)
+
+
 def shell_command(cmd, dry_run=False):
     """
     Run a shell command.
