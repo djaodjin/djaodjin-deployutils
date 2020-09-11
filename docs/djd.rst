@@ -1,5 +1,5 @@
-Upload assets
-=============
+Deploying to production
+=======================
 
 Assets are Plain-Old-Data (POD) files that need to be transferred from
 the server to the client browser, i.e. typically Javascript files (.js)
