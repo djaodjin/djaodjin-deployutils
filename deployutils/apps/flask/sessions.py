@@ -39,10 +39,8 @@ JWT_ALGORITHM = 'HS256'
 
 
 class PermissionDenied(Exception):
-    status_code = 403
 
-    def __init__(self, detail=None):
-        super(PermissionDenied, self).__init__(detail)
+    status_code = 403
 
 
 class DjaoDjinSession(CallbackDict, SessionMixin):

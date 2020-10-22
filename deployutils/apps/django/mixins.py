@@ -32,6 +32,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import ugettext as _
 
 from ...helpers import datetime_or_now, start_of_day, update_context_urls
+from . import settings
 from .compat import six
 from .templatetags.deployutils_prefixtags import site_prefixed
 
@@ -167,6 +168,33 @@ class AccountMixin(object):
             if url_kwarg_val:
                 kwargs.update({url_kwarg: url_kwarg_val})
         return kwargs
+
+
+class ProviderMixin(AccountMixin):
+    """
+    Mixin that behaves like `AccountMixin` except it will default to the broker
+    account instead of `None` when no account is found.
+    """
+
+    @property
+    def account(self):
+        if not hasattr(self, '_account'):
+            self._account = super(ProviderMixin, self).account
+            if self._account is None:
+                kwargs = {
+                    '%s__exact' % self.account_lookup_field: settings.APP_NAME
+                }
+                try:
+                    self._account = self.account_queryset.filter(**kwargs).get()
+                except self.account_queryset.model.DoesNotExist:
+                    #pylint: disable=protected-access
+                    raise Http404(
+                        _("No %(verbose_name)s found matching '%(provider)s'") %
+                        {'verbose_name':
+                         self.account_queryset.model._meta.verbose_name,
+                         'provider': settings.APP_NAME
+                        })
+        return self._account
 
 
 class BeforeMixin(object):

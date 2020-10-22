@@ -41,13 +41,12 @@ class Command(BaseCommand):
         if email:
             fixture_tmps = self.replace_email(email, *fixture_labels)
             try:
-                result = super(Command, self).handle(*fixture_tmps, **options)
+                super(Command, self).handle(*fixture_tmps, **options)
             finally:
                 for fixture in fixture_tmps:
                     os.remove(fixture)
         else:
-            result = super(Command, self).handle(*fixture_labels, **options)
-        return result
+            super(Command, self).handle(*fixture_labels, **options)
 
     @staticmethod
     def replace_email(email, *fixture_labels):

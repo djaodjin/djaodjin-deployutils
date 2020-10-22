@@ -47,8 +47,11 @@ def datetime_or_now(dtime_at=None):
                 dtime_at = datetime.datetime.strptime(
                     dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError as err:
-                LOGGER.warning(err)
-                dtime_at = None
+                try:
+                    dtime_at = datetime.datetime.strptime(dtime_at, "%Y-%m-%d")
+                except ValueError as err:
+                    LOGGER.warning(err)
+                    dtime_at = None
         elif isinstance(dtime_at, datetime.date):
             dtime_at = datetime.datetime(
                 dtime_at.year, dtime_at.month, dtime_at.day)

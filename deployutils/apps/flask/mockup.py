@@ -40,7 +40,6 @@ def api():
 def api_login():
     content = request.json
     username = content.get('username')
-    password = content.get('password')
     exp = as_timestamp(datetime_or_now() + datetime.timedelta(days=1))
     payload = app.config['MOCKUP_SESSIONS'].get(username)
     payload.update({'exp': exp})

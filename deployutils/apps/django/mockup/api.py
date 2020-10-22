@@ -37,6 +37,8 @@ from ..compat import six
 
 class ProfileDetailAPIView(RetrieveAPIView):
 
+    schema = None
+
     def get(self, request, *args, **kwargs):
         profile_slug = self.kwargs.get('profile')
         for _, session_data in six.iteritems(settings.MOCKUP_SESSIONS):
