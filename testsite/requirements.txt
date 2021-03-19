@@ -1,5 +1,5 @@
 Django==1.11.29
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 jinja2==2.8.1
 pip==19.1.1
 python-dateutil==2.8.1
