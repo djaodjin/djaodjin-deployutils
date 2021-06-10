@@ -1,4 +1,4 @@
-Django==1.11.29
+Django==2.2.24
 djangorestframework==3.9.4
 jinja2==2.8.1
 pip==19.1.1
