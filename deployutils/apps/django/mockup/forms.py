@@ -36,4 +36,5 @@ class SignupForm(forms.Form):
     full_name = forms.RegexField(regex=r'^[\w\s]+$', max_length=60)
     email = forms.EmailField()
     username = forms.SlugField()
-    password = forms.CharField(widget=forms.PasswordInput())
+    new_password = forms.CharField(widget=forms.PasswordInput())
+    new_password2 = forms.CharField(widget=forms.PasswordInput())

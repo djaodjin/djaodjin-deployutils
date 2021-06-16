@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2021, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,8 @@ urlpatterns = [
     url(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
         ProfileDetailAPIView.as_view(), name='api_profile'),
     url(r'^users/(?P<user>%s)/' % USERNAME_PAT,
-        TemplateView.as_view(), name='users_profile'),
+        TemplateView.as_view(template_name='users/index.html'),
+        name='users_profile'),
     url(r'^register/',
         SignupView.as_view(), name='registration_register'),
     url(r'^logout/',

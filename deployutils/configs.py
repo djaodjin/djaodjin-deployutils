@@ -28,11 +28,14 @@ Function to load site and credentials config files
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import io, os, re, six, sys
+import io, logging, os, re, six, sys
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
 from . import crypt
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def locate_config(confname, app_name,
@@ -44,18 +47,34 @@ def locate_config(confname, app_name,
     if location:
         candidate = os.path.normpath(os.path.join(location, confname))
         if os.path.isfile(candidate):
+            LOGGER.debug("candidate for config %s ... yes", candidate)
             candidates += [candidate]
+        else:
+            LOGGER.debug("candidate for config %s ... no", candidate)
+
     candidate = os.path.normpath(os.path.join(
         os.path.dirname(os.path.dirname(sys.executable)),
         prefix, app_name, confname))
     if os.path.isfile(candidate):
+        LOGGER.debug("candidate for config %s ... yes", candidate)
         candidates += [candidate]
+    else:
+        LOGGER.debug("candidate for config %s ... no", candidate)
+
     candidate = os.path.normpath('/%s/%s/%s' % (prefix, app_name, confname))
     if os.path.isfile(candidate):
+        LOGGER.debug("candidate for config %s ... yes", candidate)
         candidates += [candidate]
+    else:
+        LOGGER.debug("candidate for config %s ... no", candidate)
+
     candidate = os.path.normpath(os.path.join(os.getcwd(), confname))
     if os.path.isfile(candidate):
+        LOGGER.debug("candidate for config %s ... yes", candidate)
         candidates += [candidate]
+    else:
+        LOGGER.debug("candidate for config %s ... no", candidate)
+
     if candidates:
         if verbose:
             sys.stderr.write("config loaded from '%s'\n" % candidates[0])

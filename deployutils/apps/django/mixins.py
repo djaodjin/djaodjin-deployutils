@@ -161,13 +161,24 @@ class AccountMixin(object):
         context.update({self.account_url_kwarg: self.account})
         return context
 
-    def get_url_kwargs(self):
-        kwargs = {}
-        for url_kwarg in [self.account_url_kwarg]:
-            url_kwarg_val = self.kwargs.get(url_kwarg, None)
+    def get_reverse_kwargs(self):
+        """
+        List of kwargs taken from the url that needs to be passed through
+        to ``get_success_url``.
+        """
+        if self.account_url_kwarg:
+            return [self.account_url_kwarg]
+        return []
+
+    def get_url_kwargs(self, **kwargs):
+        if not kwargs:
+            kwargs = self.kwargs
+        url_kwargs = {}
+        for url_kwarg in self.get_reverse_kwargs():
+            url_kwarg_val = kwargs.get(url_kwarg, None)
             if url_kwarg_val:
-                kwargs.update({url_kwarg: url_kwarg_val})
-        return kwargs
+                url_kwargs.update({url_kwarg: url_kwarg_val})
+        return url_kwargs
 
 
 class ProviderMixin(AccountMixin):

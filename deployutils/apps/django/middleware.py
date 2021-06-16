@@ -139,10 +139,13 @@ class RequestLoggingMiddleware(MiddlewareMixin):
             for connection in connections.all():
                 nb_queries += len(connection.queries)
                 for query in connection.queries:
-                    convert = datetime.strptime(query['time'], "%S.%f")
-                    duration += timedelta(
-                        0, convert.second, convert.microsecond)
-                        # days, seconds, microseconds
+                    try:
+                        convert = datetime.strptime(query['time'], "%S.%f")
+                        duration += timedelta(
+                            0, convert.second, convert.microsecond)
+                            # days, seconds, microseconds
+                    except ValueError as err:
+                        LOGGER.error(err)
             if hasattr(request, 'starts_at'):
                 request_duration = datetime_or_now() - request.starts_at
                 logger.info(
