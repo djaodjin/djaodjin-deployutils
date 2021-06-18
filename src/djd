@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2020, Djaodjin Inc.
+# Copyright (c) 2021, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ from deployutils.copy import download_theme, upload_theme
 LOGGER = logging.getLogger(__name__)
 CONFIG = configparser.ConfigParser()
 CONFIG_FILENAME = None
+DEFAULT_API_ENDPOINT = "https://api.djaodjin.com"
 
 
 def build_subcommands_parser(parser, module):
@@ -108,12 +109,12 @@ def get_project(project=""):
                 break
         if not project:
             project = os.path.basename(os.getcwd())
-        custom_name = input(
-            "Please enter the name of the project.\n"\
-            "By default a project is hosted at *project*.djaoapp.com\n"\
-            "(project defaults to %s): " % project)
-        if custom_name:
-            project = custom_name
+            custom_name = input(
+                "Please enter the name of the project.\n"\
+                "By default a project is hosted at *project*.djaoapp.com\n"\
+                "(project defaults to %s): " % project)
+            if custom_name:
+                project = custom_name
     if project not in CONFIG.sections():
         CONFIG.add_section(project)
 
@@ -149,6 +150,7 @@ def get_project_connect(project, base_url="", api_key=""):
     """
     Required base_url and api_key to connect to the URL endpoint.
     """
+    updated = False
     if project not in CONFIG.sections():
         CONFIG.add_section(project)
 
@@ -183,7 +185,7 @@ def get_project_config(project="", base_url="", api_key=""):
     base_url, api_key, updated_connect = get_project_connect(
         project, base_url=base_url, api_key=api_key)
 
-    return project, base_url, api_key, (updated and updated_connect)
+    return project, base_url, api_key, (updated or updated_connect)
 
 
 def save_config(config=None, config_filename=None):
@@ -198,29 +200,35 @@ def save_config(config=None, config_filename=None):
     sys.stdout.write("saved configuration in %s\n" % config_filename)
 
 
-def pub_deploy(args,  project="", account="", api_key=""):
-    """Deploy container for a project.
+def pub_deploy(args, project="", account="", api_key=""):
+    """Deploy a container for a project.
     """
     base_url, api_key, updated = get_project_connect(
         'djaodjin',
-        base_url="https://api.djaodjin.com",
+        base_url=DEFAULT_API_ENDPOINT,
         api_key=api_key)
     project, account, updated = get_project_account(
         project=project, account=account)
     if updated:
         save_config()
+
+    if args:
+        container_location = args[0]
     api_container_url = \
         "%(base_url)s/api/containers/%(organization)s/apps/%(app)s/" % {
             'base_url': base_url,
             'organization': str(account),
             'app': str(project)}
-    #XXX resp = requests.post(api_container_url, auth=(api_key, ""))
-    #LOGGER.info("POST %s returns %d %s",
-    #        api_container_url, resp.status_code, resp.text)
+    data = None
+    if container_location:
+        data = {'location': container_location}
+    resp = requests.post(api_container_url, data=data, auth=(api_key, ""))
+    LOGGER.info("POST %s returns %d %s",
+        api_container_url, resp.status_code, resp.text)
 
 
 def pub_download(args, project="", base_url="", api_key=""):
-    """Download a project theme.
+    """Download a theme package for a project.
     """
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
@@ -231,12 +239,13 @@ def pub_download(args, project="", base_url="", api_key=""):
 
 def pub_init(args, project="", account="", base_url="",
              api_key="", dj_api_key=""):
-    """Initialize the API key and URLs used to upload a project
-theme or deploy its container.
+    """Initialize the API keys and URLs used to upload
+a project theme or deploy its container.
     """
+    #pylint:disable=too-many-arguments,unused-argument
     _, _, updated = get_project_connect(
         'djaodjin',
-        base_url="https://api.djaodjin.com",
+        base_url=DEFAULT_API_ENDPOINT,
         api_key=dj_api_key)
     project, account, updated_next = get_project_account(
         project=project, account=account)
@@ -249,7 +258,7 @@ theme or deploy its container.
 
 
 def pub_upload(args, project="", base_url="", api_key=""):
-    """Upload a theme package or directory for a project.
+    """Upload a theme package (or directory) for a project.
     """
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
@@ -272,6 +281,14 @@ def main(args):
         parser.add_argument('--version', action='version',
                             version='%(prog)s ' + str(__version__))
         parser.add_argument(
+            '--endpoint', action='store',
+            default=DEFAULT_API_ENDPOINT,
+            help='API endpoint to call')
+        parser.add_argument(
+            '--project', action='store',
+            default=None,
+            help='Project being managed')
+        parser.add_argument(
             '--config', action='store',
             default=os.path.join(os.getenv('HOME'), '.djd', 'credentials'),
             help='configuration file')
@@ -290,7 +307,7 @@ def main(args):
             for key, val in CONFIG.items(section):
                 LOGGER.info("%s = %s", key, val)
 
-        # Filter out options with are not part of the function prototype.
+        # Filter out options which are not part of the function prototype.
         func_args = filter_subcommand_args(options.func, options)
         return options.func(**func_args)
 

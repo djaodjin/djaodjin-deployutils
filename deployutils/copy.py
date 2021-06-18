@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging, os, subprocess, zipfile
+import logging, os, re, subprocess, zipfile
 import requests
 
 from .filesys import list_local
@@ -82,10 +82,14 @@ def download_theme(args, base_url, api_key, prefix=None):
     """
     Downloads a project theme.
     """
-    api_themes_url = base_url + '/api/themes/'
+    api_themes_url = base_url + '/themes/download/'
     resp = requests.get(api_themes_url, auth=(api_key, ""))
-    LOGGER.info("GET %s returns %d %s",
-        api_themes_url, resp.status_code, resp.text)
+    LOGGER.info("GET %s returns %d", api_themes_url, resp.status_code)
+    fname = re.findall(r'filename="(.+)"',
+        resp.headers['content-disposition'])[0]
+    LOGGER.info("saves downloaded theme in %s", fname)
+    with open(fname, 'wb') as theme_file:
+        theme_file.write(resp.content)
 
 
 def shell_command(cmd, dry_run=False):
