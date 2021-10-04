@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin Inc.
+# Copyright (c) 2021, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -144,25 +144,28 @@ def load_config(app_name, *args, **kwargs):
                         sys.sterr.write('error: %s\n' % str(err))
                         raise
         # Adds both, concat and split, versions of database URI.
-        if 'DB_LOCATION' in config:
+        if 'DB_LOCATION' in config and config['DB_LOCATION']:
             parts = urlparse(config['DB_LOCATION'])
             config.update({
                 'DB_ENGINE': parts.scheme,
                 'DB_USER': parts.username,
                 'DB_PASSWORD': parts.password,
                 'DB_HOST': parts.hostname,
-                'DB_NAME': parts.path[1:] if parts.path else None,
             })
-        elif ('DB_ENGINE' in config and 'DB_NAME' in config and
-              'DB_USER' in config and 'DB_PASSWORD' in config and
-              'DB_HOST' in config):
-            config.update({'DB_LOCATION': "%s://%s:%s@%s/%s" % (
-                config['DB_ENGINE'],
-                config['DB_USER'], config['DB_PASSWORD'],
-                config['DB_HOST'], config['DB_NAME'])})
-        elif 'DB_ENGINE' in config and 'DB_NAME' in config:
-            config.update({'DB_LOCATION': "%s:///%s" % (
-                config['DB_ENGINE'], config['DB_NAME'])})
+            if parts.scheme == 'sqlite3':
+                config.update({'DB_NAME': parts.path})
+            else:
+                config.update({
+                    'DB_NAME': parts.path[1:] if parts.path else None})
+        else:
+            location = "%s://" % config['DB_ENGINE']
+            if ('DB_USER' in config and 'DB_PASSWORD' in config and
+                config['DB_USER'] and config['DB_PASSWORD']):
+                location += "%s:%s" % (config['DB_USER'], config['DB_PASSWORD'])
+            if 'DB_HOST' in config and config['DB_HOST']:
+                location += "@%s" % config['DB_HOST']
+            location += "/%s" % config['DB_NAME']
+            config.update({'DB_LOCATION': location})
     return config
 
 
