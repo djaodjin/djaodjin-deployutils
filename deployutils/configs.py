@@ -157,7 +157,7 @@ def load_config(app_name, *args, **kwargs):
             else:
                 config.update({
                     'DB_NAME': parts.path[1:] if parts.path else None})
-        else:
+        elif 'DB_ENGINE' in config and 'DB_NAME' in config:
             location = "%s://" % config['DB_ENGINE']
             if ('DB_USER' in config and 'DB_PASSWORD' in config and
                 config['DB_USER'] and config['DB_PASSWORD']):
