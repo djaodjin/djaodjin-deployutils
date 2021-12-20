@@ -53,7 +53,7 @@ _SETTINGS = {
         settings.INSTALLED_APPS),
     'MOCKUP_SESSIONS': {},
     'MULTITIER_RESOURCES_ROOT': getattr(settings, 'DEPLOYUTILS_RESOURCES_ROOT',
-        settings.BASE_DIR + '/htdocs/'),
+        os.path.join(settings.BASE_DIR, 'htdocs')),
     'MULTITIER_ASSETS_DIR': os.path.join(settings.BASE_DIR, 'htdocs'),
     'MULTITIER_THEMES_DIR': os.path.join(settings.BASE_DIR, 'themes'),
     'RESOURCES_REMOTE_LOCATION': getattr(settings,

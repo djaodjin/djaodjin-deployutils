@@ -337,7 +337,10 @@ class JSONFormatter(logging.Formatter):
                     for frame in frames:
                         frame_dict = {}
                         for frame_key, frame_val in six.iteritems(frame):
-                            frame_dict.update({frame_key: str(frame_val)})
+                            if frame_key == 'lineno':
+                                frame_dict.update({frame_key: int(frame_val)})
+                            else:
+                                frame_dict.update({frame_key: str(frame_val)})
                         value += [frame_dict]
                 filtered_traceback_data.update({key: value})
 

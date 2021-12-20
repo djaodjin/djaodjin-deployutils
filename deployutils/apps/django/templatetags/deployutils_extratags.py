@@ -35,6 +35,10 @@ from .deployutils_prefixtags import site_prefixed
 
 register = template.Library()
 
+@register.filter()
+def absolute_uri(request):
+    return request.build_absolute_uri()
+
 
 @register.filter()
 def is_authenticated(request):

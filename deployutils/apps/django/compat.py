@@ -45,7 +45,12 @@ except ImportError: # Python<3.3
 try:
     from pip._internal.utils.misc import get_installed_distributions
 except ImportError: # pip < 10
-    from pip.utils import get_installed_distributions
+    try:
+        from pip.utils import get_installed_distributions
+    except ModuleNotFoundError: # pip > 20
+        import pkg_resources
+        def get_installed_distributions():
+            return [dist for dist in pkg_resources.working_set]
 
 try:
     from django.templatetags.static import do_static

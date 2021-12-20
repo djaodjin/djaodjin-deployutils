@@ -1,6 +1,6 @@
 boto3>=1.12.31
 cryptography>=2.2.2
-pip>=8.1.2
+pip>=8.1.2,<21.3 # because of get_installed_distributions
 PyJWT>=1.6.1
 # For datetime-related helpers
 python-dateutil>=2.4.2
