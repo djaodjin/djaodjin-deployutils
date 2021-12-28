@@ -26,17 +26,28 @@ install::
 	cd $(srcDir) && $(PYTHON) ./setup.py --quiet \
 		build -b $(CURDIR)/build install
 
-install-conf:: $(srcDir)/credentials
 
-initdb: install-conf
-	-rm -f $(srcDir)/db.sqlite
-	cd $(srcDir) && $(PYTHON) ./manage.py migrate $(RUNSYNCDB) --noinput
+install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
+                $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf
+	install -d $(DESTDIR)$(LOCALSTATEDIR)/db
+	install -d $(DESTDIR)$(LOCALSTATEDIR)/run
+	install -d $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
-$(srcDir)/credentials: $(srcDir)/testsite/etc/credentials
+$(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 	[ -f $@ ] || \
 		sed -e "s,\%(SECRET_KEY)s,$(SECRET_KEY)," \
 			-e "s,\%(DJAODJIN_SECRET_KEY)s,$(DJAODJIN_SECRET_KEY)," \
 			$< > $@
+
+$(DESTDIR)$(CONFIG_DIR)/gunicorn.conf: $(srcDir)/testsite/etc/gunicorn.conf
+	install -d $(dir $@)
+	[ -f $@ ] || sed \
+		-e 's,%(LOCALSTATEDIR)s,$(LOCALSTATEDIR),' $< > $@
+
+
+initdb: install-conf
+	-rm -f $(srcDir)/db.sqlite
+	cd $(srcDir) && $(PYTHON) ./manage.py migrate $(RUNSYNCDB) --noinput
 
 doc:
 	$(installDirs) docs
