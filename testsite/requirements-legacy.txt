@@ -4,6 +4,7 @@ jinja2==2.11.2
 PyJWT==1.6.1
 python-dateutil==2.8.2
 
-# When DEBUG=1
+# Development (DEBUG=1)
 django-debug-toolbar==1.11.1 # This version works with Py2, Django 1.11 and 2.2
 django-extensions==2.2.5
+pylint-django==0.11.1
