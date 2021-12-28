@@ -38,7 +38,6 @@ else:
     ENV_INSTALLED_APPS = tuple([])
 
 INSTALLED_APPS = ENV_INSTALLED_APPS + (
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
