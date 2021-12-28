@@ -5,6 +5,9 @@
 srcDir        ?= .
 installTop    ?= $(VIRTUAL_ENV)
 binDir        ?= $(installTop)/bin
+CONFIG_DIR    ?= $(srcDir)
+# XXX CONFIG_DIR should really be $(installTop)/etc/testsite
+LOCALSTATEDIR ?= $(installTop)/var
 
 PYTHON        := $(binDir)/python
 
