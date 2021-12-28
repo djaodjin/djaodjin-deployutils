@@ -1,6 +1,7 @@
 Django==2.2.25
 djangorestframework==3.12.4
 jinja2==2.11.2
+PyJWT==2.3.0
 python-dateutil==2.8.2
 
 # When DEBUG=1
