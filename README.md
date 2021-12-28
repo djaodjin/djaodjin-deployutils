@@ -1,11 +1,17 @@
 DjaoDjin deployutils
 ====================
 
-This Django app enables a Django project to seamlessly integrate behind
-the [DjaoDjin HTTP session manager reverse proxy](https://github.com/djaodjin/djaoapp).
+This Python module enables a Django or Flask project to seamlessly integrate
+behind the [HTTP session manager reverse proxy](https://github.com/djaodjin/djaoapp).
 It will replace the default ``django.contrib.sessions``
-and ``AUTHENTICATION_BACKENDS`` to decode sessions forwarded to your Django
-project by the HTTP session manager.
+and ``AUTHENTICATION_BACKENDS`` to decode sessions forwarded to your project
+by the HTTP session manager.
+
+Tested with
+
+- **Python:** 3.7, **Django:** 2.2 ([LTS](https://www.djangoproject.com/download/)), **Django Rest Framework:** 3.12
+- **Python:** 3.7, **Django:** 4.0 (latest), **Django Rest Framework:** 3.12
+- **Python:** 2.7, **Django:** 1.11 (legacy), **Django Rest Framework:** 3.9.4
 
 [More technical documentation](https://djaodjin.com/docs/technical/)
 

@@ -49,7 +49,7 @@ except ImportError: # pip < 10
         from pip.utils import get_installed_distributions
     except ModuleNotFoundError: # pip > 20
         import pkg_resources
-        def get_installed_distributions():
+        def get_installed_distributions(local_only=True):
             return [dist for dist in pkg_resources.working_set]
 
 try:
@@ -71,6 +71,10 @@ except ModuleNotFoundError: #pylint:disable=undefined-variable
     # <= Django 1.10, Python>=3.6
     from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
 
+try:
+    from django.urls import include, re_path
+except ImportError: # <= Django 2.0, Python<3.6
+    from django.conf.urls import include, url as re_path
 
 try:
     from django.template.base import DebugLexer

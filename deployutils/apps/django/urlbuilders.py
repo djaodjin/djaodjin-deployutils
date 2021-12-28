@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2021, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,8 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from django.conf.urls import url
-
 from . import settings
+from .compat import re_path
 
 
 if settings.DEBUG:
@@ -38,5 +37,5 @@ def url_prefixed(regex, view, name=None):
     """
     Returns a urlpattern prefixed with the APP_NAME in debug mode.
     """
-    return url(r'^%(app_prefix)s%(regex)s' % {
+    return re_path(r'^%(app_prefix)s%(regex)s' % {
         'app_prefix': APP_PREFIX, 'regex': regex}, view, name=name)

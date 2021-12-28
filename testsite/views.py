@@ -39,4 +39,7 @@ class IndexView(TemplateView):
     def get(self, request, *args, **kwargs):
         if is_authenticated(self.request):
             self.request.session['mydata'] = 'dummy'
+        page = kwargs.get('page')
+        if page and page.startswith('500'):
+            raise ValueError("Testing 500 exception catcher")
         return super(IndexView, self).get(request, *args, **kwargs)

@@ -66,6 +66,6 @@ Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
 
      urlpatterns = [
      ...
-    +    url(r'^', include('deployutils.apps.django.mockup.urls')),
+    +    re_path(r'^', include('deployutils.apps.django.mockup.urls')),
      ...
      ]

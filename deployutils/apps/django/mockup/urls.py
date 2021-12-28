@@ -26,28 +26,28 @@
 Mockup login URL used in testing.
 """
 
-from django.conf.urls import url
 from django.views.generic import TemplateView
 
 from .api import ProfileDetailAPIView
 from .views import SigninView, SignupView
+from ..compat import re_path
 
 
 USERNAME_PAT = r'[\w.@+-]+'
 SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
 
 urlpatterns = [
-    url(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
+    re_path(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
         ProfileDetailAPIView.as_view(), name='api_profile'),
-    url(r'^users/(?P<user>%s)/' % USERNAME_PAT,
+    re_path(r'^users/(?P<user>%s)/' % USERNAME_PAT,
         TemplateView.as_view(template_name='users/index.html'),
         name='users_profile'),
-    url(r'^register/',
+    re_path(r'^register/',
         SignupView.as_view(), name='registration_register'),
-    url(r'^logout/',
+    re_path(r'^logout/',
         TemplateView.as_view(template_name='accounts/logout.html'),
         name='logout'),
-    url(r'^login/recover/',
+    re_path(r'^login/recover/',
         TemplateView.as_view(), name='password_reset'),
-    url(r'^login/', SigninView.as_view(), name='login'),
+    re_path(r'^login/', SigninView.as_view(), name='login'),
 ]

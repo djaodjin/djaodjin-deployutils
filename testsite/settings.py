@@ -51,25 +51,58 @@ INSTALLED_APPS = ENV_INSTALLED_APPS + (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': 'X X %(levelname)s [%(asctime)s] %(message)s',
+            'datefmt': '%d/%b/%Y:%H:%M:%S %z'
+        },
+        'json': {
+            '()': 'deployutils.apps.django.logging.JSONFormatter',
+            'format':
+            'gunicorn.' + APP_NAME + '.app: [%(process)d] '\
+                '%(log_level)s %(remote_addr)s %(http_host)s %(username)s'\
+                ' [%(asctime)s] %(message)s',
+            'datefmt': '%d/%b/%Y:%H:%M:%S %z',
+            'replace': False,
+            'whitelists': {
+                'record': [
+                    'nb_queries', 'queries_duration',
+                    'charge', 'amount', 'unit', 'modified',
+                    'customer', 'organization', 'provider'],
+            }
+        },
+    },
     'handlers': {
-        'logfile':{
+        'db_log': {
+            'level': 'DEBUG',
+            'formatter': 'simple',
+            'filters': ['require_debug_true'],
+            'class':'logging.StreamHandler',
+        },
+        'log':{
             'level':'DEBUG',
+            'formatter': 'json',
             'class':'logging.StreamHandler',
         },
     },
     'loggers': {
         'deployutils': {
-            'handlers': ['logfile'],
             'level': 'DEBUG',
             'propagate': True,
         },
 #        'django.db.backends': {
-#           'handlers': ['logfile'],
+#           'handlers': ['db_log'],
 #           'level': 'DEBUG',
 #        },
         # This is the root logger. Apparently setting the level has no effect
         # ... anymore?
         '': {
+            'handlers': ['log'],
             'level': 'WARNING',
             'propagate': False,
         },
