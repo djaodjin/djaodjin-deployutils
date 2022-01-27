@@ -32,7 +32,7 @@ import argparse, configparser, inspect, json, logging, os, sys
 import requests
 
 from deployutils import __version__
-from deployutils.copy import download_theme, upload_theme
+from deployutils.copy import download_theme, shell_command, upload_theme
 
 
 LOGGER = logging.getLogger(__name__)
@@ -200,6 +200,19 @@ def save_config(config=None, config_filename=None):
     sys.stdout.write("saved configuration in %s\n" % config_filename)
 
 
+def ssh_reverse_tunnel(args, base_url, api_key, prefix=None):
+    """
+    Creates the SSH reverse tunnel
+    """
+    local_port = 8000
+    remote_port = local_port
+    remote_host = 'git@'
+    shell_command(['ssh', '-fnNT',
+        '-R', '*:%(remote_port)d:localhost:%(local_port)d' % {
+            'local_port': local_port, 'remote_port': remote_port},
+        remote_host])
+
+
 def pub_deploy(args, project="", account="", api_key=""):
     """Deploy a container for a project.
     """
@@ -255,6 +268,16 @@ a project theme or deploy its container.
     updated |= updated_next
     if updated:
         save_config()
+
+
+def pub_tunnel(args, project="", base_url="", api_key=""):
+    """SSH Reverse tunnel to a project.
+    """
+    project, base_url, api_key, updated = get_project_config(
+        project=project, base_url=base_url, api_key=api_key)
+    if updated:
+        save_config()
+    ssh_reverse_tunnel(args, base_url, api_key, prefix=project)
 
 
 def pub_upload(args, project="", base_url="", api_key=""):
