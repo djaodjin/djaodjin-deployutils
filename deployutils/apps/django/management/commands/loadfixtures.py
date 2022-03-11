@@ -63,10 +63,10 @@ class Command(BaseCommand):
                     look = re.match(r'(\s*"email":\s*)"(\S+)"(,)?', line)
                     if look:
                         prefix = look.group(1)
-                        suffix = look.group(3)
+                        suffix = look.group(3) if look.group(3) else ""
                         derivative = '%s+%d@%s' % (username, index, domain)
                         index += 1
-                        tmp_file.write('%s"%s"%s' % (
+                        tmp_file.write('%s"%s"%s\n' % (
                             prefix, derivative, suffix))
                     else:
                         tmp_file.write(line)

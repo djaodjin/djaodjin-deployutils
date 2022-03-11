@@ -36,6 +36,18 @@ from . import settings
 from .compat import six
 from .templatetags.deployutils_prefixtags import site_prefixed
 
+class Account(object):
+
+    def __init__(self, fields, lookup_field=None):
+        self.fields = fields
+        self.lookup_field = lookup_field if lookup_field else 'slug'
+
+    def __getattr__(self, field_name):
+        return self.fields[field_name]
+
+    def __str__(self):
+        return str(self.fields[self.lookup_field])
+
 
 class AccessiblesMixin(object):
     """
@@ -111,7 +123,7 @@ class AccessiblesMixin(object):
         return False
 
 
-class AccountMixin(object):
+class AccountMixin(AccessiblesMixin):
     """
     Mixin to use in views that will retrieve an account object (out of
     ``account_queryset``) associated to a slug parameter (``account_url_kwarg``)
@@ -126,34 +138,43 @@ class AccountMixin(object):
     @property
     def account(self):
         if not hasattr(self, '_account'):
+            self._account = None
             if (self.account_url_kwarg is not None
                 and self.account_url_kwarg in self.kwargs):
+                account_lookup_value = self.kwargs.get(self.account_url_kwarg)
                 if self.account_queryset is None:
-                    raise ImproperlyConfigured(
-                        "%(cls)s.account_queryset is None. Define "
-                        "%(cls)s.account_queryset." % {
-                            'cls': self.__class__.__name__
-                        }
-                    )
-                if self.account_lookup_field is None:
-                    raise ImproperlyConfigured(
-                        "%(cls)s.account_lookup_field is None. Define "
-                        "%(cls)s.account_lookup_field as the field used "
-                        "to retrieve accounts in the database." % {
-                            'cls': self.__class__.__name__
-                        }
-                    )
-                kwargs = {'%s__exact' % self.account_lookup_field:
-                    self.kwargs.get(self.account_url_kwarg)}
-                try:
-                    self._account = self.account_queryset.filter(**kwargs).get()
-                except self.account_queryset.model.DoesNotExist:
-                    #pylint: disable=protected-access
-                    raise Http404(_("No %(verbose_name)s found matching"\
-                        " the query") % {'verbose_name':
-                        self.account_queryset.model._meta.verbose_name})
-            else:
-                self._account = None
+                    # There are no Model in the database backing an account.
+                    # We entirely derive it from the the session token passed
+                    # by the proxy.
+                    for account in self.get_accessibles(self.request):
+                        if (account[self.account_lookup_field]
+                            == account_lookup_value):
+                            self._account = Account(account,
+                                lookup_field=self.account_lookup_field)
+                            break
+                else:
+                    if self.account_lookup_field is None:
+                        raise ImproperlyConfigured(
+                            "%(cls)s.account_lookup_field is None. Define "
+                            "%(cls)s.account_lookup_field as the field used "
+                            "to retrieve accounts in the database." % {
+                                'cls': self.__class__.__name__
+                            }
+                        )
+                    kwargs = {'%s__exact' % self.account_lookup_field:
+                        account_lookup_value}
+                    try:
+                        self._account = self.account_queryset.filter(
+                            **kwargs).get()
+                    except self.account_queryset.model.DoesNotExist:
+                        #pylint: disable=protected-access
+                        raise Http404(_("No %(verbose_name)s found matching"\
+                            " '%(account)s'") % {'verbose_name':
+                            self.account_queryset.model._meta.verbose_name,
+                            'account': account_lookup_value})
+                if not self._account:
+                    raise Http404(_("No account found matching '%(account)s'")
+                        % {'account': account_lookup_value})
         return self._account
 
     def get_context_data(self, **kwargs):

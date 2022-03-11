@@ -1,4 +1,4 @@
-# Copyright (c) 2021, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@ Mockup login URL used in testing.
 
 from django.views.generic import TemplateView
 
-from .api import ProfileDetailAPIView
-from .views import SigninView, SignupView
+from .api import LoginAPIView, ProfileDetailAPIView
+from .views import SigninView
 from ..compat import re_path
 
 
@@ -39,15 +39,9 @@ SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
 urlpatterns = [
     re_path(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
         ProfileDetailAPIView.as_view(), name='api_profile'),
+    re_path(r'^api/auth/', LoginAPIView.as_view(), name='api_login'),
     re_path(r'^users/(?P<user>%s)/' % USERNAME_PAT,
         TemplateView.as_view(template_name='users/index.html'),
         name='users_profile'),
-    re_path(r'^register/$',
-        SignupView.as_view(), name='registration_register'),
-    re_path(r'^logout/$',
-        TemplateView.as_view(template_name='accounts/logout.html'),
-        name='logout'),
-    re_path(r'^recover/$',
-        TemplateView.as_view(), name='password_reset'),
     re_path(r'^login/$', SigninView.as_view(), name='login'),
 ]

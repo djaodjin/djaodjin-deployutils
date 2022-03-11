@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,15 +27,55 @@ Mockup APIs used in stand-alone development.
 """
 from __future__ import unicode_literals
 
+from importlib import import_module
+
+from django.conf import settings as django_settings
 from django.http import Http404
-from rest_framework.generics import RetrieveAPIView
+from rest_framework import generics, status
 from rest_framework.response import Response
+import jwt
 
 from .. import settings
 from ..compat import six
+from ....helpers import as_timestamp, datetime_or_now
 
 
-class ProfileDetailAPIView(RetrieveAPIView):
+class LoginAPIView(generics.CreateAPIView):
+    """
+    Authenticates a user
+
+    Returns a JSON Web Token that can be used in HTTP requests that require
+    authentication.
+    """
+    def create_token(self, user_payload, expires_at=None):
+        if not expires_at:
+            exp = (as_timestamp(datetime_or_now())
+                + self.request.session.get_expiry_age())
+        else:
+            exp = as_timestamp(expires_at)
+        user_payload.update({'exp': exp})
+        token = jwt.encode(user_payload, settings.JWT_SECRET_KEY,
+            settings.JWT_ALGORITHM)
+        try:
+            token = token.decode('utf-8')
+        except AttributeError:
+            # PyJWT==2.0.1 already returns an oject of type `str`.
+            pass
+        return Response({'token': token}, status=status.HTTP_201_CREATED)
+
+    def post(self, request, *args, **kwargs):
+        engine = import_module(django_settings.SESSION_ENGINE)
+        session_store = engine.SessionStore()
+        #pylint:disable=protected-access
+        session_store._session_key = session_store.prepare(
+            settings.MOCKUP_SESSIONS[request.data['username']],
+            settings.DJAODJIN_SECRET_KEY)
+        session_store.modified = True
+        self.request.session = session_store
+        return self.create_token(request.data)
+
+
+class ProfileDetailAPIView(generics.RetrieveAPIView):
 
     schema = None
 
