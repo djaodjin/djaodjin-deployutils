@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,7 @@ from __future__ import unicode_literals
 from importlib import import_module
 
 from django.conf import settings as django_settings
-from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
-    get_user_model)
+from django.contrib.auth import REDIRECT_FIELD_NAME
 from django import forms
 from django.http.request import split_domain_port, validate_host
 from django.views.generic.base import TemplateResponseMixin
@@ -39,7 +38,6 @@ from django.views.generic.edit import FormMixin, ProcessFormView
 
 from ..import settings
 from ..compat import urlparse, urlunparse
-from .forms import SignupForm
 
 
 class RedirectFormMixin(FormMixin):

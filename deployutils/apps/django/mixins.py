@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -54,23 +54,45 @@ class AccessiblesMixin(object):
     Organizations accessibles by the ``request.user`` as defined
     in the session passed by the DjaoDjin proxy.
     """
-
+    MANAGER = 'manager'
     redirect_roles = None
+
+    @property
+    def accessible_plans(self):
+        if not hasattr(self, '_accessible_plans'):
+            self._accessible_plans = [plan['slug']
+                for plan in self.get_accessible_plans(self.request)]
+        return self._accessible_plans
+
+    @property
+    def accessible_profiles(self):
+        if not hasattr(self, '_accessible_profiles'):
+            self._accessible_profiles = [org['slug']
+                for org in self.get_accessible_profiles(self.request)]
+        return self._accessible_profiles
 
     def get_redirect_roles(self, request):
         #pylint:disable=unused-argument
         return self.redirect_roles
 
-    def accessibles(self, roles=None):
+    @staticmethod
+    def get_accessible_plans(request):
         """
-        Returns the list of *slugs* for which the accounts are accessibles
-        by ``request.user`` filtered by ``roles`` if present.
+        Returns the list of plans that appear under at least one subscription
+        of a profile the `request.user` has a role on.
         """
-        return [org['slug']
-                for org in self.get_accessibles(self.request, roles=roles)]
+        plans = {}
+        for organizations in six.itervalues(request.session.get(
+                'roles', {})):
+            for organization in organizations:
+                for subscription in organization.get('subscriptions', []):
+                    plan = subscription.get('plan')
+                    if plan['slug'] not in plans:
+                        plans.update({plan['slug']: plan})
+        return plans.values()
 
     @staticmethod
-    def get_accessibles(request, roles=None):
+    def get_accessible_profiles(request, roles=None):
         """
         Returns the list of *dictionnaries* for which the accounts are
         accessibles by ``request.user`` filtered by ``roles`` if present.
@@ -85,7 +107,7 @@ class AccessiblesMixin(object):
     def get_context_data(self, **kwargs):
         context = super(AccessiblesMixin, self).get_context_data(**kwargs)
         urls = {'profiles': []}
-        for account in self.get_accessibles(self.request,
+        for account in self.get_accessible_profiles(self.request,
                         self.get_redirect_roles(self.request)):
             urls['profiles'] += [{
                 'location': site_prefixed('/profile/%s/' % account['slug']),
@@ -99,7 +121,7 @@ class AccessiblesMixin(object):
         Returns the list of *dictionnaries* for which the accounts are
         managed by ``request.user``.
         """
-        return self.get_accessibles(request, roles=['manager'])
+        return self.get_accessible_profiles(request, roles=[self.MANAGER])
 
     @property
     def managed_accounts(self):
@@ -107,7 +129,8 @@ class AccessiblesMixin(object):
         Returns a list of account *slugs* for ``request.user`` is a manager
         of the account.
         """
-        return self.accessibles(roles=['manager'])
+        return [org['slug'] for org in self.get_accessible_profiles(
+            self.request, roles=[self.MANAGER])]
 
     def manages(self, account):
         """
@@ -117,7 +140,7 @@ class AccessiblesMixin(object):
         """
         account_slug = str(account)
         for organization in self.request.session.get(
-                'roles', {}).get('manager', []):
+                'roles', {}).get(self.MANAGER, []):
             if account_slug == organization['slug']:
                 return True
         return False
@@ -146,7 +169,7 @@ class AccountMixin(AccessiblesMixin):
                     # There are no Model in the database backing an account.
                     # We entirely derive it from the the session token passed
                     # by the proxy.
-                    for account in self.get_accessibles(self.request):
+                    for account in self.get_accessible_profiles(self.request):
                         if (account[self.account_lookup_field]
                             == account_lookup_value):
                             self._account = Account(account,
