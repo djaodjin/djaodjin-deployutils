@@ -102,7 +102,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
             REDIRECT_FIELD_NAME, next_url)
 
     def get(self, request, *args, **kwargs):
-        candidates = self.get_accessibles(
+        candidates = self.get_accessible_profiles(
             request, self.get_redirect_roles(request))
         count = len(candidates)
         if count == 0:
