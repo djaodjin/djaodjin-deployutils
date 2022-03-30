@@ -1,3 +1,13 @@
+0.7.0
+
+  * merges AccessiblesMixin into AccountMixin
+  * adds AccessiblesMixin.accessible_plans property
+  * adds a login mockup API
+  * adds command to integrate Django server with webpack
+  * removes register mockup API
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 30 Mar 2022 12:10:00 -0700
+
 0.2.0
 
   * Create and apply schema migrations on _pullapp_ command

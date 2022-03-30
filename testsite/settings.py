@@ -216,7 +216,7 @@ DEPLOYUTILS = {
     },
     'ALLOWED_NO_SESSION': [
         STATIC_URL,
-        reverse_lazy('login'), reverse_lazy('registration_register'),
+        reverse_lazy('login'),
         reverse_lazy('index')],
     'BACKEND_SESSION_STORE': 'django.contrib.sessions.backends.db.SessionStore',
 }

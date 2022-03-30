@@ -54,31 +54,15 @@ Run the web application
 
 Browse to http://localhost:8000
 
+Release Notes
+=============
 
+0.7.0
 
-Bonus commands
---------------
+  * merges AccessiblesMixin into AccountMixin
+  * adds AccessiblesMixin.accessible_plans property
+  * adds a login mockup API
+  * adds command to integrate Django server with webpack
+  * removes register mockup API
 
-Commands to upload/download resources
--------------------------------------
-
-
-    $ python manage.py download_resources
-    $ python manage.py upload_resources
-
-
-Not all assets are stored under source control. Images, videos, etc. are
-better kept outside the git repository. These two commands are used to
-download the extra resources into the webapp htdocs/ directory from
-the stage server and upload them from the webapp htdocs/ directory to
-the stage server respectively.
-
-
-Fetch/merge from the remote git repository and downlad the extra resources
-from the stage server.
-
-Using configuration files from a S3 bucket
-------------------------------------------
-
-
-    $ python manage.py upload_configs --location s3://__example__ credentials site.conf
+[previous release notes](changelog)
