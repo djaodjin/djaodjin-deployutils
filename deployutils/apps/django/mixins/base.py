@@ -86,9 +86,10 @@ class AccessiblesMixin(object):
                 'roles', {})):
             for organization in organizations:
                 for subscription in organization.get('subscriptions', []):
-                    plan_slug = subscription.get('plan')
-                    if plan_slug not in plans:
-                        plans.update({plan_slug: {'slug': plan_slug}})
+                    plan_key =  subscription.get('plan')
+                    plan = {'slug': plan_key}
+                    if plan_key not in plans:
+                        plans.update({plan_key: plan})
         return plans.values()
 
     @staticmethod

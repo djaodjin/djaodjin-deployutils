@@ -57,7 +57,7 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.7.0
+0.7.2
 
   * merges AccessiblesMixin into AccountMixin
   * adds AccessiblesMixin.accessible_plans property
