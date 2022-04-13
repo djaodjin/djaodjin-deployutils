@@ -187,6 +187,7 @@ def read_config(app_name, *args, **kwargs):
         content = None
         if location and location.startswith('s3://'):
             try:
+                #pylint:disable=import-outside-toplevel
                 import botocore, boto3
                 _, bucket_name, prefix = urlparse(location)[:3]
                 try:

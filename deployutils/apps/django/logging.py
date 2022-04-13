@@ -321,6 +321,7 @@ class JSONFormatter(logging.Formatter):
         for frame in traceback_data.get('frames', []):
             frame.pop('tb', None)
 
+        #pylint:disable=too-many-nested-blocks
         for key in self.whitelists.get('traceback', []):
             value = traceback_data.get(key, None)
             if value is not None:

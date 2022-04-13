@@ -43,8 +43,9 @@ IV_BLOCK_SIZE = 16
 
 class JSONEncoder(json.JSONEncoder):
 
-    def default(self, obj): #pylint: disable=method-hidden
+    def default(self, o):
         # parameter is called `o` in json.JSONEncoder.
+        obj = o
         if hasattr(obj, 'isoformat'):
             return obj.isoformat()
         if isinstance(obj, decimal.Decimal):
@@ -98,7 +99,7 @@ def _openssl_key_iv(passphrase, salt):
     assert passphrase is not None
     assert salt is not None
     # AES key: 32 bytes, IV: 16 bytes
-    mat = b''.join([x for x in _openssl_kdf(32 + IV_BLOCK_SIZE)])
+    mat = b''.join(list(_openssl_kdf(32 + IV_BLOCK_SIZE)))
     return mat[0:32], mat[32:32 + IV_BLOCK_SIZE]
 
 

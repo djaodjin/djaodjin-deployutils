@@ -28,7 +28,7 @@ Mockup login URL used in testing.
 
 from django.views.generic import TemplateView
 
-from .api import LoginAPIView, ProfileDetailAPIView
+from .api import LoginAPIView, ProfileDetailAPIView, TimersAPIView
 from .views import SigninView
 from ..compat import re_path
 
@@ -37,6 +37,7 @@ USERNAME_PAT = r'[\w.@+-]+'
 SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
 
 urlpatterns = [
+    re_path(r'^api/timer/', TimersAPIView.as_view(), name='api_timer'),
     re_path(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
         ProfileDetailAPIView.as_view(), name='api_profile'),
     re_path(r'^api/auth/', LoginAPIView.as_view(), name='api_login'),

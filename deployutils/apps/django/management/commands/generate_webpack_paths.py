@@ -27,18 +27,10 @@ class Command(BaseCommand):
         node_modules = []
         ign = apps.get_app_config('staticfiles').ignore_patterns
         for finder in get_finders():
-            for path, storage in finder.list(ign):
+            for _, storage in finder.list(ign):
                 search_path = storage.path('')
                 if not search_path in node_modules:
                     node_modules += [search_path]
-                # XXX
-                if False:
-                    search_path = storage.path('js')
-                    if not search_path in node_modules:
-                        node_modules += [search_path]
-                    search_path = storage.path('vendor')
-                    if not search_path in node_modules:
-                        node_modules += [search_path]
         venv = os.path.dirname(os.path.dirname(sys.executable))
         node_modules += [
             os.path.join(venv, 'lib', 'node_modules')

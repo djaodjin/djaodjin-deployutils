@@ -431,9 +431,9 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                         dest.write("\n")
 
                 cmdline = ['diff', '-u', source_name, dest_name]
-                cmd = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
-                lines = cmd.stdout.readlines()
-                cmd.wait()
+                with subprocess.Popen(cmdline, stdout=subprocess.PIPE) as cmd:
+                    lines = cmd.stdout.readlines()
+                    cmd.wait()
                 # Non-zero error codes are ok here. That's how diff
                 # indicates the files are different.
                 if lines:

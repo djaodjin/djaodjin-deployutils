@@ -67,6 +67,7 @@ def download(remote_location, remotes=None, prefix="", dry_run=False):
         remotes, _ = _resources_files(
             abs_paths=remote_location.startswith('s3://'))
     if remote_location.startswith('s3://'):
+        #pylint:disable=import-outside-toplevel
         from .s3 import S3Backend
         backend = S3Backend(remote_location, dry_run=dry_run)
         backend.download(list_local(remotes, prefix), prefix)
@@ -82,6 +83,7 @@ def download_theme(args, base_url, api_key, prefix=None):
     """
     Downloads a project theme.
     """
+    #pylint:disable=unused-argument
     api_themes_url = base_url + '/themes/download/'
     resp = requests.get(api_themes_url, auth=(api_key, ""))
     LOGGER.info("GET %s returns %d", api_themes_url, resp.status_code)
@@ -117,6 +119,7 @@ def upload(remote_location, remotes=None, ignores=None,
         remotes, ignores = _resources_files(
             abs_paths=remote_location.startswith('s3://'))
     if remote_location.startswith('s3://'):
+        #pylint:disable=import-outside-toplevel
         from deployutils.s3 import S3Backend
         backend = S3Backend(remote_location,
             static_root=static_root, dry_run=dry_run)
@@ -136,7 +139,9 @@ def upload_theme(args, base_url, api_key, prefix=None):
     """
     Uploads a new theme for a project.
     """
+    #pylint:disable=too-many-locals
     def zipdir(path, ziph, prefix=None):
+        #pylint:disable=unused-variable
         # ziph is zipfile handle
         for root, dirs, files in os.walk(path):
             for filename in files:
@@ -176,7 +181,8 @@ def upload_theme(args, base_url, api_key, prefix=None):
         raise ValueError("%s is neither a single zip nor a list of directoies"
             % str(args))
     api_themes_url = base_url + '/api/themes/'
-    files = {'file': (os.path.basename(zip_filename), open(zip_filename, 'rb'))}
-    resp = requests.post(api_themes_url, files=files, auth=(api_key, ""))
+    with open(zip_filename, 'rb') as file_obj:
+        files = {'file': (os.path.basename(zip_filename), file_obj)}
+        resp = requests.post(api_themes_url, files=files, auth=(api_key, ""))
     LOGGER.info("POST %s returns %d %s",
         api_themes_url, resp.status_code, resp.text)

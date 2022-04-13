@@ -45,6 +45,7 @@ setup(
               'deployutils.apps.flask',
               'deployutils.apps.django',
               'deployutils.apps.django.backends',
+              'deployutils.apps.django.mixins',
               'deployutils.apps.django.mockup',
               'deployutils.apps.django.management',
               'deployutils.apps.django.management.commands',

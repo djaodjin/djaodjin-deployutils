@@ -25,16 +25,16 @@
 from __future__ import unicode_literals
 
 import dateutil, dateutil.relativedelta
-
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import ugettext as _
 
-from ...helpers import datetime_or_now, start_of_day, update_context_urls
-from . import settings
-from .compat import six
-from .templatetags.deployutils_prefixtags import site_prefixed
+from ....helpers import datetime_or_now, start_of_day, update_context_urls
+from .. import settings
+from ..compat import six
+from ..templatetags.deployutils_prefixtags import site_prefixed
+
 
 class Account(object):
 
@@ -43,7 +43,7 @@ class Account(object):
         self.lookup_field = lookup_field if lookup_field else 'slug'
 
     def __getattr__(self, field_name):
-        return self.fields[field_name]
+        return self.fields.get(field_name, None)
 
     def __str__(self):
         return str(self.fields[self.lookup_field])
@@ -60,15 +60,15 @@ class AccessiblesMixin(object):
     @property
     def accessible_plans(self):
         if not hasattr(self, '_accessible_plans'):
-            self._accessible_plans = [plan['slug']
-                for plan in self.get_accessible_plans(self.request)]
+            self._accessible_plans = set([plan['slug']
+                for plan in self.get_accessible_plans(self.request)])
         return self._accessible_plans
 
     @property
     def accessible_profiles(self):
         if not hasattr(self, '_accessible_profiles'):
-            self._accessible_profiles = [org['slug']
-                for org in self.get_accessible_profiles(self.request)]
+            self._accessible_profiles = set([org['slug']
+                for org in self.get_accessible_profiles(self.request)])
         return self._accessible_profiles
 
     def get_redirect_roles(self, request):
@@ -86,9 +86,9 @@ class AccessiblesMixin(object):
                 'roles', {})):
             for organization in organizations:
                 for subscription in organization.get('subscriptions', []):
-                    plan = subscription.get('plan')
-                    if plan['slug'] not in plans:
-                        plans.update({plan['slug']: plan})
+                    plan_slug = subscription.get('plan')
+                    if plan_slug not in plans:
+                        plans.update({plan_slug: {'slug': plan_slug}})
         return plans.values()
 
     @staticmethod

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Djaodjin Inc.
+# Copyright (c) 2022, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,6 @@ from __future__ import absolute_import
 
 import datetime, logging, os, subprocess, sys
 
-from optparse import make_option
 from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
 
@@ -60,6 +59,7 @@ def build_assets():
     """Call django_assets ./manage.py assets build if the app is present."""
     cwd = os.getcwd()
     try:
+        #pylint:disable=import-outside-toplevel
         from webassets.script import GenericArgparseImplementation
         from django_assets.env import get_env
         prog = "%s assets" % os.path.basename(sys.argv[0])

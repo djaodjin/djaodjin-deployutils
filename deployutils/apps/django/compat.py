@@ -50,7 +50,8 @@ except ImportError: # pip < 10
     except ModuleNotFoundError: # pip > 20
         import pkg_resources
         def get_installed_distributions(local_only=True):
-            return [dist for dist in pkg_resources.working_set]
+            #pylint:disable=unused-argument
+            return list(pkg_resources.working_set)
 
 try:
     from django.templatetags.static import do_static

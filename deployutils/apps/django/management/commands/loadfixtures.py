@@ -57,20 +57,19 @@ class Command(BaseCommand):
         fixture_tmps = []
         for fixture in fixture_labels:
             with open(fixture) as fixture_file:
-                tmp_file = tempfile.NamedTemporaryFile(
-                    mode='w+t', suffix='.json', delete=False)
-                for line in fixture_file.readlines():
-                    look = re.match(r'(\s*"email":\s*)"(\S+)"(,)?', line)
-                    if look:
-                        prefix = look.group(1)
-                        suffix = look.group(3) if look.group(3) else ""
-                        derivative = '%s+%d@%s' % (username, index, domain)
-                        index += 1
-                        tmp_file.write('%s"%s"%s\n' % (
-                            prefix, derivative, suffix))
-                    else:
-                        tmp_file.write(line)
-                tmp_file.close()
-                fixture_tmps += [os.path.join(
-                    tempfile.gettempdir(), tmp_file.name)]
+                with tempfile.NamedTemporaryFile(
+                        mode='w+t', suffix='.json', delete=False) as tmp_file:
+                    for line in fixture_file.readlines():
+                        look = re.match(r'(\s*"email":\s*)"(\S+)"(,)?', line)
+                        if look:
+                            prefix = look.group(1)
+                            suffix = look.group(3) if look.group(3) else ""
+                            derivative = '%s+%d@%s' % (username, index, domain)
+                            index += 1
+                            tmp_file.write('%s"%s"%s\n' % (
+                                prefix, derivative, suffix))
+                        else:
+                            tmp_file.write(line)
+                    fixture_tmps += [os.path.join(
+                        tempfile.gettempdir(), tmp_file.name)]
         return fixture_tmps

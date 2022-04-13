@@ -1,4 +1,4 @@
-# Copyright (c) 2019, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,40 +22,48 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, logging
+from __future__ import unicode_literals
 
-from flask import current_app as app, request, jsonify
-import jwt
+import logging
+from datetime import datetime, timedelta
 
-from ...helpers import as_timestamp, datetime_or_now
+from django.db import connections
+import monotonic
 
 
 LOGGER = logging.getLogger(__name__)
-JWT_ALGORITHM = 'HS256'
-
-def api():
-    return jsonify({'version': "1.0"})
 
 
-def api_login():
-    content = request.json
-    username = content.get('username')
-    exp = as_timestamp(datetime_or_now() + datetime.timedelta(days=1))
-    payload = app.config['MOCKUP_SESSIONS'].get(username)
-    payload.update({'exp': exp})
-    token = jwt.encode(payload,
-        app.config['DJAODJIN_SECRET_KEY'], JWT_ALGORITHM).decode('utf-8')
-    return jsonify({'token': token})
+class TimersMixin(object):
+    """
+    Mixin used to track performance of queries
+    """
+    enable_report_queries = True
 
+    def _start_time(self):
+        if not self.enable_report_queries:
+            return
+        self.start_time = monotonic.monotonic()
 
-def api_tokens():
-    content = request.json
-    token = content.get('token')
-    payload = jwt.decode(token, app.config['DJAODJIN_SECRET_KEY'])
-    username = payload.get('username', None)
-    exp = as_timestamp(datetime_or_now() + datetime.timedelta(days=1))
-    payload = app.config['MOCKUP_SESSIONS'].get(username)
-    payload.update({'exp': exp})
-    token = jwt.encode(payload,
-        app.config['DJAODJIN_SECRET_KEY'], JWT_ALGORITHM).decode('utf-8')
-    return jsonify({'token': token})
+    def _report_queries(self, descr=None):
+        if not self.enable_report_queries:
+            return
+        if not hasattr(self, 'start_time'):
+            return
+        end_time = monotonic.monotonic()
+        if descr is None:
+            descr = ""
+        nb_queries = 0
+        duration = timedelta()
+        for conn in connections.all():
+            nb_queries += len(conn.queries)
+            for query in conn.queries:
+                try:
+                    convert = datetime.strptime(query['time'], "%S.%f")
+                    duration += timedelta(
+                        0, convert.second, convert.microsecond)
+                except ValueError:
+                    duration += timedelta()
+                    # days, seconds, microseconds
+        LOGGER.debug("(elapsed: %.2fs) %s: %s for %d SQL queries",
+            (end_time - self.start_time), descr, duration, nb_queries)

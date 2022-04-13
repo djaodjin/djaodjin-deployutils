@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@ Helpers to redirect based on session.
 
 from django import http
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.views.generic import RedirectView
 from django.views.generic.base import TemplateResponseMixin
@@ -59,7 +60,6 @@ def _insert_url(request, redirect_field_name=REDIRECT_FIELD_NAME,
         path = request.get_full_path()
     # As long as *inserted_url* is not None, this call will redirect
     # anything (i.e. inserted_url), not just the login.
-    from django.contrib.auth.views import redirect_to_login
     return redirect_to_login(path, inserted_url, redirect_field_name)
 
 
@@ -102,7 +102,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
             REDIRECT_FIELD_NAME, next_url)
 
     def get(self, request, *args, **kwargs):
-        candidates = self.get_accessibles(
+        candidates = self.get_accessible_profiles(
             request, self.get_redirect_roles(request))
         count = len(candidates)
         if count == 0:

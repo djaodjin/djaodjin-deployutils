@@ -27,6 +27,7 @@ Mockup APIs used in stand-alone development.
 """
 from __future__ import unicode_literals
 
+import json, logging
 from importlib import import_module
 
 from django.conf import settings as django_settings
@@ -39,6 +40,8 @@ from .. import settings
 from ..compat import six
 from ....helpers import as_timestamp, datetime_or_now
 
+LOGGER = logging.getLogger(__name__)
+
 
 class LoginAPIView(generics.CreateAPIView):
     """
@@ -47,6 +50,8 @@ class LoginAPIView(generics.CreateAPIView):
     Returns a JSON Web Token that can be used in HTTP requests that require
     authentication.
     """
+    schema = None
+
     def create_token(self, user_payload, expires_at=None):
         if not expires_at:
             exp = (as_timestamp(datetime_or_now())
@@ -87,3 +92,14 @@ class ProfileDetailAPIView(generics.RetrieveAPIView):
                     if profile.get('slug') == profile_slug:
                         return Response(profile)
         raise Http404
+
+
+class TimersAPIView(generics.CreateAPIView):
+
+    schema = None
+
+    def post(self, request, *args, **kwargs):
+        # request.data is like {'display_timedelta': 135,
+        #     'request_id': 'c78b2f42-95d6-130d-2627-66f8b03913e8'}
+        LOGGER.info("timedelta:JS: %s", json.dumps(request.data))
+        return Response([request.data['display_timedelta'], args, kwargs])
