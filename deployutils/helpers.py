@@ -47,13 +47,13 @@ def datetime_or_now(dtime_at=None):
                 # XXX `parse_datetime`
                 conv_dtime_at = datetime.datetime.strptime(
                     dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except ValueError as err:
+            except ValueError:
                 pass
             if not conv_dtime_at:
                 try:
                     conv_dtime_at = datetime.datetime.strptime(
                         dtime_at, "%Y-%m-%dT%H:%M:%SZ")
-                except ValueError as err:
+                except ValueError:
                     pass
             if not conv_dtime_at:
                 try:
@@ -115,7 +115,7 @@ def update_context_urls(context, urls):
                 if isinstance(val, dict):
                     context['urls'][key].update(val)
                 else:
-                    # Because organization_create url is added in this mixin
+                    # Because saas_profile_create url is added in Mixin
                     # and in ``OrganizationRedirectView``.
                     context['urls'][key] = val
             else:

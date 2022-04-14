@@ -1,3 +1,11 @@
+0.8.0
+  * renames organization_redirects.html to profile_redirects.html
+  * filters subscriptions by profiles and ends_at
+  * uses profile instead of organization (see [definitions](https://www.djaodjin.com/docs/accounts/))
+  * adds timers mixin and api
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 14 Apr 2022 09:15:00 -0700
+
 0.7.2
 
   * merges AccessiblesMixin into AccountMixin

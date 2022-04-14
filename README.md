@@ -57,12 +57,10 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.7.2
-
-  * merges AccessiblesMixin into AccountMixin
-  * adds AccessiblesMixin.accessible_plans property
-  * adds a login mockup API
-  * adds command to integrate Django server with webpack
-  * removes register mockup API
+0.8.0
+  * renames organization_redirects.html to profile_redirects.html
+  * filters subscriptions by profiles and ends_at
+  * uses profile instead of organization (see [definitions](https://www.djaodjin.com/docs/accounts/))
+  * adds timers mixin and api
 
 [previous release notes](changelog)

@@ -80,17 +80,17 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
                           RedirectView):
     """
     Find the ``Account`` associated with the request user
-    and return the URL that contains the organization slug
+    and return the URL that contains the profile slug
     to redirect to.
     """
 
-    slug_url_kwarg = 'organization'
-    template_name = 'saas/organization_redirects.html'
+    slug_url_kwarg = 'profile'
+    template_name = 'saas/profile_redirects.html'
     permanent = False
     create_more = False
     create_on_none = True
     new_account_url = site_prefixed('/profile/new/') # i.e. reverse(
-                                                 # 'saas_organization_create')
+                                                 # 'saas_profile_create')
 
     def get_new_account_url(self, *args, **kwargs):
         kwargs.update({
@@ -113,8 +113,8 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
                 return http.HttpResponseRedirect(url)
             raise http.Http404("No account")
         if count == 1 and not self.create_more:
-            organization = candidates[0]
-            kwargs.update({self.slug_url_kwarg: organization['slug']})
+            profile = candidates[0]
+            kwargs.update({self.slug_url_kwarg: profile['slug']})
             return super(AccountRedirectView, self).get(
                 request, *args, **kwargs)
         redirects = []

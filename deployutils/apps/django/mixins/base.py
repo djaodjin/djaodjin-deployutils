@@ -51,7 +51,7 @@ class Account(object):
 
 class AccessiblesMixin(object):
     """
-    Organizations accessibles by the ``request.user`` as defined
+    Profiles accessibles by the ``request.user`` as defined
     in the session passed by the DjaoDjin proxy.
     """
     MANAGER = 'manager'
@@ -81,12 +81,14 @@ class AccessiblesMixin(object):
         Returns the list of plans that appear under at least one subscription
         of a profile the `request.user` has a role on.
         """
+        #pylint:disable=too-many-nested-blocks
         plans = {}
-        for organizations in six.itervalues(request.session.get(
+        for accessible_profiles in six.itervalues(request.session.get(
                 'roles', {})):
-            for organization in organizations:
-                if not profile or profile == organization.get('slug'):
-                    for subscription in organization.get('subscriptions', []):
+            for accessible_profile in accessible_profiles:
+                if not profile or profile == accessible_profile.get('slug'):
+                    for subscription in accessible_profile.get(
+                            'subscriptions', []):
                         subscription_ends_at = subscription.get('ends_at')
                         if (not at_time or
                             at_time < datetime_or_now(subscription_ends_at)):
@@ -103,10 +105,10 @@ class AccessiblesMixin(object):
         accessibles by ``request.user`` filtered by ``roles`` if present.
         """
         results = []
-        for role_name, organizations in six.iteritems(request.session.get(
+        for role_name, accessible_profiles in six.iteritems(request.session.get(
                 'roles', {})):
             if roles is None or role_name in roles:
-                results += organizations
+                results += accessible_profiles
         return results
 
     def get_context_data(self, **kwargs):
@@ -141,12 +143,12 @@ class AccessiblesMixin(object):
         """
         Returns ``True`` if the ``request.user`` is a manager for ``account``.
         ``account`` will be converted to a string and compared
-        to an organization slug.
+        to a profile slug.
         """
         account_slug = str(account)
-        for organization in self.request.session.get(
+        for accessible_profile in self.request.session.get(
                 'roles', {}).get(self.MANAGER, []):
-            if account_slug == organization['slug']:
+            if account_slug == accessible_profile['slug']:
                 return True
         return False
 
