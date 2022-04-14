@@ -57,7 +57,7 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.8.0
+0.8.1
   * renames organization_redirects.html to profile_redirects.html
   * filters subscriptions by profiles and ends_at
   * uses profile instead of organization (see [definitions](https://www.djaodjin.com/docs/accounts/))

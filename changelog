@@ -1,3 +1,8 @@
+0.8.1
+  * fixes use of django_settings instead of deployutils.settings
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 14 Apr 2022 16:53:00 -0700
+
 0.8.0
   * renames organization_redirects.html to profile_redirects.html
   * filters subscriptions by profiles and ends_at
