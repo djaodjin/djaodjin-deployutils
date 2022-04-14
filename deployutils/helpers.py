@@ -22,7 +22,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime, logging
+import datetime, logging, re
 
 from dateutil.tz import tzlocal
 from pytz import utc
@@ -39,27 +39,39 @@ def as_timestamp(dtime_at=None):
 
 
 def datetime_or_now(dtime_at=None):
+    conv_dtime_at = None
     if not isinstance(dtime_at, datetime.datetime):
         # `datetime.datetime` is a subclass of `datetime.date`.
         if isinstance(dtime_at, six.string_types):
             try:
                 # XXX `parse_datetime`
-                dtime_at = datetime.datetime.strptime(
+                conv_dtime_at = datetime.datetime.strptime(
                     dtime_at, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError as err:
+                pass
+            if not conv_dtime_at:
                 try:
-                    dtime_at = datetime.datetime.strptime(dtime_at, "%Y-%m-%d")
+                    conv_dtime_at = datetime.datetime.strptime(
+                        dtime_at, "%Y-%m-%dT%H:%M:%SZ")
+                except ValueError as err:
+                    pass
+            if not conv_dtime_at:
+                try:
+                    look = re.match(r'(\d\d\d\d-\d\d-\d\d)(.*)', dtime_at)
+                    if look:
+                        conv_dtime_at = datetime.datetime.strptime(
+                            look.group(1), "%Y-%m-%d")
+                        LOGGER.warning("cannot interpret %s", look.group(2))
                 except ValueError as err:
                     LOGGER.warning(err)
-                    dtime_at = None
         elif isinstance(dtime_at, datetime.date):
-            dtime_at = datetime.datetime(
+            conv_dtime_at = datetime.datetime(
                 dtime_at.year, dtime_at.month, dtime_at.day)
-    if not dtime_at:
-        dtime_at = datetime.datetime.utcnow().replace(tzinfo=utc)
-    if dtime_at.tzinfo is None:
-        dtime_at = dtime_at.replace(tzinfo=utc)
-    return dtime_at
+    if not conv_dtime_at:
+        conv_dtime_at = datetime.datetime.utcnow().replace(tzinfo=utc)
+    if conv_dtime_at.tzinfo is None:
+        conv_dtime_at = conv_dtime_at.replace(tzinfo=utc)
+    return conv_dtime_at
 
 
 def full_name_natural_split(full_name):

@@ -76,7 +76,7 @@ class AccessiblesMixin(object):
         return self.redirect_roles
 
     @staticmethod
-    def get_accessible_plans(request):
+    def get_accessible_plans(request, profile=None, at_time=None):
         """
         Returns the list of plans that appear under at least one subscription
         of a profile the `request.user` has a role on.
@@ -85,11 +85,15 @@ class AccessiblesMixin(object):
         for organizations in six.itervalues(request.session.get(
                 'roles', {})):
             for organization in organizations:
-                for subscription in organization.get('subscriptions', []):
-                    plan_key =  subscription.get('plan')
-                    plan = {'slug': plan_key}
-                    if plan_key not in plans:
-                        plans.update({plan_key: plan})
+                if not profile or profile == organization.get('slug'):
+                    for subscription in organization.get('subscriptions', []):
+                        subscription_ends_at = subscription.get('ends_at')
+                        if (not at_time or
+                            at_time < datetime_or_now(subscription_ends_at)):
+                            plan_key =  subscription.get('plan')
+                            plan = {'slug': plan_key}
+                            if plan_key not in plans:
+                                plans.update({plan_key: plan})
         return plans.values()
 
     @staticmethod
