@@ -84,7 +84,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     to redirect to.
     """
 
-    slug_url_kwarg = 'profile'
+    account_url_kwarg = 'profile'
     template_name = 'saas/profile_redirects.html'
     permanent = False
     create_more = False
@@ -94,10 +94,10 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
 
     def get_new_account_url(self, *args, **kwargs):
         kwargs.update({
-            self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
+            self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
         next_url = super(AccountRedirectView, self).get_redirect_url(
-        *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
-            ':%s' % self.slug_url_kwarg)
+        *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
+            ':%s' % self.account_url_kwarg)
         return '%s?%s=%s' % (self.new_account_url,
             REDIRECT_FIELD_NAME, next_url)
 
@@ -114,19 +114,20 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
             raise http.Http404("No account")
         if count == 1 and not self.create_more:
             profile = candidates[0]
-            kwargs.update({self.slug_url_kwarg: profile['slug']})
+            kwargs.update({self.account_url_kwarg: profile['slug']})
             return super(AccountRedirectView, self).get(
                 request, *args, **kwargs)
         redirects = []
         for org in candidates:
-            kwargs.update({self.slug_url_kwarg: org['slug']})
+            kwargs.update({self.account_url_kwarg: org['slug']})
             url = super(AccountRedirectView, self).get_redirect_url(
                 *args, **kwargs)
             print_name = org.get('printable_name', org.get('slug', ""))
             redirects += [(url, print_name)]
-        kwargs.update({self.slug_url_kwarg: 'PATTERN-%s' % self.slug_url_kwarg})
+        kwargs.update({
+            self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
         context = {'redirects': redirects,
             'next': super(AccountRedirectView, self).get_redirect_url(
-            *args, **kwargs).replace('PATTERN-%s' % self.slug_url_kwarg,
-                ':%s' % self.slug_url_kwarg)}
+            *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
+                ':%s' % self.account_url_kwarg)}
         return self.render_to_response(context)
