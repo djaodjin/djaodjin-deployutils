@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@ def asset(path):
     """
     *Mockup*: adds the appropriate url or path prefix.
     """
+    if settings.DEBUG and path in settings.ASSETS_CDN:
+        return settings.ASSETS_CDN[path]
     return site_prefixed(path)
 
 
