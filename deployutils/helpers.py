@@ -40,8 +40,10 @@ def as_timestamp(dtime_at=None):
 
 def datetime_or_now(dtime_at=None):
     conv_dtime_at = None
-    if not isinstance(dtime_at, datetime.datetime):
+    if isinstance(dtime_at, datetime.datetime):
         # `datetime.datetime` is a subclass of `datetime.date`.
+        conv_dtime_at = dtime_at
+    if not conv_dtime_at:
         if isinstance(dtime_at, six.string_types):
             try:
                 # XXX `parse_datetime`
