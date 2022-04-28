@@ -166,6 +166,9 @@ def load_config(app_name, *args, **kwargs):
                 location += "@%s" % config['DB_HOST']
             location += "/%s" % config['DB_NAME']
             config.update({'DB_LOCATION': location})
+    if config.get('DEBUG'):
+        sys.stderr.write("database connected to '%s'\n" % config.get(
+            'DB_LOCATION'))
     return config
 
 

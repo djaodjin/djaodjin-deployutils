@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2021, Djaodjin Inc.
+# Copyright (c) 2022, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -225,14 +225,13 @@ def pub_deploy(args, project="", account="", api_key=""):
     if updated:
         save_config()
 
-    if args:
-        container_location = args[0]
     api_container_url = \
         "%(base_url)s/api/containers/%(organization)s/apps/%(app)s/" % {
             'base_url': base_url,
             'organization': str(account),
             'app': str(project)}
     data = None
+    container_location = args[0] if args else None
     if container_location:
         data = {'location': container_location}
     resp = requests.post(api_container_url, data=data, auth=(api_key, ""))
@@ -323,12 +322,15 @@ def main(args):
 
         options = parser.parse_args(args[1:])
         CONFIG_FILENAME = options.config
+        sys.stdout.write("read configuration from %s\n" % CONFIG_FILENAME)
         CONFIG.read(CONFIG_FILENAME)
-        LOGGER.info("read configuration from %s", CONFIG_FILENAME)
         for section in CONFIG.sections():
-            LOGGER.info("[%s]", section)
+            LOGGER.debug("[%s]", section)
             for key, val in CONFIG.items(section):
-                LOGGER.info("%s = %s", key, val)
+                if key.endswith('_key'):
+                    LOGGER.debug("%s = *****", key)
+                else:
+                    LOGGER.debug("%s = %s", key, val)
 
         # Filter out options which are not part of the function prototype.
         func_args = filter_subcommand_args(options.func, options)
