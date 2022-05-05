@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM python:3.7-slim-bullseye
-WORKDIR /
-RUN mkdir -p /opt/virtualenv
-ENV VIRTUAL_ENV="/opt/virtualenv/_installTop_"
+ENV VIRTUAL_ENV="/opt/deployutils"
 RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin${PATH:+:}$PATH"
 COPY . $VIRTUAL_ENV/djaodjin-deployutils/
@@ -17,5 +15,5 @@ RUN set -eux;\
       \
       apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
       rm -rf /var/lib/apt/lists/*;
-EXPOSE 8000/tcp
-ENTRYPOINT ["/opt/virtualenv/_installTop_/bin/python", "/opt/virtualenv/_installTop_/djaodjin-deployutils/manage.py", "runserver", "0.0.0.0:8000"]
+EXPOSE 80/tcp
+ENTRYPOINT ["/opt/deployutils/bin/python", "/opt/deployutils/djaodjin-deployutils/manage.py", "runserver", "0.0.0.0:80"]
