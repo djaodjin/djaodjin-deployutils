@@ -1,4 +1,4 @@
-# Copyright (c) 2017, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@ from six.moves.urllib.parse import urljoin
 from . import settings
 
 
-def site_prefixed(path):
+def site_url(path):
     """
     *Mockup*: adds the path prefix when required.
     """
@@ -40,8 +40,8 @@ def site_prefixed(path):
         path_prefix = ''
     if path:
         # We have an actual path instead of generating a prefix that will
-        # be placed in front of static urls (ie. {{'pricing'|site_prefixed}}
-        # insted of {{''|site_prefixed}}{{ASSET_URL}}).
+        # be placed in front of static urls (ie. {{'pricing'|site_url}}
+        # insted of {{''|site_url}}{{ASSET_URL}}).
         path_prefix += '/'
         if path.startswith('/'):
             path = path[1:]

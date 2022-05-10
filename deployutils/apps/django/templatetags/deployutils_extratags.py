@@ -1,4 +1,4 @@
-# Copyright (c) 2020, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@ from django.forms import BaseForm
 from django.utils.safestring import mark_safe
 
 from ..compat import is_authenticated as is_authenticated_base, six
-from .deployutils_prefixtags import site_prefixed
+from .deployutils_prefixtags import site_url
 
 
 register = template.Library()
@@ -84,7 +84,7 @@ def url_profile(request): #pylint:disable=unused-argument
     *Mockup*: access the user profile.
     """
     if hasattr(request, 'user') and is_authenticated_base(request):
-        return site_prefixed("users/%s/" % request.user)
+        return site_url("users/%s/" % request.user)
     return None
 
 

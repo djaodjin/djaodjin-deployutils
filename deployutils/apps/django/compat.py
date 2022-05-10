@@ -53,29 +53,6 @@ except ImportError: # pip < 10
             #pylint:disable=unused-argument
             return list(pkg_resources.working_set)
 
-try:
-    from django.templatetags.static import do_static
-except ImportError: # django < 2.1
-    from django.contrib.staticfiles.templatetags import do_static
-
-try:
-    from django.utils.module_loading import import_string
-except ImportError: # django < 1.7
-    from django.utils.module_loading import import_by_path as import_string
-
-
-try:
-    from django.urls import NoReverseMatch, reverse, reverse_lazy
-except ImportError: # <= Django 1.10, Python<3.6
-    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
-except ModuleNotFoundError: #pylint:disable=undefined-variable
-    # <= Django 1.10, Python>=3.6
-    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
-
-try:
-    from django.urls import include, re_path
-except ImportError: # <= Django 2.0, Python<3.6
-    from django.conf.urls import include, url as re_path
 
 try:
     from django.template.base import DebugLexer
@@ -110,6 +87,46 @@ class DjangoTemplate(object):
     def template_libraries(self):
         from django.template.base import libraries
         return libraries
+
+
+try:
+    from django.templatetags.static import do_static
+except ImportError: # django < 2.1
+    from django.contrib.staticfiles.templatetags import do_static
+
+try:
+    from django.urls import NoReverseMatch, reverse, reverse_lazy
+except ImportError: # <= Django 1.10, Python<3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
+except ModuleNotFoundError: #pylint:disable=undefined-variable
+    # <= Django 1.10, Python>=3.6
+    from django.core.urlresolvers import NoReverseMatch, reverse, reverse_lazy
+
+try:
+    from django.urls import include, re_path
+except ImportError: # <= Django 2.0, Python<3.6
+    from django.conf.urls import include, url as re_path
+
+
+try:
+    if six.PY3:
+        from django.utils.encoding import force_str
+    else:
+        from django.utils.encoding import force_text as force_str
+except ImportError: # django < 3.0
+    from django.utils.encoding import force_text as force_str
+
+
+try:
+    from django.utils.module_loading import import_string
+except ImportError: # django < 1.7
+    from django.utils.module_loading import import_by_path as import_string
+
+
+try:
+    from django.utils.translation import gettext_lazy
+except ImportError: # django < 3.0
+    from django.utils.translation import ugettext_lazy as gettext_lazy
 
 
 def get_html_engine():

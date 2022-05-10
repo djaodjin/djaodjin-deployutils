@@ -1,4 +1,4 @@
-# Copyright (c) 2019, DjaoDjin inc.
+# Copyright (c) 2022, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,8 @@
 import datetime, logging, re
 
 from dateutil.tz import tzlocal
-from pytz import utc
+from pytz import UnknownTimeZoneError, timezone, utc
+from pytz.tzinfo import DstTzInfo
 import six
 
 LOGGER = logging.getLogger(__name__)
@@ -98,6 +99,17 @@ def full_name_natural_split(full_name):
         if middle_name:
             middle_initials += middle_name[0]
     return first_name, middle_initials, last_name
+
+
+def parse_tz(tzone):
+    if issubclass(type(tzone), DstTzInfo):
+        return tzone
+    if tzone:
+        try:
+            return timezone(tzone)
+        except UnknownTimeZoneError:
+            pass
+    return None
 
 
 def start_of_day(dtime_at=None):

@@ -35,7 +35,7 @@ from django.views.generic.base import TemplateResponseMixin
 
 from .compat import six
 from .mixins import AccessiblesMixin
-from .templatetags.deployutils_prefixtags import site_prefixed
+from .templatetags.deployutils_prefixtags import site_url
 
 
 def _get_accept_list(request):
@@ -89,7 +89,7 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     permanent = False
     create_more = False
     create_on_none = True
-    new_account_url = site_prefixed('/profile/new/') # i.e. reverse(
+    new_account_url = site_url('/profile/new/') # i.e. reverse(
                                                  # 'saas_profile_create')
 
     def get_new_account_url(self, *args, **kwargs):

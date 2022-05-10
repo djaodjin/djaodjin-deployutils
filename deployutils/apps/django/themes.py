@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Djaodjin Inc.
+# Copyright (c) 2022, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,13 @@ from django.conf import settings as django_settings
 from django.template.base import (Parser, NodeList, TemplateSyntaxError)
 from django.template.backends.django import DjangoTemplates
 from django.template.context import Context
-from django.utils.encoding import force_text
 from django_assets.templatetags.assets import assets
 from jinja2.lexer import Lexer
 from webassets import Bundle
 
 from . import settings
-from .compat import (DebugLexer, TokenType, do_static, get_html_engine,
-    six, urlparse, urlunparse)
+from .compat import (DebugLexer, TokenType, do_static, force_str,
+    get_html_engine, six, urlparse, urlunparse)
 from ...copy import shell_command
 
 
@@ -364,7 +363,7 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
             with open(source_name) as source:
                 template_string = source.read()
             try:
-                template_string = force_text(template_string)
+                template_string = force_str(template_string)
                 lexer = DebugLexer(template_string)
                 tokens = lexer.tokenize()
                 if not os.path.isdir(os.path.dirname(dest_name)):

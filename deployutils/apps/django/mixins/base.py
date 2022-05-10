@@ -28,12 +28,11 @@ import dateutil, dateutil.relativedelta
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
 from django.utils.dateparse import parse_datetime
-from django.utils.translation import ugettext as _
 
 from ....helpers import datetime_or_now, start_of_day, update_context_urls
 from .. import settings
-from ..compat import six
-from ..templatetags.deployutils_prefixtags import site_prefixed
+from ..compat import gettext_lazy as _, six
+from ..templatetags.deployutils_prefixtags import site_url
 
 
 class Account(object):
@@ -117,7 +116,7 @@ class AccessiblesMixin(object):
         for account in self.get_accessible_profiles(self.request,
                         self.get_redirect_roles(self.request)):
             urls['profiles'] += [{
-                'location': site_prefixed('/profile/%s/' % account['slug']),
+                'location': site_url('/profile/%s/' % account['slug']),
                 'printable_name': account.get('printable_name',
                     account.get('slug'))}]
         update_context_urls(context, urls)
