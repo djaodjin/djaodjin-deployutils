@@ -57,8 +57,9 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.8.2
-  * fixes exception in djd deploy
-  * uses account_url_kwarg in AccountRedirectView for consistency
+0.9.0
+  * renames site_prefixed to site_url for compatibility with djaoapp templates
+  * fixes datetime_or_now always returns `now` when passed a datetime object
+  * adds parse_tz
 
 [previous release notes](changelog)
