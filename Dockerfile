@@ -6,6 +6,8 @@ ENV PATH="$VIRTUAL_ENV/bin${PATH:+:}$PATH"
 COPY . $VIRTUAL_ENV/reps/djaodjin-deployutils/
 WORKDIR $VIRTUAL_ENV/reps/djaodjin-deployutils
 RUN set -eux;\
+      savedAptMark="$(apt-mark showmanual)"; \
+      \
       apt-get update; \
       apt-get install -y --no-install-recommends make; \
       \
@@ -13,6 +15,8 @@ RUN set -eux;\
       \
       make initdb; \
       \
+      apt-mark auto '.*'; \
+      apt-mark manual $savedAptMark; \
       apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
       rm -rf /var/lib/apt/lists/*;
 EXPOSE 80/tcp
