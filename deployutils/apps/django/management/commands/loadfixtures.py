@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2022, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@ from __future__ import unicode_literals
 
 import os, re, tempfile
 
+from django.conf import settings
 from django.core.management.commands.loaddata import Command as BaseCommand
 
 
@@ -68,8 +69,17 @@ class Command(BaseCommand):
                             index += 1
                             tmp_file.write('%s"%s"%s\n' % (
                                 prefix, derivative, suffix))
-                        else:
-                            tmp_file.write(line)
+                            continue
+                        look = re.match(r'(\s*"picture":\s*)"(\S+)"(,)?', line)
+                        if look:
+                            prefix = look.group(1)
+                            suffix = look.group(3) if look.group(3) else ""
+                            derivative = "/%s%s" % (settings.APP_NAME,
+                                look.group(2))
+                            tmp_file.write('%s"%s"%s\n' % (
+                                prefix, derivative, suffix))
+                            continue
+                        tmp_file.write(line)
                     fixture_tmps += [os.path.join(
                         tempfile.gettempdir(), tmp_file.name)]
         return fixture_tmps
