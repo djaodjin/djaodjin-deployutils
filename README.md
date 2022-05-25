@@ -57,9 +57,9 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.9.0
-  * renames site_prefixed to site_url for compatibility with djaoapp templates
-  * fixes datetime_or_now always returns `now` when passed a datetime object
-  * adds parse_tz
+0.9.1
+
+  * restores site_prefixed to facilitate migration
+  * adds site_prefixed to picture field in fixtures
 
 [previous release notes](changelog)
