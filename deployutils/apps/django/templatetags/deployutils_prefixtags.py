@@ -60,3 +60,8 @@ def site_url(path):
         if path.startswith('/'):
             path = path[1:]
     return urljoin(path_prefix, path)
+
+
+@register.filter()
+def site_prefixed(path):
+    return site_url(path)
