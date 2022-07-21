@@ -141,7 +141,7 @@ def load_config(app_name, *args, **kwargs):
                             varvalue = eval(look.group(2), {}, {})
                         config.update({varname: varvalue})
                     except Exception as err:
-                        sys.sterr.write('error: %s\n' % str(err))
+                        sys.stderr.write('error: %s\n' % str(err))
                         raise
         # Adds both, concat and split, versions of database URI.
         if 'DB_LOCATION' in config and config['DB_LOCATION']:

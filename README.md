@@ -9,8 +9,8 @@ by the HTTP session manager.
 
 Tested with
 
-- **Python:** 3.7, **Django:** 2.2 ([LTS](https://www.djangoproject.com/download/)), **Django Rest Framework:** 3.12
-- **Python:** 3.7, **Django:** 4.0 (latest), **Django Rest Framework:** 3.12
+- **Python:** 3.7, **Django:** 3.2 ([LTS](https://www.djangoproject.com/download/)), **Django Rest Framework:** 3.12
+- **Python:** 3.10, **Django:** 4.0 (latest), **Django Rest Framework:** 3.12
 - **Python:** 2.7, **Django:** 1.11 (legacy), **Django Rest Framework:** 3.9.4
 
 [More technical documentation](https://djaodjin.com/docs/technical/)
