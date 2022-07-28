@@ -15,9 +15,10 @@ RUN_DIR = os.getenv('RUN_DIR', os.getcwd())
 DB_NAME = os.path.join(RUN_DIR, 'db.sqlite')
 LOG_FILE = os.path.join(RUN_DIR, 'testsite-app.log')
 
+
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
-        location=os.getenv("SETTINGS_LOCATION", None),
+        location=os.getenv("TESTSITE_SETTINGS_LOCATION", None),
         passphrase=os.getenv("SETTINGS_CRYPT_KEY", None)))
 
 if not hasattr(sys.modules[__name__], "SECRET_KEY"):
