@@ -37,6 +37,7 @@ install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
 	install -d $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
 $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
+	$(installDirs) $(dir $@)
 	[ -f $@ ] || \
 		sed -e "s,\%(SECRET_KEY)s,$(SECRET_KEY)," \
 			-e "s,\%(DJAODJIN_SECRET_KEY)s,$(DJAODJIN_SECRET_KEY)," \
@@ -48,7 +49,7 @@ $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf: $(srcDir)/testsite/etc/gunicorn.conf
 		-e 's,%(LOCALSTATEDIR)s,$(LOCALSTATEDIR),' $< > $@
 
 
-initdb: install-conf
+initdb:
 	-rm -f $(srcDir)/db.sqlite
 	cd $(srcDir) && $(PYTHON) ./manage.py migrate $(RUNSYNCDB) --noinput
 
