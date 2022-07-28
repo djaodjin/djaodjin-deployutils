@@ -57,9 +57,8 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.9.1
+0.9.2
 
-  * restores site_prefixed to facilitate migration
-  * adds site_prefixed to picture field in fixtures
+  * permits JWT in Cookie Header for debugging stand-alone
 
 [previous release notes](changelog)
