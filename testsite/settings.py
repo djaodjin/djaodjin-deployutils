@@ -2,7 +2,7 @@
 Django settings for deployutils testsite project.
 """
 
-import os, sys
+import logging, os, sys
 
 from deployutils.apps.django.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
@@ -11,6 +11,9 @@ from deployutils.configs import load_config, update_settings
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_NAME = os.path.basename(BASE_DIR)
+RUN_DIR = os.getenv('RUN_DIR', os.getcwd())
+DB_NAME = os.path.join(RUN_DIR, 'db.sqlite')
+LOG_FILE = os.path.join(RUN_DIR, 'testsite-app.log')
 
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
@@ -107,6 +110,11 @@ LOGGING = {
         },
     },
 }
+if logging.getLogger('gunicorn.error').handlers:
+    LOGGING['handlers']['log'].update({
+        'class':'logging.handlers.WatchedFileHandler',
+        'filename': LOG_FILE
+    })
 
 
 # HTTP Pipeline
@@ -159,7 +167,7 @@ STATIC_URL = '/static/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite'),
+        'NAME': DB_NAME,
     }
 }
 
