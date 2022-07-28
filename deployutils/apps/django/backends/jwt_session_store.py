@@ -32,9 +32,11 @@ import logging
 
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
     SESSION_KEY, authenticate)
+from dateutil.relativedelta import relativedelta
 import jwt
 
 from .... import crypt
+from ....helpers import as_timestamp, datetime_or_now
 from .. import settings
 from ..compat import six
 from .session_base import SessionStore as SessionBase
@@ -66,7 +68,12 @@ class SessionStore(SessionBase):
         """
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
-        encoded = jwt.encode(session_data, passphrase,
+        exp = as_timestamp(datetime_or_now() + relativedelta(hours=2))
+        session_data.update({'exp': exp})
+        encoded = jwt.encode(
+            session_data,
+            passphrase,
+            settings.JWT_ALGORITHM,
             json_encoder=crypt.JSONEncoder)
         # b64encode will return `bytes` (Py3) but Django 2.0 is expecting
         # a `str` to add to the cookie header, otherwise it wraps those
@@ -87,8 +94,10 @@ class SessionStore(SessionBase):
         """
         session_data = {}
         try:
-            session_data = jwt.decode(self._session_key,
-                settings.DJAODJIN_SECRET_KEY)
+            session_data = jwt.decode(
+                self._session_key,
+                settings.DJAODJIN_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM])
             self._session_key_data.update(session_data)
             LOGGER.debug("session data (from proxy): %s", session_data)
             # We have been able to decode the session data, let's

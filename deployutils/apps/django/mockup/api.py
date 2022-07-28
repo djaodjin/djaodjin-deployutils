@@ -60,8 +60,8 @@ class LoginAPIView(generics.CreateAPIView):
             exp = as_timestamp(expires_at)
         user_payload.update({'exp': exp})
         token = jwt.encode(user_payload,
-            django_settings.JWT_SECRET_KEY,
-            django_settings.JWT_ALGORITHM)
+            settings.DJAODJIN_SECRET_KEY,
+            settings.JWT_ALGORITHM)
         try:
             token = token.decode('utf-8')
         except AttributeError:

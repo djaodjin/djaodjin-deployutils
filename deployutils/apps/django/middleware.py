@@ -70,6 +70,16 @@ class SessionMiddleware(BaseMiddleware):
             session_key = None
         return session_key
 
+    def check_jwt_cookie(self, request):
+        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+        # Without a session field, `AuthenticationMiddleware` will complain.
+        request.session = JWTSessionEngine(session_key)
+        # trigger ``load()``
+        if not request.session._session: #pylint: disable=protected-access
+            session_key = None
+        return session_key
+
+
     @staticmethod
     def check_encrypted_cookies(request):
         session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
@@ -91,9 +101,9 @@ class SessionMiddleware(BaseMiddleware):
             session_key = self.check_jwt_session_store(request)
             # Fall back to the Cookie header
             if not session_key:
-                LOGGER.debug("trying fallback EncryptedCookieSessionEngine"\
-                    " with Cookie header.")
-                session_key = self.check_encrypted_cookies(request)
+                LOGGER.debug(
+                    "trying fallback JWTSessionEngine with Cookie header.")
+                session_key = self.check_jwt_cookie(request)
         else:
             # Check the Cookie header
             LOGGER.debug("trying EncryptedCookieSessionEngine"\
