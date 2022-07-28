@@ -9,6 +9,8 @@ CONFIG_DIR    ?= $(srcDir)
 # XXX CONFIG_DIR should really be $(installTop)/etc/testsite
 LOCALSTATEDIR ?= $(installTop)/var
 
+installDirs   ?= install -d
+installFiles  ?= install -p -m 644
 PYTHON        := $(binDir)/python
 
 
@@ -32,9 +34,9 @@ install::
 
 install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
                 $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf
-	install -d $(DESTDIR)$(LOCALSTATEDIR)/db
-	install -d $(DESTDIR)$(LOCALSTATEDIR)/run
-	install -d $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
+	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/db
+	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/run
+	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
 $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 	$(installDirs) $(dir $@)
@@ -44,7 +46,7 @@ $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 			$< > $@
 
 $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf: $(srcDir)/testsite/etc/gunicorn.conf
-	install -d $(dir $@)
+	$(installDirs) $(dir $@)
 	[ -f $@ ] || sed \
 		-e 's,%(LOCALSTATEDIR)s,$(LOCALSTATEDIR),' $< > $@
 
