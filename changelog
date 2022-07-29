@@ -1,8 +1,9 @@
-0.9.2
+0.9.3
 
+  * fixes typo that imported incorrect module in version 0.9.2
   * permits JWT in Cookie Header for debugging stand-alone
 
- -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 27 Jul 2022 23:47:00 -0700
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Thu, 28 Jul 2022 13:16:00 -0700
 
 0.9.1
 

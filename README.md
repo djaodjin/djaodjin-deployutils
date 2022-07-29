@@ -57,7 +57,7 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.9.2
+0.9.3
 
   * permits JWT in Cookie Header for debugging stand-alone
 
