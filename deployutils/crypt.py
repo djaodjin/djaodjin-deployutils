@@ -50,6 +50,11 @@ class JSONEncoder(json.JSONEncoder):
             return obj.isoformat()
         if isinstance(obj, decimal.Decimal):
             return float(obj)
+        if not isinstance(obj, (bool, int, float)):
+            try:
+                return str(obj)
+            except (TypeError, ValueError):
+                pass
         return super(JSONEncoder, self).default(obj)
 
 
