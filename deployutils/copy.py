@@ -36,7 +36,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _resources_files(abs_paths=False):
     remotes = []
-    ignores = ['*~', '.DS_Store']
+    ignores = []
     with open('.gitignore') as gitignore:
         for line in gitignore.readlines():
             if line.startswith('#'):
@@ -49,10 +49,6 @@ def _resources_files(abs_paths=False):
             if pathname.endswith(os.sep):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
-                pathname = pathname[:-1]
-                ignores += [pathname]
-            elif (os.path.exists(pathname)
-                and not os.path.basename(pathname).startswith('.')):
                 remotes += [pathname]
             else:
                 ignores += [pathname]
