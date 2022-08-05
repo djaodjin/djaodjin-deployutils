@@ -57,8 +57,9 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.9.3
+0.9.4
 
-  * permits JWT in Cookie Header for debugging stand-alone
+  * prevents exception-with-exception due to PosixPath
+  * selects directory to upload as resources by appending '/'
 
 [previous release notes](changelog)

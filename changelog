@@ -1,3 +1,10 @@
+0.9.4
+
+  * prevents exception-with-exception due to PosixPath
+  * selects directory to upload as resources by appending '/'
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Fri,  5 Aug 2022 13:00:00 -0700
+
 0.9.3
 
   * fixes typo that imported incorrect module in version 0.9.2
