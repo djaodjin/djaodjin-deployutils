@@ -38,6 +38,12 @@ install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
 	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/run
 	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
+build-assets: vendor-assets-prerequisites
+
+
+vendor-assets-prerequisites:
+
+
 $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 	$(installDirs) $(dir $@)
 	[ -f $@ ] || \
