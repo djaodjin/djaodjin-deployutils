@@ -37,10 +37,10 @@ USERNAME_PAT = r'[\w.@+-]+'
 SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
 
 urlpatterns = [
-    re_path(r'^api/timer/', TimersAPIView.as_view(), name='api_timer'),
-    re_path(r'^api/profile/(?P<profile>%s)/' % SLUG_PAT,
+    re_path(r'^api/timer', TimersAPIView.as_view(), name='api_timer'),
+    re_path(r'^api/profile/(?P<profile>%s)' % SLUG_PAT,
         ProfileDetailAPIView.as_view(), name='api_profile'),
-    re_path(r'^api/auth/', LoginAPIView.as_view(), name='api_login'),
+    re_path(r'^api/auth', LoginAPIView.as_view(), name='api_login'),
     re_path(r'^users/(?P<user>%s)/' % USERNAME_PAT,
         TemplateView.as_view(template_name='users/index.html'),
         name='users_profile'),

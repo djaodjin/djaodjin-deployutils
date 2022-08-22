@@ -13,6 +13,11 @@ installDirs   ?= install -d
 installFiles  ?= install -p -m 644
 PYTHON        := $(binDir)/python
 
+RUN_DIR       ?= $(srcDir)
+DB_NAME       ?= $(RUN_DIR)/db.sqlite
+
+MANAGE        := TESTSITE_SETTINGS_LOCATION=$(CONFIG_DIR) RUN_DIR=$(RUN_DIR) $(PYTHON) manage.py
+
 
 # We generate the SECRET_KEY this way so it can be overriden
 # in test environments.
@@ -24,7 +29,7 @@ DJAODJIN_SECRET_KEY ?= $(shell $(PYTHON) -c 'import sys ; from random import cho
 # requires a --run-syncdb argument.
 # Implementation Note: We have to wait for the config files to be installed
 # before running the manage.py command (else missing SECRECT_KEY).
-RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(PYTHON) manage.py migrate --help 2>/dev/null)),--run-syncdb,)
+RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(MANAGE) migrate --help 2>/dev/null)),--run-syncdb,)
 
 
 install::
@@ -39,6 +44,15 @@ install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
 	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
 build-assets: vendor-assets-prerequisites
+
+
+clean: clean-dbs
+	[ ! -f $(srcDir)/package-lock.json ] || rm $(srcDir)/package-lock.json
+	find $(srcDir) -name '__pycache__' -exec rm -rf {} +
+	find $(srcDir) -name '*~' -exec rm -rf {} +
+
+clean-dbs:
+	[ ! -f $(DB_NAME) ] || rm $(DB_NAME)
 
 
 vendor-assets-prerequisites:
@@ -57,9 +71,9 @@ $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf: $(srcDir)/testsite/etc/gunicorn.conf
 		-e 's,%(LOCALSTATEDIR)s,$(LOCALSTATEDIR),' $< > $@
 
 
-initdb:
-	-rm -f $(srcDir)/db.sqlite
-	cd $(srcDir) && $(PYTHON) ./manage.py migrate $(RUNSYNCDB) --noinput
+initdb: clean-dbs
+	$(installDirs) $(dir $(DB_NAME))
+	cd $(srcDir) && $(MANAGE) migrate $(RUNSYNCDB) --noinput
 
 doc:
 	$(installDirs) docs

@@ -174,7 +174,7 @@ class Session(object):
         config.setdefault('DJAODJIN_SECRET_KEY',
             os.getenv('DJAODJIN_SECRET_KEY', ""))
         config.setdefault('ALLOWED_NO_SESSION',
-            ['/api', '/api/auth/'])
+            ['/api', '/api/auth'])
         return DjaoDjinSessionInterface(
             secret_key=config['DJAODJIN_SECRET_KEY'],
             allowed_no_session=config['ALLOWED_NO_SESSION'])

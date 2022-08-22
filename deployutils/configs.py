@@ -161,14 +161,22 @@ def load_config(app_name, *args, **kwargs):
             location = "%s://" % config['DB_ENGINE']
             if ('DB_USER' in config and 'DB_PASSWORD' in config and
                 config['DB_USER'] and config['DB_PASSWORD']):
-                location += "%s:%s" % (config['DB_USER'], config['DB_PASSWORD'])
-            if 'DB_HOST' in config and config['DB_HOST']:
-                location += "@%s" % config['DB_HOST']
+                location += "%s:%s@" % (
+                    config['DB_USER'], config['DB_PASSWORD'])
+            db_host = config.get('DB_HOST', "")
+            location += db_host if (
+                db_host or config['DB_ENGINE'] == 'sqlite3') else "localhost"
             location += "/%s" % config['DB_NAME']
             config.update({'DB_LOCATION': location})
     if config.get('DEBUG'):
-        sys.stderr.write("database connected to '%s'\n" % config.get(
-            'DB_LOCATION'))
+        parts = urlparse(config['DB_LOCATION'])
+        db_location = "%s://" % parts.scheme
+        if parts.scheme != 'sqlite3' and parts.username and parts.password:
+            db_location += "%s:*****@" % parts.username
+        if parts.hostname:
+            db_location += parts.hostname
+        db_location += parts.path
+        sys.stderr.write("database connected to '%s'\n" % db_location)
     return config
 
 
