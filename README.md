@@ -57,9 +57,8 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.9.4
+0.10.0
 
-  * prevents exception-with-exception due to PosixPath
-  * selects directory to upload as resources by appending '/'
+  * removes trailing / on mockup APIs
 
 [previous release notes](changelog)

@@ -1,3 +1,9 @@
+0.10.0
+
+  * removes trailing / on mockup APIs
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Mon,  22 Aug 2022 09:45:00 -0700
+
 0.9.4
 
   * prevents exception-with-exception due to PosixPath
