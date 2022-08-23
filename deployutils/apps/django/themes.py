@@ -362,6 +362,8 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
             # We don't want to overwrite specific theme files by generic ones.
             with open(source_name) as source:
                 template_string = source.read()
+                if six.PY2 and hasattr(template_string, 'decode'):
+                    template_string = template_string.decode('utf-8')
             try:
                 template_string = force_str(template_string)
                 lexer = DebugLexer(template_string)
@@ -430,9 +432,14 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                         dest.write("\n")
 
                 cmdline = ['diff', '-u', source_name, dest_name]
-                with subprocess.Popen(cmdline, stdout=subprocess.PIPE) as cmd:
-                    lines = cmd.stdout.readlines()
-                    cmd.wait()
+                try:
+                    with subprocess.Popen(
+                            cmdline, stdout=subprocess.PIPE) as cmd:
+                        lines = cmd.stdout.readlines()
+                        cmd.wait()
+                except AttributeError:
+                    pass # Py2.7 Popen doesn't support context managers
+                         # i.e. `__exit__` is undefined.
                 # Non-zero error codes are ok here. That's how diff
                 # indicates the files are different.
                 if lines:
