@@ -431,6 +431,7 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                             buffered_tokens = []
                         dest.write("\n")
 
+                lines = None
                 cmdline = ['diff', '-u', source_name, dest_name]
                 try:
                     with subprocess.Popen(
