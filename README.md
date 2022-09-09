@@ -57,8 +57,9 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.10.0
+0.10.3
 
-  * removes trailing / on mockup APIs
+  * prevents returning a dict with only the exp field
+  * restores backward compatibility with py27
 
 [previous release notes](changelog)

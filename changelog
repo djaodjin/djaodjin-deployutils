@@ -1,3 +1,10 @@
+0.10.3
+
+  * prevents returning a dict with only the exp field
+  * restores backward compatibility with py27
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Thu,  8 Sep 2022 23:35:00 -0700
+
 0.10.0
 
   * removes trailing / on mockup APIs
