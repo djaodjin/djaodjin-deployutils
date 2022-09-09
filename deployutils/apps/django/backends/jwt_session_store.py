@@ -66,6 +66,8 @@ class SessionStore(SessionBase):
         Returns *session_dict* as a base64 encoded json string.
 
         """
+        if not session_data:
+            return ""
         if passphrase is None:
             passphrase = settings.DJAODJIN_SECRET_KEY
         exp = as_timestamp(datetime_or_now() + relativedelta(hours=2))
