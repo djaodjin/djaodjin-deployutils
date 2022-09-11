@@ -49,7 +49,8 @@ def _resources_files(abs_paths=False):
             if pathname.endswith(os.sep):
                 # os.path.basename will not work as expected if pathname
                 # ends with a '/'.
-                remotes += [pathname]
+                if os.path.isdir(pathname):
+                    remotes += [pathname]
             else:
                 ignores += [pathname]
     return remotes, ignores
@@ -126,9 +127,10 @@ def upload(remote_location, remotes=None, ignores=None,
             for ignore in ignores:
                 excludes += ['--exclude', ignore]
         # -O omit to set mod times on directories to avoid permissions error.
-        shell_command(['/usr/bin/rsync']
+        cmdline = (['/usr/bin/rsync']
             + excludes + ['-pOthrRvz', '--rsync-path', '/usr/bin/rsync']
-            + remotes + [remote_location], dry_run=dry_run)
+            + remotes + [remote_location])
+        shell_command(cmdline, dry_run=dry_run)
 
 
 def upload_theme(args, base_url, api_key, prefix=None):
