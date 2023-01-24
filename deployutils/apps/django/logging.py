@@ -280,7 +280,7 @@ class JSONFormatter(logging.Formatter):
         return self._fmt % formatted
 
     def formatException(self, exc_info, request=None):
-        #pylint:disable=too-many-locals,arguments-differ
+        #pylint:disable=too-many-locals,arguments-differ,arguments-renamed
         reporter = ExceptionReporter(request, is_email=True, *exc_info)
         traceback_data = reporter.get_traceback_data()
         filtered_traceback_data = {}

@@ -1,4 +1,4 @@
-# Copyright (c) 2019, DjaoDjin inc.
+# Copyright (c) 2023, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,11 @@ Encryption and Decryption functions
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import decimal, json, logging, os, six
+import decimal, json, logging, os
 from base64 import b64decode, b64encode
 from binascii import hexlify
 
+import six
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes

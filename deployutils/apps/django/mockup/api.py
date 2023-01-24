@@ -73,12 +73,13 @@ class LoginAPIView(generics.CreateAPIView):
         engine = import_module(django_settings.SESSION_ENGINE)
         session_store = engine.SessionStore()
         #pylint:disable=protected-access
+        user_payload = settings.MOCKUP_SESSIONS[request.data['username']]
         session_store._session_key = session_store.prepare(
-            settings.MOCKUP_SESSIONS[request.data['username']],
+            user_payload,
             settings.DJAODJIN_SECRET_KEY)
         session_store.modified = True
         self.request.session = session_store
-        return self.create_token(request.data)
+        return self.create_token(user_payload)
 
 
 class ProfileDetailAPIView(generics.RetrieveAPIView):

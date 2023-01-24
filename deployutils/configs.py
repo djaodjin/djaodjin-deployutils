@@ -1,4 +1,4 @@
-# Copyright (c) 2021, DjaoDjin Inc.
+# Copyright (c) 2023, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,9 @@ Function to load site and credentials config files
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import io, logging, os, re, six, sys
+import io, logging, os, re, sys
+
+import six
 #pylint:disable=import-error
 from six.moves.urllib.parse import urlparse
 
@@ -168,7 +170,8 @@ def load_config(app_name, *args, **kwargs):
                 db_host or config['DB_ENGINE'] == 'sqlite3') else "localhost"
             location += "/%s" % config['DB_NAME']
             config.update({'DB_LOCATION': location})
-    if config.get('DEBUG'):
+    debug = config.get('DEBUG', kwargs.get('debug'))
+    if debug and 'DB_LOCATION' in config:
         parts = urlparse(config['DB_LOCATION'])
         db_location = "%s://" % parts.scheme
         if parts.scheme != 'sqlite3' and parts.username and parts.password:

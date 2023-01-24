@@ -1,4 +1,4 @@
-# Copyright (c) 2022, DjaoDjin inc.
+# Copyright (c) 2023, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 from django import template
 
 from .. import settings
-from ..compat import urljoin
+from ..compat import six, urljoin
 
 register = template.Library()
 
@@ -41,25 +41,28 @@ def asset(path):
 
 
 @register.filter()
-def site_url(path):
+def site_url(request):
     """
     *Mockup*: adds the path prefix when required.
     """
-    if path is None:
-        path = ''
-    path_prefix = ''
-    if settings.DEBUG and hasattr(settings, 'APP_NAME'):
-        candidate = '/%s' % settings.APP_NAME
-        if not path.startswith(candidate):
-            path_prefix = candidate
-    if path:
-        # We have an actual path instead of generating a prefix that will
-        # be placed in front of static urls (ie. {{'pricing'|site_url}}
-        # insted of {{''|site_url}}{{ASSET_URL}}).
-        path_prefix += '/'
-        if path.startswith('/'):
-            path = path[1:]
-    return urljoin(path_prefix, path)
+    if isinstance(request, six.string_types):
+        path = request
+        if path is None:
+            path = ''
+        path_prefix = ''
+        if settings.DEBUG and hasattr(settings, 'APP_NAME'):
+            candidate = '/%s' % settings.APP_NAME
+            if not path.startswith(candidate):
+                path_prefix = candidate
+        if path:
+            # We have an actual path instead of generating a prefix that will
+            # be placed in front of static urls (ie. {{'pricing'|site_url}}
+            # insted of {{''|site_url}}{{ASSET_URL}}).
+            path_prefix += '/'
+            if path.startswith('/'):
+                path = path[1:]
+        return urljoin(path_prefix, path)
+    return request.build_absolute_uri(location='/').rstrip('/')
 
 
 @register.filter()

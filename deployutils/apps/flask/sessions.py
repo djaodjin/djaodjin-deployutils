@@ -126,8 +126,7 @@ class DjaoDjinSessionInterface(FlaskSessionInterface):
         LOGGER.debug("decoded session data: %s", session_data)
         return self.session_class(initial=session_data, session_key=session_key)
 
-    @staticmethod
-    def save_session(app, session, response):
+    def save_session(self, app, session, response):
         #pylint:disable=unused-argument
         if session and session.modified:
             if 'csrf_token' in session:
