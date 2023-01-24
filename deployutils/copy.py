@@ -178,7 +178,7 @@ def upload_theme(args, base_url, api_key, prefix=None):
     else:
         raise ValueError("%s is neither a single zip nor a list of directoies"
             % str(args))
-    api_themes_url = base_url + '/api/themes/'
+    api_themes_url = base_url + '/api/themes'
     with open(zip_filename, 'rb') as file_obj:
         files = {'file': (os.path.basename(zip_filename), file_obj)}
         resp = requests.post(api_themes_url, files=files, auth=(api_key, ""))
