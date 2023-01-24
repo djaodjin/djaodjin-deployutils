@@ -1,0 +1,44 @@
+{
+  "name": "@djaodjin/djaodjin-deployutils",
+  "version": "1.0.0",
+  "description": "CLI to deploy front-end code to DjaoDjin hosting services",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djaodjin/djaodjin-deployutils.git"
+  },
+  "keywords": [
+    "microsaas",
+    "saas",
+    "hostingservices",
+    "deploy"
+  ],
+  "author": "DjaoDjin inc",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/djaodjin/djaodjin-deployutils/issues"
+  },
+  "homepage": "https://github.com/djaodjin/djaodjin-deployutils#readme",
+  "bin": {
+    "djupload": "bin/djupload.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "axios": "^1.2.1",
+    "form-data": "^4.0.0",
+    "ini": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.32.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-promise": "^6.1.1"
+  }
+}
