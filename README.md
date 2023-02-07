@@ -57,9 +57,10 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.10.3
+0.10.4
 
-  * prevents returning a dict with only the exp field
-  * restores backward compatibility with py27
+  * adds upload command as a npm package
+  * fixes package_theme command for py3.10/django3.2
+  * encodes mockup session properly
 
 [previous release notes](changelog)
