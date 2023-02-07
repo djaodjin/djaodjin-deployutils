@@ -1,3 +1,9 @@
+0.10.5
+
+  * checks directory exist before trying to copy templates
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Tue,  7 Feb 2023 14:15:00 -0700
+
 0.10.4
 
   * adds upload command as a npm package

@@ -300,6 +300,8 @@ def package_theme(app_name, build_dir,
     if template_dirs is None:
         template_dirs = get_template_search_path(app_name)
     for template_dir in template_dirs:
+        if not os.path.isdir(template_dir):
+            continue
         # The first of template_dirs usually contains the most specialized
         # templates (ie. the ones we truely want to install).
         if (templates_dest
