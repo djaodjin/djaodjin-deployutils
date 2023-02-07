@@ -212,7 +212,9 @@ def get_template_search_path(app_name=None):
                 template_dirs += [dir_path]
     # Previous Django versions
     for field_name in ['TEMPLATE_DIRS', 'TEMPLATES_DIRS']:
-        template_dirs += list(getattr(django_settings, field_name, []))
+        for candidate in list(getattr(django_settings, field_name, [])):
+            if not candidate in template_dirs:
+                template_dirs += [candidate]
     return template_dirs
 
 
@@ -358,6 +360,9 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
             continue
         source_name = os.path.join(srcroot, pathname)
         dest_name = os.path.join(destroot, pathname)
+        LOGGER.debug("%s %s %s", "install" if (
+            os.path.isfile(source_name) and not os.path.exists(dest_name)) else
+            "pass", source_name, dest_name)
         if os.path.isfile(source_name) and not os.path.exists(dest_name):
             # We don't want to overwrite specific theme files by generic ones.
             with open(source_name) as source:
@@ -451,7 +456,8 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                         '*MULTITIER_TEMPLATES_ROOT*')
                 LOGGER.debug("%s %s to %s", verb,
                     source_name.replace(
-                        django_settings.BASE_DIR, '*APP_ROOT*'),
+                        #py3.10: will be PosixPath
+                        str(django_settings.BASE_DIR), '*APP_ROOT*'),
                     dest_multitier_name)
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
