@@ -89,14 +89,14 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
     permanent = False
     create_more = False
     create_on_none = True
-    new_account_url = site_url('/profile/new/') # i.e. reverse(
-                                                 # 'saas_profile_create')
+    new_account_url = site_url('/users/roles/accept/') # i.e. reverse(
+                                         # 'saas_role_implicit_grant_accept')
 
     def get_new_account_url(self, *args, **kwargs):
         kwargs.update({
             self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
-        next_url = super(AccountRedirectView, self).get_redirect_url(
-        *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
+        next_url = self.get_redirect_url(
+            *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
             ':%s' % self.account_url_kwarg)
         return '%s?%s=%s' % (self.new_account_url,
             REDIRECT_FIELD_NAME, next_url)

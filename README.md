@@ -57,7 +57,7 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.10.4
+0.10.5
 
   * adds upload command as a npm package
   * fixes package_theme command for py3.10/django3.2
