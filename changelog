@@ -1,3 +1,10 @@
+0.10.6
+
+  * uses `get_redirect_url` so it can be overriden in subclasses
+  * defaults `new_account_url` to implicit grant
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Tue,  9 Mar 2023 20:10:00 -0700
+
 0.10.5
 
   * checks directory exist before trying to copy templates

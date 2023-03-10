@@ -57,10 +57,9 @@ Browse to http://localhost:8000
 Release Notes
 =============
 
-0.10.5
+0.10.6
 
-  * adds upload command as a npm package
-  * fixes package_theme command for py3.10/django3.2
-  * encodes mockup session properly
+  * uses `get_redirect_url` so it can be overriden in subclasses
+  * defaults `new_account_url` to implicit grant
 
 [previous release notes](changelog)
