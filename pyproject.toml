@@ -1,0 +1,70 @@
+# This pyproject.toml seems to work to build a new package
+# when `setuptools==67.6.1` is installed.
+[project]
+name = "djaodjin-deployutils"
+dynamic = ["version"]
+description = "Deploy webapps hosted on djaodjin.com"
+readme = "README.md"
+requires-python = ">=3.7"
+license =  {text = "BSD-2-Clause"}
+keywords = ["deployutils", "session", "django", "flask"]
+authors = [
+  {name = "The DjaoDjin Team", email = "help@djaodjin.com"}
+]
+maintainers = [
+  {name = "The DjaoDjin Team", email = "help@djaodjin.com"}
+]
+classifiers = [
+  "Framework :: Django",
+  "Framework :: Flask",
+  "Environment :: Web Environment",
+  "Programming Language :: Python",
+  "License :: OSI Approved :: BSD License"
+]
+dependencies = [
+  "boto3>=1.12.31",
+  "cryptography>=2.2.2",
+  "pip>=8.1.2",
+  "PyJWT>=1.6.1",
+  # For datetime-related helpers
+  "python-dateutil>=2.4.2",
+  "pytz>=2021.1",
+  "six>=1.10.0",
+  "requests>=2.22.0"
+]
+
+[project.optional-dependencies]
+django = [
+  "django-assets>=0.10",
+  "djangorestframework>=3.9.4",
+  "jinja2>=2.8.1",
+  # when you use the timers mixins
+  "monotonic>=1.1"
+]
+flask = [
+  "Flask>=0.11"
+]
+
+[project.urls]
+repository = "https://github.com/djaodjin/djaodjin-deployutils"
+documentation = "https://djaodjin-deployutils.readthedocs.io/"
+changelog = "https://github.com/djaodjin/djaodjin-deployutils/changelog"
+
+[project.scripts]
+djd = "deployutils.djd:cli_main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["deployutils*"]
+
+[tool.setuptools.package-data]
+deployutils = [
+  'apps/django/templates/accounts/*.html',
+  'apps/django/templates/saas/*.html'
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "deployutils.__version__"}

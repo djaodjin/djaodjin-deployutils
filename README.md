@@ -32,11 +32,8 @@ Development
 Clone the repository in a virtualenv and install the prerequisites
 
 
-    $ virtualenv _installTop_
-    $ cd _installTop_
-    $ source bin/activate
-    $ git clone https://github.com/djaodjin/djaodjin-deployutils.git
-    $ cd djaodjin-deployutils
+    $ python3 -m .venv
+    $ source .venv/bin/activate
     $ pip install -r testsite/requirements.txt
 
 
@@ -56,6 +53,12 @@ Browse to http://localhost:8000
 
 Release Notes
 =============
+
+Tested with
+
+- **Python:** 3.7, **Django:** 3.2 ([LTS](https://www.djangoproject.com/download/))
+- **Python:** 3.10, **Django:** 4.2 (latest)
+- **Python:** 2.7, **Django:** 1.11 (legacy) - use testsite/requirements-legacy.txt
 
 0.10.6
 

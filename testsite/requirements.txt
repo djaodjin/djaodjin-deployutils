@@ -1,10 +1,10 @@
-Django==3.2.15
-djangorestframework==3.12.4
+Django==3.2.18
+djangorestframework==3.14.0
 Jinja2==3.1.1
-PyJWT==2.4.0
+PyJWT==2.6.0
 python-dateutil==2.8.2
-monotonic==1.1
-cryptography==37.0.2
+monotonic==1.6
+cryptography==40.0.2
 
 # When DEBUG=1
 django-debug-toolbar==3.5.0       # 3.4.0 requires Django>=3.2
@@ -14,9 +14,9 @@ django-debug-toolbar==3.5.0       # 3.4.0 requires Django>=3.2
 django-extensions==3.2.0          # required by Django==4.0
 
 # So we can run pylint with no missing imports
-coverage==6.3.2
+coverage==7.2.3
 Flask==2.1.1
 
 # development
 Sphinx==5.1.1
-sphinxcontrib-httpdomain==1.8.0
+sphinxcontrib-httpdomain==1.8.1

@@ -341,6 +341,10 @@ def main(args):
         return err.code
 
 
-if __name__ == '__main__':
+def cli_main():
     logging.basicConfig(level='INFO')
     main(sys.argv)
+
+
+if __name__ == '__main__':
+    main_cli()
