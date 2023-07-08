@@ -45,7 +45,7 @@ install-conf:: $(DESTDIR)$(CONFIG_DIR)/credentials \
 	$(installDirs) $(DESTDIR)$(LOCALSTATEDIR)/log/gunicorn
 
 
-dist:
+dist::
 	$(PYTHON) -m build
 	$(TWINE) check dist/*
 	$(TWINE) upload dist/*
@@ -87,5 +87,7 @@ doc:
 	$(installDirs) docs
 	cd $(srcDir) && sphinx-build -b html ./docs $(PWD)/docs
 
+
+.PHONY: all check dist doc install
 
 -include $(buildTop)/share/dws/suffix.mk

@@ -26,12 +26,9 @@ from . import settings
 from .compat import re_path
 
 
-if settings.DEBUG:
-    # In debug mode we add a path_prefix such that we can test
-    # the webapp through the session proxy.
-    APP_PREFIX = '%s/' % settings.APP_NAME
-else:
-    APP_PREFIX = ''
+# In debug mode we add a path_prefix such that we can test
+# the webapp through the session proxy.
+APP_PREFIX = settings.APP_PREFIX if settings.DEBUG else ""
 
 def url_prefixed(regex, view, name=None):
     """

@@ -42,6 +42,9 @@ _SETTINGS = {
     'ALLOWED_NO_SESSION': [],
     'APP_NAME': getattr(settings, 'APP_NAME',
         os.path.basename(settings.BASE_DIR)),
+    'APP_PREFIX': getattr(settings, 'APP_PREFIX',
+        '%s/' % getattr(settings, 'APP_NAME',
+        os.path.basename(settings.BASE_DIR))),
     'ASSETS_CDN': {},
     'BACKEND_SESSION_STORE': None,
     'DEBUG': getattr(settings, 'DEBUG', None),
@@ -66,6 +69,7 @@ _SETTINGS.update(getattr(settings, 'DEPLOYUTILS', {}))
 
 ALLOWED_NO_SESSION = _SETTINGS.get('ALLOWED_NO_SESSION')
 APP_NAME = _SETTINGS.get('APP_NAME')
+APP_PREFIX = _SETTINGS.get('APP_PREFIX')
 ASSETS_CDN = _SETTINGS.get('ASSETS_CDN')
 BACKEND_SESSION_STORE = _SETTINGS.get('BACKEND_SESSION_STORE')
 DEBUG = _SETTINGS.get('DEBUG')
