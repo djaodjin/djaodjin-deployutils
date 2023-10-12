@@ -60,9 +60,9 @@ Tested with
 - **Python:** 3.10, **Django:** 4.2 (latest)
 - **Python:** 2.7, **Django:** 1.11 (legacy) - use testsite/requirements-legacy.txt
 
-0.10.6
+0.10.7
 
-  * uses `get_redirect_url` so it can be overriden in subclasses
-  * defaults `new_account_url` to implicit grant
+  * enables download of templates only, i.e. skip assets
+  * enables defining APP_PREFIX in settings.py
 
 [previous release notes](changelog)

@@ -1,3 +1,10 @@
+0.10.7
+
+  * enables download of templates only, i.e. skip assets
+  * enables defining APP_PREFIX in settings.py
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Thu, 12 Oct 2023 16:50:00 -0700
+
 0.10.6
 
   * uses `get_redirect_url` so it can be overriden in subclasses
