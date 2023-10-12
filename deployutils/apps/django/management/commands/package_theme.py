@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Djaodjin Inc.
+# Copyright (c) 2023, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,14 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import sys
+import logging
 
 from . import ResourceCommand
 from ... import settings
 from ...themes import (init_build_and_install_dirs, package_assets,
     package_theme, fill_package)
+
+LOGGER = logging.getLogger(__name__.split('.',maxsplit=1)[0])
 
 
 class Command(ResourceCommand):
@@ -84,6 +86,9 @@ class Command(ResourceCommand):
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
+        parser.add_argument('--verbose', action='store_true', dest='verbose',
+            default=False,
+            help='verbose mode')
         parser.add_argument('--app_name', action='store', dest='app_name',
             default=settings.APP_NAME,
             help='overrides the destination site name')
@@ -103,6 +108,8 @@ class Command(ResourceCommand):
                 ' (after excludes have been applied)')
 
     def handle(self, *args, **options):
+        if options['verbose']:
+            LOGGER.setLevel(logging.DEBUG)
         app_name = options['app_name']
         build_dir, install_dir = init_build_and_install_dirs(app_name,
             build_dir=options['build_dir'],
@@ -111,8 +118,10 @@ class Command(ResourceCommand):
             excludes=options['excludes'],
             includes=options['includes'],
             path_prefix=options['path_prefix'])
-        package_assets(app_name, build_dir=build_dir)
+        package_assets(app_name, build_dir=build_dir,
+            excludes=options['excludes'],
+            includes=options['includes'])
         zip_path = fill_package(app_name,
             build_dir=build_dir,
             install_dir=install_dir)
-        sys.stdout.write('package built: %s\n' % zip_path)
+        self.stdout.write('package built: %s\n' % zip_path)

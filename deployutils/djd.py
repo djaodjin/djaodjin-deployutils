@@ -239,14 +239,18 @@ def pub_deploy(args, project="", account="", api_key=""):
         api_container_url, resp.status_code, resp.text)
 
 
-def pub_download(args, project="", base_url="", api_key=""):
+def pub_download(args, project="", base_url="", api_key="",
+                 templates_only=False):
     """Download a theme package for a project.
+  --templates-only    download templates only,
+                      skip assets.
     """
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
     if updated:
         save_config()
-    download_theme(args, base_url, api_key, prefix=project)
+    download_theme(args, base_url, api_key, prefix=project,
+        templates_only=templates_only)
 
 
 def pub_init(args, project="", account="", base_url="",
@@ -279,14 +283,15 @@ def pub_tunnel(args, project="", base_url="", api_key=""):
     ssh_reverse_tunnel(args, base_url, api_key, prefix=project)
 
 
-def pub_upload(args, project="", base_url="", api_key=""):
+def pub_upload(args, project="", base_url="", api_key="", templates_only=False):
     """Upload a theme package (or directory) for a project.
     """
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
     if updated:
         save_config()
-    upload_theme(args, base_url, api_key, prefix=project)
+    upload_theme(args, base_url, api_key, prefix=project,
+        templates_only=templates_only)
 
 
 def main(args):
@@ -295,7 +300,6 @@ def main(args):
     """
     global CONFIG_FILENAME
     try:
-        import __main__
         parser = argparse.ArgumentParser(
             usage='%(prog)s [options] command\n\nVersion\n  %(prog)s version '
             + str(__version__),
@@ -314,7 +318,7 @@ def main(args):
             '--config', action='store',
             default=os.path.join(os.getenv('HOME'), '.djd', 'credentials'),
             help='configuration file')
-        build_subcommands_parser(parser, __main__)
+        build_subcommands_parser(parser, sys.modules[__name__])
 
         if len(args) <= 1:
             parser.print_help()

@@ -31,6 +31,7 @@ from django.conf import settings as django_settings
 from django.template.base import (Parser, NodeList, TemplateSyntaxError)
 from django.template.backends.django import DjangoTemplates
 from django.template.context import Context
+from django.utils._os import safe_join
 from django_assets.templatetags.assets import assets
 from jinja2.lexer import Lexer
 from webassets import Bundle
@@ -234,47 +235,62 @@ def init_build_and_install_dirs(app_name, build_dir=None, install_dir=None):
     return build_dir, install_dir
 
 
-def package_assets(app_name, build_dir):#pylint:disable=unused-argument
+def package_assets(app_name, build_dir,
+                   excludes=None, includes=None):
+    #pylint:disable=unused-argument
     resources_dest = os.path.join(build_dir, 'public')
 
     # Copy local resources (not under source control) to resources_dest.
-    excludes = ['--exclude', '*~', '--exclude', '.DS_Store',
+    exclude_args = ['--exclude', '*~', '--exclude', '.DS_Store',
         '--exclude', '.webassets-cache']
+    if excludes:
+        for pat in excludes:
+            exclude_args += ['--exclude', pat]
     app_static_root = django_settings.STATIC_ROOT
     assert app_static_root is not None and app_static_root
     # When app_static_root ends with the static_url, we will want
     # to insert the app_name prefix.
-    static_root_parts = app_static_root.split(os.sep)
+    static_root_parts = app_static_root.split(os.path.sep)
     root_parts_idx = len(static_root_parts)
     root_idx = len(app_static_root)
     found = False
     orig_static_url = django_settings.STATIC_URL
-    orig_static_url_parts = orig_static_url.split('/')
-    if not orig_static_url_parts[0]:
-        orig_static_url_parts = orig_static_url_parts[1:]
-    if orig_static_url_parts[0] == app_name:
-        orig_static_url_parts = orig_static_url_parts[1:]
-    for url_part in reversed(orig_static_url_parts):
-        found = True # With ``break`` later on to default to False
-                     # when zero iteration.
-        if url_part:
-            root_parts_idx = root_parts_idx - 1
-            root_idx = root_idx - len(static_root_parts[root_parts_idx]) - 1
-            if url_part != static_root_parts[root_parts_idx]:
-                found = False
-                break
-    if found:
-        app_static_root = os.path.join(
-            app_static_root[:root_idx], django_settings.STATIC_URL[1:-1])
+    static_url_parts = orig_static_url.strip('/').split('/')
+    path_parts = app_static_root.strip('/').split('/')
+    root_idx = 0
+    for path_part, url_part in zip(reversed(path_parts),
+                                   reversed(static_url_parts)):
+        if path_part != url_part:
+            break
+        root_idx += 1
+    if root_idx:
+        app_static_root = os.path.sep + os.path.join(*path_parts[:-root_idx])
+    if not app_static_root.endswith(os.path.sep):
+        app_static_root = app_static_root + os.path.sep
         # static_url is required per-Django to start and ends with a '/'
         # (i.e. '/static/').
         # If we have a trailing '/', rsync will copy the content
         # of the directory instead of the directory itself.
-    cmdline = (['/usr/bin/rsync']
-        + excludes + ['-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
-        + [app_static_root, resources_dest])
-    LOGGER.info(' '.join(cmdline))
-    shell_command(cmdline)
+    cmdline_root = ['/usr/bin/rsync'] + exclude_args + [
+        '-az', '--safe-links', '--rsync-path', '/usr/bin/rsync']
+    if False and includes:
+        # XXX includes should add back excluded content to match
+        # the `package_theme` implementation.
+        for include in includes:
+            include_static_root = safe_join(app_static_root, include)
+            if os.path.exists(include_static_root):
+                include_parts = include.strip('/').split('/')
+                if len(include_parts) > 1:
+                    include_resources_dest = safe_join(
+                        resources_dest, os.path.join(*include_parts[:-1]))
+                if not os.path.exists(include_resources_dest):
+                    os.makedirs(include_resources_dest)
+                cmdline = cmdline_root + [
+                    include_static_root, include_resources_dest]
+                shell_command(cmdline)
+    else:
+        cmdline = cmdline_root + [app_static_root, resources_dest]
+        shell_command(cmdline)
 
 
 def package_theme(app_name, build_dir,
@@ -331,6 +347,22 @@ def fill_package_zip(zip_file, srcroot, prefix=''):
             fill_package_zip(zip_file, srcroot, prefix=pathname)
 
 
+def _list_templates(srcroot, prefix=''):
+    """
+    List all templates in srcroot
+    """
+    results = []
+    for pathname in os.listdir(os.path.join(srcroot, prefix)):
+        pathname = os.path.join(prefix, pathname)
+        source_name = os.path.join(srcroot, pathname)
+        if os.path.isfile(source_name):
+            results += [pathname]
+        elif os.path.isdir(source_name):
+            if not source_name.endswith('jinja2'):
+                results += _list_templates(srcroot, prefix=pathname)
+    return results
+
+
 def install_templates(srcroot, destroot, prefix='', excludes=None,
                       includes=None, path_prefix=None):
     #pylint:disable=too-many-arguments,too-many-statements
@@ -339,29 +371,29 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
     and its subdirectories.
     """
     #pylint: disable=too-many-locals
-    if excludes is None:
-        excludes = []
+    exclude_pats = [r'.*~', r'\.DS_Store']
+    if excludes:
+        exclude_pats += excludes
     if includes is None:
         includes = []
     if not os.path.exists(os.path.join(prefix, destroot)):
         os.makedirs(os.path.join(prefix, destroot))
-    for pathname in os.listdir(os.path.join(srcroot, prefix)):
-        pathname = os.path.join(prefix, pathname)
+    for pathname in _list_templates(srcroot):
+        source_name = os.path.join(srcroot, pathname)
+        dest_name = os.path.join(destroot, pathname)
         excluded = False
-        for pat in excludes:
-            if re.match(pat, pathname):
+        for pat in exclude_pats:
+            if re.search(pat, pathname):
                 excluded = True
                 break
         if excluded:
             for pat in includes:
-                if re.match(pat, pathname):
+                if re.search(pat, pathname):
                     excluded = False
                     break
         if excluded:
             LOGGER.debug("skip %s", pathname)
             continue
-        source_name = os.path.join(srcroot, pathname)
-        dest_name = os.path.join(destroot, pathname)
         LOGGER.debug("%s %s %s", "install" if (
             os.path.isfile(source_name) and not os.path.exists(dest_name)) else
             "pass", source_name, dest_name)
@@ -464,6 +496,3 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
                     "from unicode or UTF-8 strings.", source_name)
-        elif os.path.isdir(source_name):
-            install_templates(srcroot, destroot, prefix=pathname,
-                excludes=excludes, includes=includes, path_prefix=path_prefix)
