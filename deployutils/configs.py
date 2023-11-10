@@ -117,6 +117,7 @@ def load_config(app_name, *args, **kwargs):
     """
     config = {}
     #pylint:disable=too-many-nested-blocks
+    db_location = None
     for content in six.itervalues(
             read_config(app_name, *args, **kwargs)):
         for line in content.split('\n'):
@@ -146,8 +147,8 @@ def load_config(app_name, *args, **kwargs):
                         sys.stderr.write('error: %s\n' % str(err))
                         raise
         # Adds both, concat and split, versions of database URI.
-        if 'DB_LOCATION' in config and config['DB_LOCATION']:
-            parts = urlparse(config['DB_LOCATION'])
+        if 'DB_SECRET_LOCATION' in config and config['DB_SECRET_LOCATION']:
+            parts = urlparse(config['DB_SECRET_LOCATION'])
             config.update({
                 'DB_ENGINE': parts.scheme,
                 'DB_USER': parts.username,
@@ -159,26 +160,24 @@ def load_config(app_name, *args, **kwargs):
             else:
                 config.update({
                     'DB_NAME': parts.path[1:] if parts.path else None})
+            db_location = "%s://" % parts.scheme
+            if parts.scheme != 'sqlite3' and parts.username and parts.password:
+                db_location += "%s:*****@" % parts.username
+            if parts.hostname:
+                db_location += parts.hostname
+            db_location += parts.path
         elif 'DB_ENGINE' in config and 'DB_NAME' in config:
-            location = "%s://" % config['DB_ENGINE']
+            db_location = "%s://" % config['DB_ENGINE']
             if ('DB_USER' in config and 'DB_PASSWORD' in config and
                 config['DB_USER'] and config['DB_PASSWORD']):
-                location += "%s:%s@" % (
-                    config['DB_USER'], config['DB_PASSWORD'])
+                db_location += "%s:%s@" % (
+                    config['DB_USER'], '*****')
             db_host = config.get('DB_HOST', "")
-            location += db_host if (
+            db_location += db_host if (
                 db_host or config['DB_ENGINE'] == 'sqlite3') else "localhost"
-            location += "/%s" % config['DB_NAME']
-            config.update({'DB_LOCATION': location})
+            db_location += "/%s" % config['DB_NAME']
     debug = config.get('DEBUG', kwargs.get('debug'))
-    if debug and 'DB_LOCATION' in config:
-        parts = urlparse(config['DB_LOCATION'])
-        db_location = "%s://" % parts.scheme
-        if parts.scheme != 'sqlite3' and parts.username and parts.password:
-            db_location += "%s:*****@" % parts.username
-        if parts.hostname:
-            db_location += parts.hostname
-        db_location += parts.path
+    if debug and db_location:
         sys.stderr.write("database connected to '%s'\n" % db_location)
     return config
 
