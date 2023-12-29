@@ -57,9 +57,9 @@ async function getProject (project) {
   if (!srcPath ||
     !(path.resolve(srcPath) === path.resolve(process.cwd()))) {
     if (!(project in CONFIG)) {
-      CONFIG[project] = { srcPath: '' }
+      CONFIG[project] = { src_path: '' }
     }
-    CONFIG[project].srcPath = process.cwd()
+    CONFIG[project].src_path = process.cwd()
     updated = true
   }
 
@@ -139,19 +139,60 @@ function saveConfig (config, configFilename) {
   console.log('saved configuration in', configFilename)
 }
 
+
+/** Downloads the theme for a project.
+ */
+async function downloadTheme (templatesOnly, baseUrl, apiKey, prefix) {
+  const themesURL = baseUrl + '/themes/download/' + (
+      templatesOnly ? 'templates_only=1' : '')
+  await axios.get(themesURL).then(function (resp) {
+    const msg = JSON.stringify(resp.data)
+    console.log(`GET ${themesURL} returns ${resp.status} ${msg}`)
+  }).catch(function (err) {
+    const resp = err.response
+    if (resp) {
+      const msg = JSON.stringify(resp.data)
+      console.log(`GET ${themesURL} returns ${resp.status} ${msg}`)
+    } else {
+      // something happened that lead to an error.
+      console.log('error:', err.message)
+    }
+  })
+}
+
+
 /** Uploads a new theme for a project.
  */
 async function uploadTheme (args, baseUrl, apiKey, prefix) {
-  async function zipdir (zipFilename, args, prefix) {
-    const zip = new AdmZip()
-    for (let idx = 0; idx < args.length; ++idx) {
-      const arg = args[idx]
-      zip.addLocalFolder(arg, prefix ? `${prefix}/${arg}` : arg)
-    }
-    zip.writeZip(zipFilename)
+  async function zipRoots (zipFilename, args, rootPrefix) {
+      function zipdir (zip, args, prefix) {
+        for (let idx = 0; idx < args.length; ++idx) {
+          const arg = args[idx]
+          const pathname = `${prefix}/${arg}`
+//          console.log("XXX zip ", arg, "(",fs.lstatSync(arg).isDirectory(),")", "...")
+          if( fs.lstatSync(pathname).isDirectory() ) {
+            zipdir(zip, fs.readdirSync(pathname).map(function(item){
+                return `${arg}/${item}`}), prefix)
+          } else {
+             const nameInZip = rootPrefix + (arg.endsWith('.html') ?
+                 '/templates/' : '/public/') + arg
+             const content = fs.readFileSync(pathname);
+              zip.addFile(nameInZip, content, 0644)
+          }
+        }
+      }
+
+      const zip = new AdmZip()
+      for(let idx = 0; idx < args.length; ++idx) {
+          const pathname = args[idx]
+          if( fs.lstatSync(pathname).isDirectory() ) {
+              zipdir(zip, fs.readdirSync(pathname), pathname)
+          }
+      }
+      zip.writeZip(zipFilename)
   }
 
-  if (!args) {
+  if (args.length === 0) {
     throw ValueError(
       'A single zip file or a list of directories must be present')
   }
@@ -173,7 +214,7 @@ async function uploadTheme (args, baseUrl, apiKey, prefix) {
     if (prefix) {
       zipFilename = `${prefix}.zip`
     }
-    await zipdir(zipFilename, args, prefix)
+    await zipRoots(zipFilename, args, prefix)
   } else {
     throw ValueError(`${args} is neither a single zip nor a list of directoies`)
   }
@@ -181,6 +222,7 @@ async function uploadTheme (args, baseUrl, apiKey, prefix) {
   const form = new FormData()
   const file = fs.readFileSync(zipFilename)
   form.append('file', file, path.basename(zipFilename))
+/*
   await axios.post(apiThemesURL, form, {
     auth: {
       username: `${apiKey}`,
@@ -203,7 +245,18 @@ async function uploadTheme (args, baseUrl, apiKey, prefix) {
       console.log('error:', err.message)
     }
   })
+*/
 }
+
+
+async function pubDownload (templatesOnly) {
+  const config = await getProjectConfig()
+  if (config.updated) {
+    saveConfig()
+  }
+  downloadTheme(templatesOnly, config.base_url, config.api_key, config.name)
+}
+
 
 async function pubUpload (args) {
   const config = await getProjectConfig()
@@ -213,6 +266,7 @@ async function pubUpload (args) {
   uploadTheme(args, config.base_url, config.api_key, config.name)
 }
 
+
 /** Main Entry point
  */
 async function main (args) {
@@ -220,7 +274,13 @@ async function main (args) {
   if (fs.existsSync(CONFIG_FILENAME)) {
     CONFIG = ini.parse(fs.readFileSync(CONFIG_FILENAME, 'utf-8'))
   }
-  await pubUpload(args)
+  if( args.length > 0 && args[0] === '--download-templates-only' ) {
+      await pubDownload(true)
+  } else if ( args.length > 0 && args[0] === '--download' ) {
+      await pubDownload(false)
+  } else {
+      await pubUpload(args)
+  }
   rdl.close()
 }
 

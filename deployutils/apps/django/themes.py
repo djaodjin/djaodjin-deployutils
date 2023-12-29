@@ -383,16 +383,16 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
         dest_name = os.path.join(destroot, pathname)
         excluded = False
         for pat in exclude_pats:
-            if re.search(pat, pathname):
+            if re.search(pat, source_name):
                 excluded = True
                 break
         if excluded:
             for pat in includes:
-                if re.search(pat, pathname):
+                if re.search(pat, source_name):
                     excluded = False
                     break
         if excluded:
-            LOGGER.debug("skip %s", pathname)
+            LOGGER.debug("skip %s", source_name)
             continue
         LOGGER.debug("%s %s %s", "install" if (
             os.path.isfile(source_name) and not os.path.exists(dest_name)) else
