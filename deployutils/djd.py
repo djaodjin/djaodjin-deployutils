@@ -351,4 +351,4 @@ def cli_main():
 
 
 if __name__ == '__main__':
-    main_cli()
+    cli_main()
