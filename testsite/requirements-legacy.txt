@@ -1,4 +1,4 @@
-Django==1.11.29
+Django==3.2.24
 djangorestframework==3.9.4
 jinja2==2.11.2
 PyJWT==1.6.1
