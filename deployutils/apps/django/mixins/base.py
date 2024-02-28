@@ -1,4 +1,4 @@
-# Copyright (c) 2022, DjaoDjin inc.
+# Copyright (c) 2024, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,10 @@ class AccessiblesMixin(object):
 
     @property
     def accessible_plans(self):
+        """
+        Returns a set of plan slug. A profile the `request.user` has a role on
+        must be subscribed to the plan.
+        """
         if not hasattr(self, '_accessible_plans'):
             self._accessible_plans = set([plan['slug']
                 for plan in self.get_accessible_plans(self.request)])
@@ -65,6 +69,10 @@ class AccessiblesMixin(object):
 
     @property
     def accessible_profiles(self):
+        """
+        Returns a set of profile slug. The `request.user` must have a role
+        on the profile.
+        """
         if not hasattr(self, '_accessible_profiles'):
             self._accessible_profiles = set([org['slug']
                 for org in self.get_accessible_profiles(self.request)])
@@ -129,6 +137,7 @@ class AccessiblesMixin(object):
         """
         return self.get_accessible_profiles(request, roles=[self.MANAGER])
 
+
     @property
     def managed_accounts(self):
         """
@@ -137,6 +146,7 @@ class AccessiblesMixin(object):
         """
         return [org['slug'] for org in self.get_accessible_profiles(
             self.request, roles=[self.MANAGER])]
+
 
     def manages(self, account):
         """
@@ -150,6 +160,17 @@ class AccessiblesMixin(object):
             if account_slug == accessible_profile['slug']:
                 return True
         return False
+
+
+    def manages_broker(self):
+        """
+        Returns ``True`` if the ``request.user`` is a manager for the site.
+        """
+        broker_slug = self.request.session.get('site', {}).get('slug')
+        print("XXX manages %s?" % str(broker_slug))
+        if not broker_slug:
+            return False
+        return self.manages(broker_slug)
 
 
 class AccountMixin(AccessiblesMixin):
