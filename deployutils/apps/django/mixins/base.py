@@ -88,22 +88,7 @@ class AccessiblesMixin(object):
         Returns the list of plans that appear under at least one subscription
         of a profile the `request.user` has a role on.
         """
-        #pylint:disable=too-many-nested-blocks
-        plans = {}
-        for accessible_profiles in six.itervalues(request.session.get(
-                'roles', {})):
-            for accessible_profile in accessible_profiles:
-                if not profile or profile == accessible_profile.get('slug'):
-                    for subscription in accessible_profile.get(
-                            'subscriptions', []):
-                        subscription_ends_at = subscription.get('ends_at')
-                        if (not at_time or
-                            at_time < datetime_or_now(subscription_ends_at)):
-                            plan_key =  subscription.get('plan')
-                            plan = {'slug': plan_key}
-                            if plan_key not in plans:
-                                plans.update({plan_key: plan})
-        return plans.values()
+        return _get_accessible_plans(request, profile=profile, at_time=at_time)
 
     @staticmethod
     def get_accessible_profiles(request, roles=None):
@@ -111,12 +96,8 @@ class AccessiblesMixin(object):
         Returns the list of *dictionnaries* for which the accounts are
         accessibles by ``request.user`` filtered by ``roles`` if present.
         """
-        results = []
-        for role_name, accessible_profiles in six.iteritems(request.session.get(
-                'roles', {})):
-            if roles is None or role_name in roles:
-                results += accessible_profiles
-        return results
+        return _get_accessible_profiles(request, roles=roles)
+
 
     def get_context_data(self, **kwargs):
         context = super(AccessiblesMixin, self).get_context_data(**kwargs)
@@ -129,6 +110,7 @@ class AccessiblesMixin(object):
                     account.get('slug'))}]
         update_context_urls(context, urls)
         return context
+
 
     def get_managed(self, request):
         """
@@ -167,7 +149,6 @@ class AccessiblesMixin(object):
         Returns ``True`` if the ``request.user`` is a manager for the site.
         """
         broker_slug = self.request.session.get('site', {}).get('slug')
-        print("XXX manages %s?" % str(broker_slug))
         if not broker_slug:
             return False
         return self.manages(broker_slug)
@@ -342,3 +323,39 @@ class DateRangeMixin(BeforeMixin):
         if self.start_at:
             context.update({'start_at': self.start_at})
         return context
+
+
+def _get_accessible_plans(request, profile=None, at_time=None):
+    """
+    Returns the list of plans that appear under at least one subscription
+    of a profile the `request.user` has a role on.
+    """
+    #pylint:disable=too-many-nested-blocks
+    plans = {}
+    for accessible_profiles in six.itervalues(request.session.get(
+            'roles', {})):
+        for accessible_profile in accessible_profiles:
+            if not profile or profile == accessible_profile.get('slug'):
+                for subscription in accessible_profile.get(
+                        'subscriptions', []):
+                    subscription_ends_at = subscription.get('ends_at')
+                    if (not at_time or
+                        at_time < datetime_or_now(subscription_ends_at)):
+                        plan_key =  subscription.get('plan')
+                        plan = {'slug': plan_key}
+                        if plan_key not in plans:
+                            plans.update({plan_key: plan})
+    return plans.values()
+
+
+def _get_accessible_profiles(request, roles=None):
+    """
+    Returns the list of *dictionnaries* for which the accounts are
+    accessibles by ``request.user`` filtered by ``roles`` if present.
+    """
+    results = []
+    for role_name, accessible_profiles in six.iteritems(request.session.get(
+            'roles', {})):
+        if roles is None or role_name in roles:
+            results += accessible_profiles
+    return results

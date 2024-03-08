@@ -237,7 +237,7 @@ def init_build_and_install_dirs(app_name, build_dir=None, install_dir=None):
 
 def package_assets(app_name, build_dir,
                    excludes=None, includes=None):
-    #pylint:disable=unused-argument
+    #pylint:disable=unused-argument,too-many-locals
     resources_dest = os.path.join(build_dir, 'public')
 
     # Copy local resources (not under source control) to resources_dest.
@@ -250,10 +250,7 @@ def package_assets(app_name, build_dir,
     assert app_static_root is not None and app_static_root
     # When app_static_root ends with the static_url, we will want
     # to insert the app_name prefix.
-    static_root_parts = app_static_root.split(os.path.sep)
-    root_parts_idx = len(static_root_parts)
     root_idx = len(app_static_root)
-    found = False
     orig_static_url = django_settings.STATIC_URL
     static_url_parts = orig_static_url.strip('/').split('/')
     path_parts = app_static_root.strip('/').split('/')
@@ -495,4 +492,4 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                     dest_multitier_name)
             except UnicodeDecodeError:
                 LOGGER.warning("%s: Templates can only be constructed "
-                    "from unicode or UTF-8 strings.", source_name)
+                    "from unicode or UTF-8 strings.", pathname)
