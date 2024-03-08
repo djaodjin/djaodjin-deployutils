@@ -60,9 +60,9 @@ Tested with
 - **Python:** 3.10, **Django:** 4.2 (latest)
 - **Python:** 2.7, **Django:** 1.11 (legacy) - use testsite/requirements-legacy.txt
 
-0.10.8
+0.10.9
 
-  * takes excluded templates into account when packaging theme
-  * security renames DB_LOCATION to DB_SECRET_LOCATION to redact db_password
+  * enables using `get_accessible_profiles` without deriving from Mixin
+  * adds `manages_broker` as a shortcut
 
 [previous release notes](changelog)

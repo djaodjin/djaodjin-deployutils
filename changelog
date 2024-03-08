@@ -1,3 +1,10 @@
+0.10.9
+
+  * enables using `get_accessible_profiles` without deriving from Mixin
+  * adds `manages_broker` as a shortcut
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Fri,  8 Mar 2024 12:00:00 -0700
+
 0.10.8
 
   * takes excluded templates into account when packaging theme
