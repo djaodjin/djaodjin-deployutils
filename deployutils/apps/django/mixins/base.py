@@ -120,6 +120,22 @@ class AccessiblesMixin(object):
         return self.get_accessible_profiles(request, roles=[self.MANAGER])
 
 
+    def has_role(self, account, roles):
+        """
+        Returns ``True`` if the ``request.user`` is at least one of ``roles``
+        for ``account``.
+
+        ``account`` will be converted to a string and compared
+        to a profile slug.
+        """
+        account_slug = str(account)
+        for accessible_profile in self.get_accessible_profiles(
+                self.request, roles=roles):
+            if account_slug == accessible_profile['slug']:
+                return True
+        return False
+
+
     @property
     def managed_accounts(self):
         """
@@ -136,22 +152,22 @@ class AccessiblesMixin(object):
         ``account`` will be converted to a string and compared
         to a profile slug.
         """
-        account_slug = str(account)
-        for accessible_profile in self.request.session.get(
-                'roles', {}).get(self.MANAGER, []):
-            if account_slug == accessible_profile['slug']:
-                return True
-        return False
+        return self.has_role(account, roles=[self.MANAGER])
 
-
+    @property
     def manages_broker(self):
         """
         Returns ``True`` if the ``request.user`` is a manager for the site.
         """
-        broker_slug = self.request.session.get('site', {}).get('slug')
-        if not broker_slug:
-            return False
-        return self.manages(broker_slug)
+        if not hasattr(self, '_manages_broker'):
+            site = self.request.session.get('site')
+            if not site:
+                return False
+            broker_slug = site.get('slug')
+            if not broker_slug:
+                return False
+            self._manages_broker = self.manages(broker_slug)
+        return self._manages_broker
 
 
 class AccountMixin(AccessiblesMixin):
@@ -332,6 +348,8 @@ def _get_accessible_plans(request, profile=None, at_time=None):
     """
     #pylint:disable=too-many-nested-blocks
     plans = {}
+    if profile:
+        profile = str(profile)
     for accessible_profiles in six.itervalues(request.session.get(
             'roles', {})):
         for accessible_profile in accessible_profiles:
