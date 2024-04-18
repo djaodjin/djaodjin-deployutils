@@ -380,12 +380,12 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
         dest_name = os.path.join(destroot, pathname)
         excluded = False
         for pat in exclude_pats:
-            if re.search(pat, source_name):
+            if re.search(pat, pathname):
                 excluded = True
                 break
         if excluded:
             for pat in includes:
-                if re.search(pat, source_name):
+                if re.search(pat, pathname):
                     excluded = False
                     break
         if excluded:

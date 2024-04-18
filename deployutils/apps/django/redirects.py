@@ -76,7 +76,7 @@ def redirect_or_denied(request, inserted_url,
 
 
 
-class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
+class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
                           RedirectView):
     """
     Find the ``Account`` associated with the request user
@@ -126,8 +126,9 @@ class AccountRedirectView(TemplateResponseMixin, AccessiblesMixin,
             redirects += [(url, print_name)]
         kwargs.update({
             self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
-        context = {'redirects': redirects,
+        context = self.get_context_data(**kwargs)
+        context.update({'redirects': redirects,
             'next': super(AccountRedirectView, self).get_redirect_url(
             *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
-                ':%s' % self.account_url_kwarg)}
+                ':%s' % self.account_url_kwarg)})
         return self.render_to_response(context)

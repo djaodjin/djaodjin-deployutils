@@ -100,6 +100,7 @@ class AccessiblesMixin(object):
 
 
     def get_context_data(self, **kwargs):
+        # XXX If we don't call super, we will miss contextes in ListView.
         context = super(AccessiblesMixin, self).get_context_data(**kwargs)
         urls = {'profiles': []}
         for account in self.get_accessible_profiles(self.request,
