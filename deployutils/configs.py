@@ -142,6 +142,9 @@ def load_config(app_name, *args, **kwargs):
                         if varvalue is None:
                             # Environment variables override the config file
                             varvalue = eval(look.group(2), {}, {})
+                        else:
+                            sys.stderr.write(
+                                "set %s from environment variable" % varname)
                         config.update({varname: varvalue})
                     except Exception as err:
                         sys.stderr.write('error: %s\n' % str(err))
