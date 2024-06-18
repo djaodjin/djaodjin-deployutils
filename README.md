@@ -60,9 +60,10 @@ Tested with
 - **Python:** 3.10, **Django:** 4.2 (latest)
 - **Python:** 2.7, **Django:** 1.11 (legacy) - use testsite/requirements-legacy.txt
 
-0.10.9
+0.11.0
 
-  * enables using `get_accessible_profiles` without deriving from Mixin
-  * adds `manages_broker` as a shortcut
+  * makes `manages_broker` a property (breaking change)
+  * fixes missing get_context_data
+  * adds message about env variables override
 
 [previous release notes](changelog)

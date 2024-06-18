@@ -1,3 +1,11 @@
+0.11.0
+
+  * makes `manages_broker` a property (breaking change)
+  * fixes missing get_context_data
+  * adds message about env variables override
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Mon, 17 Jun 2024 23:15:00 -0700
+
 0.10.9
 
   * enables using `get_accessible_profiles` without deriving from Mixin
