@@ -120,15 +120,14 @@ class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
         redirects = []
         for org in candidates:
             kwargs.update({self.account_url_kwarg: org['slug']})
-            url = super(AccountRedirectView, self).get_redirect_url(
-                *args, **kwargs)
+            url = self.get_redirect_url(*args, **kwargs)
             print_name = org.get('printable_name', org.get('slug', ""))
             redirects += [(url, print_name)]
         kwargs.update({
             self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
         context = self.get_context_data(**kwargs)
         context.update({'redirects': redirects,
-            'next': super(AccountRedirectView, self).get_redirect_url(
-            *args, **kwargs).replace('PATTERN-%s' % self.account_url_kwarg,
+            'next': self.get_redirect_url(*args, **kwargs).replace(
+                'PATTERN-%s' % self.account_url_kwarg,
                 ':%s' % self.account_url_kwarg)})
         return self.render_to_response(context)
