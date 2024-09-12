@@ -12,6 +12,7 @@ LOCALSTATEDIR ?= $(installTop)/var
 
 installDirs   ?= install -d
 installFiles  ?= install -p -m 644
+DOCKER        ?= docker
 PYTHON        := python
 PIP           := pip
 TWINE         := twine
@@ -64,6 +65,13 @@ initdb: clean-dbs
 doc:
 	$(installDirs) build/docs
 	cd $(srcDir) && sphinx-build -b html ./docs $(PWD)/build/docs
+
+
+# !!! Attention !!!
+# You will need to run `make initdb` before running `package-docker` in order
+# to create the dummy db.sqilte file to package.
+package-docker: build-assets
+	cd $(srcDir) && $(DOCKER) build $(DOCKER_OPTS) .
 
 
 vendor-assets-prerequisites:
