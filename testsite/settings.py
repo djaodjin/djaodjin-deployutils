@@ -13,7 +13,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_NAME = os.path.basename(BASE_DIR)
 RUN_DIR = os.getenv('RUN_DIR', os.getcwd())
 DB_NAME = os.path.join(RUN_DIR, 'db.sqlite')
-LOG_FILE = os.path.join(RUN_DIR, 'testsite-app.log')
 DJAODJIN_SECRET_KEY = ""
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -114,7 +113,7 @@ LOGGING = {
         },
     },
 }
-if logging.getLogger('gunicorn.error').handlers:
+if not DEBUG and hasattr(sys.modules[__name__], 'LOG_FILE') and LOG_FILE:
     LOGGING['handlers']['log'].update({
         'class':'logging.handlers.WatchedFileHandler',
         'filename': LOG_FILE
