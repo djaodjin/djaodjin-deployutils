@@ -14,7 +14,11 @@ APP_NAME = os.path.basename(BASE_DIR)
 RUN_DIR = os.getenv('RUN_DIR', os.getcwd())
 DB_NAME = os.path.join(RUN_DIR, 'db.sqlite')
 LOG_FILE = os.path.join(RUN_DIR, 'testsite-app.log')
+DJAODJIN_SECRET_KEY = ""
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+ALLOWED_HOSTS = []
 
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
@@ -26,10 +30,9 @@ if not hasattr(sys.modules[__name__], "SECRET_KEY"):
     SECRET_KEY = "".join([choice(
         "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*-_=+") for i in range(50)])
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+if not DJAODJIN_SECRET_KEY:
+    sys.stderr.write("error: DJAODJIN_SECRET_KEY evaluates to None")
+    sys.exit(1)
 
 # Installed apps
 # --------------
