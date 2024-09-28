@@ -9,4 +9,4 @@ WORKDIR /app/reps/djaodjin-deployutils
 RUN /app/bin/pip install -r testsite/requirements.txt
 
 EXPOSE 80/tcp
-ENTRYPOINT ["/app/bin/python", "/app/reps/djaodjin-deployutils/manage.py", "runserver", "0.0.0.0:80"]
+ENTRYPOINT ["/app/bin/python", "/app/reps/djaodjin-deployutils/manage.py", "runserver", "--nothreading", "--noreload", "0.0.0.0:80"]
