@@ -3,12 +3,11 @@
 -include $(buildTop)/share/dws/prefix.mk
 
 srcDir        ?= .
-installTop    ?= $(VIRTUAL_ENV)
+installTop    ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV),$(abspath $(srcDir)))
 binDir        ?= $(installTop)/bin
 libDir        ?= $(installTop)/lib
-CONFIG_DIR    ?= $(srcDir)
-# XXX CONFIG_DIR should really be $(installTop)/etc/testsite
-LOCALSTATEDIR ?= $(installTop)/var
+CONFIG_DIR    ?= $(installTop)/etc/testsite
+RUN_DIR       ?= $(installTop)/var/run
 
 installDirs   ?= install -d
 installFiles  ?= install -p -m 644
@@ -17,7 +16,6 @@ PYTHON        := python
 PIP           := pip
 TWINE         := twine
 
-RUN_DIR       ?= $(abspath $(srcDir))
 DB_NAME       ?= $(RUN_DIR)/db.sqlite
 
 $(info Path to python executable (i.e. PYTHON) while running make: $(shell which $(PYTHON)))
@@ -91,9 +89,7 @@ $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 
 $(DESTDIR)$(CONFIG_DIR)/gunicorn.conf: $(srcDir)/testsite/etc/gunicorn.conf
 	$(installDirs) $(dir $@)
-	[ -f $@ ] || sed \
-		-e 's,%(LOCALSTATEDIR)s,$(LOCALSTATEDIR),' \
-		-e 's,%(RUN_DIR)s,$(RUN_DIR),' $< > $@
+	[ -f $@ ] || sed -e 's,%(RUN_DIR)s,$(RUN_DIR),' $< > $@
 
 
 -include $(buildTop)/share/dws/suffix.mk
