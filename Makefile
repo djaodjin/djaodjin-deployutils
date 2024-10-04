@@ -3,7 +3,7 @@
 -include $(buildTop)/share/dws/prefix.mk
 
 srcDir        ?= .
-installTop    ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV),$(abspath $(srcDir)))
+installTop    ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV),$(abspath $(srcDir))/.venv)
 binDir        ?= $(installTop)/bin
 libDir        ?= $(installTop)/lib
 CONFIG_DIR    ?= $(installTop)/etc/testsite

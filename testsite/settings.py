@@ -10,7 +10,7 @@ from deployutils.configs import load_config, update_settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP_NAME = os.path.basename(BASE_DIR)
+APP_NAME = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 RUN_DIR = os.getenv('RUN_DIR', os.getcwd())
 DB_NAME = os.path.join(RUN_DIR, 'db.sqlite')
 DJAODJIN_SECRET_KEY = ""
@@ -21,7 +21,6 @@ ALLOWED_HOSTS = []
 
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
-        location=os.getenv("TESTSITE_SETTINGS_LOCATION", None),
         passphrase=os.getenv("SETTINGS_CRYPT_KEY", None)))
 
 if not hasattr(sys.modules[__name__], "SECRET_KEY"):
