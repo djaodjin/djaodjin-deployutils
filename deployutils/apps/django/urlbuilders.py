@@ -1,4 +1,4 @@
-# Copyright (c) 2021, DjaoDjin inc.
+# Copyright (c) 2024, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,9 +30,10 @@ from .compat import re_path
 # the webapp through the session proxy.
 APP_PREFIX = settings.APP_PREFIX if settings.DEBUG else ""
 
-def url_prefixed(regex, view, name=None):
+def url_prefixed(regex, view, kwargs=None, name=None):
     """
     Returns a urlpattern prefixed with the APP_NAME in debug mode.
     """
     return re_path(r'^%(app_prefix)s%(regex)s' % {
-        'app_prefix': APP_PREFIX, 'regex': regex}, view, name=name)
+        'app_prefix': APP_PREFIX, 'regex': regex}, view,
+        kwargs=kwargs, name=name)
