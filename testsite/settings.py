@@ -30,8 +30,10 @@ if not hasattr(sys.modules[__name__], "SECRET_KEY"):
 
 DJAODJIN_SECRET_KEY = os.getenv('DJAODJIN_SECRET_KEY', DJAODJIN_SECRET_KEY)
 if not DJAODJIN_SECRET_KEY:
-    sys.stderr.write("error: DJAODJIN_SECRET_KEY evaluates to None")
-    sys.exit(1)
+    DJAODJIN_SECRET_KEY = "".join([choice(
+        "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*-_=+") for i in range(50)])
+    sys.stderr.write(
+        "warning: DJAODJIN_SECRET_KEY wasn't set; using random value\n")
 
 # Installed apps
 # --------------
