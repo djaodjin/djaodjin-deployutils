@@ -44,7 +44,9 @@ order to do that. Furthermore the S3 bucket must be configured to be
 web accessible if we either want to serve the resources directly.
 
 Assuming we have an AWS account, we follow these (one-time) steps
-to create our bucket::
+to create our bucket:
+
+.. code-block:: bash
 
     # Install the aws command line tools
     $ pip install awscli
@@ -73,7 +75,9 @@ to create our bucket::
 
 To then upload resources to S3 is easy. Set
 ``DEPLOYUTILS_RESOURCES_REMOTE_LOCATION`` to the bucket and run
-the ``upload_resources`` command::
+the ``upload_resources`` command:
+
+.. code-block:: bash
 
     $ git diff settings.py
     +DEPLOYUTILS_RESOURCES_REMOTE_LOCATION = 's3://_example_'

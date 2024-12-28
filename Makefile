@@ -55,14 +55,14 @@ clean-dbs:
 	[ ! -f $(DB_NAME) ] || rm $(DB_NAME)
 
 
+doc:
+	$(installDirs) build/docs
+	cd $(srcDir) && DJAODJIN_SECRET_KEY=`$(PYTHON) -c 'import sys ; from random import choice ; sys.stdout.write("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789") for i in range(50)]))'` sphinx-build -b html ./docs $(PWD)/build/docs
+
+
 initdb: clean-dbs
 	$(installDirs) $(dir $(DB_NAME))
 	cd $(srcDir) && $(MANAGE) migrate $(RUNSYNCDB) --noinput
-
-
-doc:
-	$(installDirs) build/docs
-	cd $(srcDir) && sphinx-build -b html ./docs $(PWD)/build/docs
 
 
 # !!! Attention !!!
@@ -81,7 +81,7 @@ $(DESTDIR)$(CONFIG_DIR)/credentials: $(srcDir)/testsite/etc/credentials
 		sed \
 		-e "s,\%(SECRET_KEY)s,`$(PYTHON) -c 'import sys ; from random import choice ; sys.stdout.write("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*-_=+") for i in range(50)]))'`," \
 		-e "s,\%(DJAODJIN_SECRET_KEY)s,`$(PYTHON) -c 'import sys ; from random import choice ; sys.stdout.write("".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*-_=+") for i in range(50)]))'`," \
-			$< > $@ ; \
+		$< > $@ ; \
 	else \
 		echo "warning: We are keeping $@ intact but $< contains updates that might affect behavior of the testsite." ; \
 	fi

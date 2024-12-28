@@ -1,17 +1,17 @@
 Welcome to Djaodjin deployutils documentation!
 ==============================================
 
-This project contains Django management commands that we found useful
-to seemlessly move a Django project between developper and production
-machines.
+This repository contains the code for the command line tool and modules
+to seamlessly integrate an appplication with DjaoDjin's
+`HTTP session manager proxy <https://github.com/djaodjin/djaoapp>`_.
 
 Contents:
 
 .. toctree::
    :maxdepth: 1
 
-   upload_resources
-
+   djd
+   deploy-django
 
 Indices and tables
 ==================
