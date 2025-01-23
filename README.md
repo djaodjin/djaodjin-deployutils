@@ -48,12 +48,11 @@ Tested with
 
 - **Python:** 3.7, **Django:** 3.2 ([LTS](https://www.djangoproject.com/download/))
 - **Python:** 3.10, **Django:** 4.2 (latest)
+- **Python:** 3.12, **Django:** 5.1 (next)
 - **Python:** 2.7, **Django:** 1.11 (legacy) - use testsite/requirements-legacy.txt
 
-0.11.0
+0.12.0
 
-  * makes `manages_broker` a property (breaking change)
-  * fixes missing get_context_data
-  * adds message about env variables override
+  * adds support for Django 4.2(LTS) and 5.1
 
 [previous release notes](changelog)
