@@ -35,8 +35,12 @@ dependencies = [
 
 [project.optional-dependencies]
 django = [
+  "Django==3.2.24 ; python_version < '3.9'",
+  "Django==4.2.17 ; python_version >= '3.9' and python_version < '3.12'",
+  "Django==5.1.4 ; python_version >= '3.12'",
   "django-assets>=0.10",
-  "djangorestframework>=3.9.4",
+  "djangorestframework==3.14.0 ; python_version < '3.9'",
+  "djangorestframework==3.15.2 ; python_version >= '3.9'",
   "jinja2>=2.8.1",
   # when you use the timers mixins
   "monotonic>=1.1"
