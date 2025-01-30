@@ -3,6 +3,7 @@ Django settings for deployutils testsite project.
 """
 
 import logging, os, sys
+from random import choice
 
 from deployutils.apps.django.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
@@ -24,7 +25,6 @@ update_settings(sys.modules[__name__],
         passphrase=os.getenv("SETTINGS_CRYPT_KEY", None)))
 
 if not hasattr(sys.modules[__name__], "SECRET_KEY"):
-    from random import choice
     SECRET_KEY = "".join([choice(
         "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^*-_=+") for i in range(50)])
 
