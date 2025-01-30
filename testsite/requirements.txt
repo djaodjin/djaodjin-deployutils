@@ -20,7 +20,7 @@ cryptography==42.0.4
 
 # When DEBUG=1
 django-debug-toolbar==5.0.1 ; python_version >= "3.12"  # Currently in alpha
-django-debug-toolbar==4.4.6 ; python_version >= "3.9"
+django-debug-toolbar==4.4.6 ; python_version >= "3.9" and python_version < "3.12"
 django-debug-toolbar==3.5.0 ; python_version < "3.9"
                                   # 3.4.0 requires Django>=3.2
                                   # 3.2.4 fails with SQLPanel is not scriptable
