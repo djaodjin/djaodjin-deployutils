@@ -1,4 +1,4 @@
-# Copyright (c) 2024, DjaoDjin Inc.
+# Copyright (c) 2025, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,4 +22,4 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.11.1-dev'
+__version__ = '0.12.0'
