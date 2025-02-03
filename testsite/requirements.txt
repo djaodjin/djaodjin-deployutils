@@ -10,13 +10,13 @@ djangorestframework==3.15.2 ; python_version >= "3.9" # Breaking
                                             # 3.15.1. Requires Django
                                             # >=4.2 and Python >=3.8.
 
-Jinja2==3.1.3
+Jinja2==3.1.5
 PyJWT==2.6.0
 python-dateutil==2.8.2
 pytz==2024.2              # This has been obviated by `zoneinfo' and `tzdata'
                           # since 3.9, but we still use it.
 monotonic==1.6
-cryptography==42.0.4
+cryptography==43.0.1
 
 # When DEBUG=1
 django-debug-toolbar==5.0.1 ; python_version >= "3.12"  # Currently in alpha
