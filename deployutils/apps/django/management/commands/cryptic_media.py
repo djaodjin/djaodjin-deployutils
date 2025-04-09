@@ -26,7 +26,7 @@ import hashlib, os
 
 from django.conf import settings as django_settings
 
-from . import ResourceCommand
+from .base import ResourceCommand
 
 
 class Command(ResourceCommand):

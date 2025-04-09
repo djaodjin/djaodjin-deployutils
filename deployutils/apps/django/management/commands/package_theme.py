@@ -27,7 +27,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from . import ResourceCommand
+from .base import ResourceCommand
 from ... import settings
 from ...themes import (init_build_and_install_dirs, package_assets,
     package_theme, fill_package)

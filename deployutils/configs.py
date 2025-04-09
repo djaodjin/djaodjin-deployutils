@@ -144,7 +144,7 @@ def load_config(app_name, *args, **kwargs):
                             varvalue = eval(look.group(2), {}, {})
                         else:
                             sys.stderr.write(
-                                "set %s from environment variable" % varname)
+                                "set %s from environment variable\n" % varname)
                         config.update({varname: varvalue})
                     except Exception as err:
                         sys.stderr.write('error: %s\n' % str(err))
@@ -254,7 +254,15 @@ def update_settings(module, config):
         #pylint:disable=protected-access
         if isinstance(value, six.string_types) and 'LOCALSTATEDIR' in value:
             value = value % {'LOCALSTATEDIR': module.BASE_DIR + '/var'}
-        setattr(module, key.upper(), value)
+        if not (value is None or (
+                isinstance(value, six.string_types) and value == "")):
+            # If the value in credentials / site.conf is None, or an empty
+            # string, we don't override the default value.
+            # This enables a stock credentials / site.conf to be loaded
+            # in a Docker container that enables to override settings through
+            # environment variables, without changing the default values
+            # defined before the call to `update_settings`.
+            setattr(module, key.upper(), value)
 
     if hasattr(module, 'LOG_FILE') and module.LOG_FILE:
         for pathname in [module.LOG_FILE]:

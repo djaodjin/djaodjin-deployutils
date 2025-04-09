@@ -28,7 +28,7 @@ import logging, subprocess
 
 from ... import settings
 from .....copy import download
-from . import ResourceCommand
+from .base import ResourceCommand
 
 
 class Command(ResourceCommand):

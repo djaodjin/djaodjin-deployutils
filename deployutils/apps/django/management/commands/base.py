@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2022, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,29 +23,49 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
-import logging, subprocess
+import datetime, logging, os, subprocess, sys
 
 from django.conf import settings as django_settings
+from django.core.management.base import BaseCommand
 
+from .....filesys import list_local
 from ... import settings
-from .....copy import upload
-from .base import ResourceCommand, build_assets
+
+LOGGER = logging.getLogger(__name__)
 
 
-class Command(ResourceCommand):
-    help = "Upload resouces to stage."
+class ResourceCommand(BaseCommand):
+    """Commands intended to interact with the resources server directly."""
+
+    def __init__(self):
+        BaseCommand.__init__(self)
+        self.webapp = os.path.basename(
+            os.path.dirname(os.path.abspath(sys.argv[0])))
+        self.deployed_path = os.path.join(
+            settings.DEPLOYED_WEBAPP_ROOT, self.webapp)
+
+    def add_arguments(self, parser):
+        super(ResourceCommand, self).add_arguments(parser)
+        parser.add_argument('-n', action='store_true', dest='no_execute',
+            default=False,
+            help='Print but do not execute')
 
     def handle(self, *args, **options):
-        ResourceCommand.handle(self, *args, **options)
-        try:
-            build_assets()
-            upload(settings.RESOURCES_REMOTE_LOCATION,
-                prefix=settings.MULTITIER_RESOURCES_ROOT,
-                static_root=django_settings.STATIC_ROOT,
-                dry_run=settings.DRY_RUN)
-            logging.info("uploaded resources for %s", self.webapp)
-        except subprocess.CalledProcessError as err:
-            logging.exception(
-                "upload_resources %s caught exception: %s", self.webapp, err)
+        settings.DRY_RUN = options['no_execute']
+
+
+def build_assets():
+    """Call django_assets ./manage.py assets build if the app is present."""
+    cwd = os.getcwd()
+    try:
+        #pylint:disable=import-outside-toplevel
+        from webassets.script import GenericArgparseImplementation
+        from django_assets.env import get_env
+        prog = "%s assets" % os.path.basename(sys.argv[0])
+        impl = GenericArgparseImplementation(
+            env=get_env(), log=LOGGER, no_global_options=True, prog=prog)
+        impl.run_with_argv(["build"])
+    except ImportError:
+        pass
+    os.chdir(cwd)
