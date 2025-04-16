@@ -49,12 +49,14 @@ class RequestFilter(logging.Filter):
                 record.username = '-'
             meta = getattr(request, 'META', {})
             record.remote_addr = meta.get('REMOTE_ADDR', '-')
+            record.http_host = meta.get('HTTP_HOST', '-')
             record.http_user_agent = meta.get('HTTP_USER_AGENT', '-')
             if not hasattr(record, 'request'):
                 record.request = request
         else:
             record.username = '-'
             record.remote_addr = '-'
+            record.http_host = '-'
             record.http_user_agent = '-'
         return True
 
@@ -71,10 +73,11 @@ class JSONFormatter(logging.Formatter):
             'http_user_agent',
             'log_level',
             'message',
-            'http_path',
-            'remote_addr',
+            'http_host',
             'http_method',
+            'http_path',
             'http_version',
+            'remote_addr',
             'username'
         ],
         'traceback': [
