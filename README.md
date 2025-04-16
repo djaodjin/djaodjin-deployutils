@@ -50,8 +50,9 @@ Tested with
 - **Python:** 3.12, **Django:** 5.1 (next)
 - **Python:** 3.7, **Django:** 3.2 (legacy)
 
-0.12.1
+0.12.2
 
+  * adds http_host to log record
   * prevents override of default values if settings var is None or empoty string
   * adds support for Django 4.2(LTS) and 5.1
 
