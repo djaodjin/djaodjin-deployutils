@@ -1,4 +1,4 @@
-# Copyright (c) 2022, DjaoDjin inc.
+# Copyright (c) 2025, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ from django.views.generic.base import ContextMixin, TemplateResponseMixin
 from .compat import six
 from .mixins import AccessiblesMixin
 from .templatetags.deployutils_prefixtags import site_url
+from ...helpers import update_context_urls
 
 
 def _get_accept_list(request):
@@ -121,13 +122,26 @@ class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
         for org in candidates:
             kwargs.update({self.account_url_kwarg: org['slug']})
             url = self.get_redirect_url(*args, **kwargs)
-            print_name = org.get('printable_name', org.get('slug', ""))
-            redirects += [(url, print_name)]
+            slug = org.get('slug', "")
+            print_name = org.get('printable_name', slug)
+            redirects += [{'profile': {
+                'slug': slug, 'printable_name': print_name},
+                'home_url': url}]
         kwargs.update({
             self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
         context = self.get_context_data(**kwargs)
-        context.update({'redirects': redirects,
+        context.update({'redirects': {'results': redirects},
             'next': self.get_redirect_url(*args, **kwargs).replace(
                 'PATTERN-%s' % self.account_url_kwarg,
                 ':%s' % self.account_url_kwarg)})
+        update_context_urls(context, {
+            'api_candidates': site_url("/api/accounts/profiles"),
+            'user': {
+                'api_accessibles':
+                  site_url("/api/users/%s/accessibles" % str(request.user)),
+                'api_profile_create':
+                  site_url("/api/users/%s/profiles" % str(request.user)),
+                'accessibles': site_url("/users/%s/roles/" % str(request.user))
+            },
+        })
         return self.render_to_response(context)
