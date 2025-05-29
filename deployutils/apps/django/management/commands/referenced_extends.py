@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,9 @@ from ...themes import get_template_search_path
 
 class Command(ResourceCommand):
     help = "Display an inheritance tree through ``extends`` of templates."
+    edges = []
 
     def handle(self, *args, **options):
-        self.edges = []
         for template_dir in get_template_search_path():
             self._load_templates(
                 template_dir, template_roots=get_template_search_path())

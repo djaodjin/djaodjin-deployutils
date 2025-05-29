@@ -76,15 +76,16 @@ def download(remote_location, remotes=None, prefix="", dry_run=False):
                 '%s/./' % remote_location, dest_root], dry_run=dry_run)
 
 
-def download_theme(args, base_url, api_key, prefix=None, templates_only=False):
+def download_theme(args, base_url, api_key, prefix=None, templates_only=False,
+                   timeout=None):
     """
     Downloads a project theme.
     """
-    #pylint:disable=unused-argument
+    #pylint:disable=too-many-arguments,unused-argument
     api_themes_url = base_url + '/themes/download/'
     if templates_only:
         api_themes_url += '?templates_only=true'
-    resp = requests.get(api_themes_url, auth=(api_key, ""))
+    resp = requests.get(api_themes_url, auth=(api_key, ""), timeout=timeout)
     LOGGER.info("GET %s returns %d", api_themes_url, resp.status_code)
     fname = re.findall(r'filename="(.+)"',
         resp.headers['content-disposition'])[0]
@@ -135,7 +136,7 @@ def upload(remote_location, remotes=None, ignores=None,
         shell_command(cmdline, dry_run=dry_run)
 
 
-def upload_theme(args, base_url, api_key, prefix=None, templates_only=False):
+def upload_theme(args, base_url, api_key, prefix=None, timeout=None):
     """
     Uploads a new theme for a project.
     """
@@ -183,6 +184,7 @@ def upload_theme(args, base_url, api_key, prefix=None, templates_only=False):
     api_themes_url = base_url + '/api/themes'
     with open(zip_filename, 'rb') as file_obj:
         files = {'file': (os.path.basename(zip_filename), file_obj)}
-        resp = requests.post(api_themes_url, files=files, auth=(api_key, ""))
+        resp = requests.post(api_themes_url, files=files, auth=(api_key, ""),
+            timeout=timeout)
     LOGGER.info("POST %s returns %d %s",
         api_themes_url, resp.status_code, resp.text)

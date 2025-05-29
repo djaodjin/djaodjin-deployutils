@@ -63,8 +63,8 @@ class AccessiblesMixin(object):
         must be subscribed to the plan.
         """
         if not hasattr(self, '_accessible_plans'):
-            self._accessible_plans = set([plan['slug']
-                for plan in self.get_accessible_plans(self.request)])
+            self._accessible_plans = {plan['slug']
+                for plan in self.get_accessible_plans(self.request)}
         return self._accessible_plans
 
     @property
@@ -74,8 +74,8 @@ class AccessiblesMixin(object):
         on the profile.
         """
         if not hasattr(self, '_accessible_profiles'):
-            self._accessible_profiles = set([org['slug']
-                for org in self.get_accessible_profiles(self.request)])
+            self._accessible_profiles = {org['slug']
+                for org in self.get_accessible_profiles(self.request)}
         return self._accessible_profiles
 
     def get_redirect_roles(self, request):

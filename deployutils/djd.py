@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2022, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -213,7 +213,7 @@ def ssh_reverse_tunnel(args, base_url, api_key, prefix=None):
         remote_host])
 
 
-def pub_deploy(args, project="", account="", api_key=""):
+def pub_deploy(args, project="", account="", api_key="", timeout=None):
     """Deploy a container for a project.
     """
     base_url, api_key, updated = get_project_connect(
@@ -234,23 +234,25 @@ def pub_deploy(args, project="", account="", api_key=""):
     container_location = args[0] if args else None
     if container_location:
         data = {'location': container_location}
-    resp = requests.post(api_container_url, data=data, auth=(api_key, ""))
+    resp = requests.post(api_container_url, data=data, auth=(api_key, ""),
+        timeout=timeout)
     LOGGER.info("POST %s returns %d %s",
         api_container_url, resp.status_code, resp.text)
 
 
 def pub_download(args, project="", base_url="", api_key="",
-                 templates_only=False):
+                 templates_only=False, timeout=None):
     """Download a theme package for a project.
   --templates-only    download templates only,
                       skip assets.
     """
+    #pylint:disable=too-many-arguments
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
     if updated:
         save_config()
     download_theme(args, base_url, api_key, prefix=project,
-        templates_only=templates_only)
+        templates_only=templates_only, timeout=timeout)
 
 
 def pub_init(args, project="", account="", base_url="",
@@ -283,21 +285,21 @@ def pub_tunnel(args, project="", base_url="", api_key=""):
     ssh_reverse_tunnel(args, base_url, api_key, prefix=project)
 
 
-def pub_upload(args, project="", base_url="", api_key="", templates_only=False):
+def pub_upload(args, project="", base_url="", api_key="", timeout=None):
     """Upload a theme package (or directory) for a project.
     """
     project, base_url, api_key, updated = get_project_config(
         project=project, base_url=base_url, api_key=api_key)
     if updated:
         save_config()
-    upload_theme(args, base_url, api_key, prefix=project,
-        templates_only=templates_only)
+    upload_theme(args, base_url, api_key, prefix=project, timeout=timeout)
 
 
 def main(args):
     """
     Main Entry Point
     """
+    #pylint:disable=global-statement
     global CONFIG_FILENAME
     try:
         parser = argparse.ArgumentParser(
@@ -342,7 +344,7 @@ def main(args):
 
     except RuntimeError as err:
         LOGGER.error(err)
-        return err.code
+        return 1
 
 
 def cli_main():

@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,8 @@ from django.conf import settings as django_settings
 
 from ... import settings
 from .....copy import shell_command
-from . import ResourceCommand, list_local
+from .....filesys import list_local
+from .base import ResourceCommand
 
 
 class Command(ResourceCommand):

@@ -1,4 +1,4 @@
-# Copyright (c) 2022, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,12 +24,10 @@
 
 from __future__ import absolute_import
 
-import datetime, logging, os, subprocess, sys
+import logging, os, sys
 
-from django.conf import settings as django_settings
 from django.core.management.base import BaseCommand
 
-from .....filesys import list_local
 from ... import settings
 
 LOGGER = logging.getLogger(__name__)
