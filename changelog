@@ -1,3 +1,10 @@
+0.13.0
+
+ * evals settings passed through environment variables
+ * matches saas profile redirects
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Wed, 28 May 2025 22:05:00 -0700
+
 0.12.2
 
   * adds http_host to log record
