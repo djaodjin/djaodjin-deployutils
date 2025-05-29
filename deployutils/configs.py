@@ -125,6 +125,14 @@ def load_config(app_name, *args, **kwargs):
                 look = re.match(r'(\w+)\s*=\s*(.*)', line)
                 if look:
                     try:
+                        varname = look.group(1).upper()
+                        varvalue = os.getenv(varname)
+                        if varvalue is None:
+                            # Environment variables override the config file
+                            varvalue = look.group(2)
+                        else:
+                            sys.stderr.write(
+                                "set %s from environment variable\n" % varname)
                         # We used to parse the file line by line.
                         # Once Django 1.5 introduced ALLOWED_HOSTS
                         # (a tuple that definitely belongs to the site.conf
@@ -137,14 +145,8 @@ def load_config(app_name, *args, **kwargs):
                         # for this:
                         # http://www.voidspace.org.uk/python/configobj.html
                         #pylint:disable=eval-used
-                        varname = look.group(1).upper()
-                        varvalue = os.getenv(varname)
-                        if varvalue is None:
-                            # Environment variables override the config file
-                            varvalue = eval(look.group(2), {}, {})
-                        else:
-                            sys.stderr.write(
-                                "set %s from environment variable\n" % varname)
+                        if isinstance(varvalue, six.string_types):
+                            varvalue = eval(varvalue, {}, {})
                         config.update({varname: varvalue})
                     except Exception as err:
                         sys.stderr.write('error: %s\n' % str(err))
