@@ -50,7 +50,7 @@ Tested with
 - **Python:** 3.12, **Django:** 5.1 (next)
 - **Python:** 3.7, **Django:** 3.2 (legacy)
 
-0.13.0
+0.13.1
 
  * evals settings passed through environment variables
  * matches saas profile redirects

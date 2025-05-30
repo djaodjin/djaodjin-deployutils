@@ -146,7 +146,10 @@ def load_config(app_name, *args, **kwargs):
                         # http://www.voidspace.org.uk/python/configobj.html
                         #pylint:disable=eval-used
                         if isinstance(varvalue, six.string_types):
-                            varvalue = eval(varvalue, {}, {})
+                            try:
+                                varvalue = eval(varvalue, {}, {})
+                            except SyntaxError:
+                                pass
                         config.update({varname: varvalue})
                     except Exception as err:
                         sys.stderr.write('error: %s\n' % str(err))

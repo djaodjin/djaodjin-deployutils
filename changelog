@@ -1,3 +1,9 @@
+0.13.1
+
+ * fixes eval of settings passed through environment variables
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Fri, 30 May 2025 00:35:00 -0700
+
 0.13.0
 
  * evals settings passed through environment variables
