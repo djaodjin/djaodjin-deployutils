@@ -3,7 +3,7 @@ FROM python:3.10-slim-bookworm
 #2025-04-15: python:3.10-slim-bookworm - Python 3.10.17, Debian 12.10 (Bookworm)
 #2023-04-21: python:3.10-slim-bullseye - Python 3.10.11, Debian 11.0 (Bullseye)
 
-LABEL org.opencontainers.image.source https://github.com/djaodjin/djaodjin-deployutils
+LABEL org.opencontainers.image.source=https://github.com/djaodjin/djaodjin-deployutils
 
 # Print version info for build log
 RUN echo "Building with" `python --version` '('`which python`')' "on Debian" `cat /etc/debian_version` "..."
