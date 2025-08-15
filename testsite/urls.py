@@ -1,4 +1,4 @@
-# Copyright (c) 2021, DjaoDjin inc.
+# Copyright (c) 2025, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,13 @@ URLs for deployutils testsite.
 """
 
 from django.conf import settings
-from deployutils.apps.django.compat import include, re_path
+from deployutils.apps.django_deployutils.compat import include, re_path
 
 from .views import IndexView
 
 
 if settings.DEBUG:
+    #pylint:disable=ungrouped-imports
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
     import debug_toolbar
 
@@ -44,6 +45,6 @@ else:
     urlpatterns = []
 
 urlpatterns += [
-    re_path(r'^', include('deployutils.apps.django.mockup.urls')),
+    re_path(r'^', include('deployutils.apps.django_deployutils.mockup.urls')),
     re_path(r'^(?P<page>\S+)?$', IndexView.as_view(), name='index'),
 ]

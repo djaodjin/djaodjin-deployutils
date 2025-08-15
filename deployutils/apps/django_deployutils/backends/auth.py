@@ -33,8 +33,9 @@ from django.db.utils import DatabaseError
 from ..compat import check_signature, six
 from ....helpers import full_name_natural_split
 
-# Beware that if you are using `deployutils.apps.django.logging.RequestFilter`
-# to add `%(username)s` to log entries, there will be a recursive loop through
+# Beware that if you are using
+# `deployutils.apps.django_deployutils.logging.RequestFilter` to add
+# `%(username)s` to log entries, there will be a recursive loop through
 # django.contrib.auth calls coming here.
 LOGGER = logging.getLogger(__name__)
 

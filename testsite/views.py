@@ -1,4 +1,4 @@
-# Copyright (c) 2018, DjaoDjin inc.
+# Copyright (c) 2025, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 
 from django.conf import settings
 from django.views.generic import TemplateView
-from deployutils.apps.django.compat import is_authenticated
+from deployutils.apps.django_deployutils.compat import is_authenticated
 
 
 class IndexView(TemplateView):

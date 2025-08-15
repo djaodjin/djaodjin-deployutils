@@ -27,24 +27,24 @@ updating your `settings.py` as such:
          'django.contrib.sessions',
          'django.contrib.messages',
          'django.contrib.staticfiles',
-    +    'deployutils.apps.django',
+    +    'deployutils.apps.django_deployutils',
      )
 
      MIDDLEWARE_CLASSES = (
          'django.middleware.security.SecurityMiddleware',
     -    'django.contrib.sessions.middleware.SessionMiddleware',
-    +    'deployutils.apps.django.middleware.SessionMiddleware',
+    +    'deployutils.apps.django_deployutils.middleware.SessionMiddleware',
          'django.middleware.common.CommonMiddleware',
          'django.middleware.csrf.CsrfViewMiddleware',
          'django.contrib.auth.middleware.AuthenticationMiddleware',
      )
 
     +AUTHENTICATION_BACKENDS = (
-    +    'deployutils.apps.django.backends.auth.ProxyUserBackend',
+    +    'deployutils.apps.django_deployutils.backends.auth.ProxyUserBackend',
     +)
 
     # Session settings
-    +SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
+    +SESSION_ENGINE = 'deployutils.apps.django_deployutils.backends.encrypted_cookies'
 
     +DEPLOYUTILS = {
     +    # Hardcoded mockups here.
@@ -79,7 +79,7 @@ Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
 
      urlpatterns = [
      ...
-    +    re_path(r'^', include('deployutils.apps.django.mockup.urls')),
+    +    re_path(r'^', include('deployutils.apps.django_deployutils.mockup.urls')),
      ...
      ]
 
@@ -91,7 +91,7 @@ The Django integration provides a templatetag to rewrite URLs that are
 embeded in templates to facilitate using assets in different environments
 (ex: development, production).
 
-.. autofunction:: deployutils.apps.django.templatetags.deployutils_prefixtags.asset
+.. autofunction:: deployutils.apps.django_deployutils.templatetags.deployutils_prefixtags.asset
 
 
 Helper mixins
@@ -102,12 +102,12 @@ roles, organizations and subscriptions attached to a user, deployutils
 provides a set of useful mixins that you can extend
 in your `Views` in order to access the session data:
 
-- `deployutils.apps.django.mixins.AccessiblesMixin <https://github.com/djaodjin/djaodjin-deployutils/blob/a72d73072c72a9538d87d3427d36fd59f1da2726/deployutils/apps/django/mixins.py#L38>`_ to test if a user has a specific role on an organization.
-- `deployutils.apps.django.mixins.AccountMixin <https://github.com/djaodjin/djaodjin-deployutils/blob/a72d73072c72a9538d87d3427d36fd59f1da2726/deployutils/apps/django/mixins.py#L130>`_ to retrieve an account object associated to a slug parameter
+- `deployutils.apps.django_deployutils.mixins.AccessiblesMixin <https://github.com/djaodjin/djaodjin-deployutils/blob/main/deployutils/apps/django/mixins/base.py#L51>`_ to test if a user has a specific role on an organization.
+- `deployutils.apps.django_deployutils.mixins.AccountMixin <https://github.com/djaodjin/djaodjin-deployutils/blob/main/deployutils/apps/django/mixins/base.py#L174>`_ to retrieve an account object associated to a slug parameter
 
 
 we have seen previously that `request.user` is set automatically by
-`deployutils.apps.django.middleware.SessionMiddleware`.
+`deployutils.apps.django_deployutils.middleware.SessionMiddleware`.
 You can also access the raw session data by accessing it by key in
 `request.session`. For example to retrieve the dictionnary of roles
 for the authenticated user, use the following code:
@@ -117,7 +117,7 @@ for the authenticated user, use the following code:
     roles = request.session.get('roles', {})
 
 
-You can also add `deployutils.apps.django.mixins.AccessiblesMixin`
+You can also add `deployutils.apps.django_deployutils.mixins.AccessiblesMixin`
 to your views and benefit from often used methods such as
 `managed_accounts`, the list of all organizations managed
 by the authenticated user. Example:
@@ -125,7 +125,7 @@ by the authenticated user. Example:
 .. code-block:: python
 
     from django.views.generic import TemplateView
-    from deployutils.apps.django.mixins import AccessiblesMixin
+    from deployutils.apps.django_deployutils.mixins import AccessiblesMixin
 
     class AppView(AccessiblesMixin, TemplateView):
     ...
@@ -137,12 +137,12 @@ by the authenticated user. Example:
 
 Other methods available in the mixin are:
 
-.. autoproperty:: deployutils.apps.django.mixins.AccessiblesMixin.accessible_plans
-.. autoproperty:: deployutils.apps.django.mixins.AccessiblesMixin.accessible_profiles
-.. automethod:: deployutils.apps.django.mixins.AccessiblesMixin.get_accessible_plans
-.. automethod:: deployutils.apps.django.mixins.AccessiblesMixin.get_accessible_profiles
-.. automethod:: deployutils.apps.django.mixins.AccessiblesMixin.get_managed
-.. automethod:: deployutils.apps.django.mixins.AccessiblesMixin.has_role
-.. autoproperty:: deployutils.apps.django.mixins.AccessiblesMixin.managed_accounts
-.. automethod:: deployutils.apps.django.mixins.AccessiblesMixin.manages
-.. autoproperty:: deployutils.apps.django.mixins.AccessiblesMixin.manages_broker
+.. autoproperty:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.accessible_plans
+.. autoproperty:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.accessible_profiles
+.. automethod:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.get_accessible_plans
+.. automethod:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.get_accessible_profiles
+.. automethod:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.get_managed
+.. automethod:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.has_role
+.. autoproperty:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.managed_accounts
+.. automethod:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.manages
+.. autoproperty:: deployutils.apps.django_deployutils.mixins.AccessiblesMixin.manages_broker

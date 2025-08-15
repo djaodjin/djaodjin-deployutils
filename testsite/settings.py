@@ -2,10 +2,10 @@
 Django settings for deployutils testsite project.
 """
 
-import logging, os, sys
+import os, sys
 from random import choice
 
-from deployutils.apps.django.compat import reverse_lazy
+from deployutils.apps.django_deployutils.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
 
 APP_VERSION = "1.0"
@@ -19,6 +19,7 @@ DJAODJIN_SECRET_KEY = ""
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ALLOWED_HOSTS = []
+LOG_FILE = None
 
 update_settings(sys.modules[__name__],
     load_config(APP_NAME, 'credentials', 'site.conf', verbose=True,
@@ -51,7 +52,7 @@ INSTALLED_APPS = ENV_INSTALLED_APPS + (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'deployutils.apps.django',
+    'deployutils.apps.django_deployutils',
     'testsite'
 )
 
@@ -69,7 +70,7 @@ LOGGING = {
             'datefmt': '%d/%b/%Y:%H:%M:%S %z'
         },
         'json': {
-            '()': 'deployutils.apps.django.logging.JSONFormatter',
+            '()': 'deployutils.apps.django_deployutils.logging.JSONFormatter',
             'format':
             'gunicorn.' + APP_NAME + '.app: [%(process)d] '\
                 '%(log_level)s %(remote_addr)s %(http_host)s %(username)s'\
@@ -132,7 +133,7 @@ else:
 
 MIDDLEWARE += (
     'django.middleware.security.SecurityMiddleware',
-    'deployutils.apps.django.middleware.SessionMiddleware',
+    'deployutils.apps.django_deployutils.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -196,8 +197,8 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME':
 # The default session serializer switched to JSONSerializer in Django 1.6
 # but just to be sure:
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
-#SESSION_ENGINE = 'deployutils.apps.django.backends.jwt_session_store'
+SESSION_ENGINE = 'deployutils.apps.django_deployutils.backends.encrypted_cookies'
+#SESSION_ENGINE = 'deployutils.apps.django_deployutils.backends.jwt_session_store'
 
 # The Django Middleware expects to find the authentication backend
 # before returning an authenticated user model.
@@ -214,7 +215,7 @@ SESSION_ENGINE = 'deployutils.apps.django.backends.encrypted_cookies'
 #        if backend_path in settings.AUTHENTICATION_BACKENDS:
 #            backend = load_backend(backend_path)
 AUTHENTICATION_BACKENDS = (
-    'deployutils.apps.django.backends.auth.ProxyUserBackend',
+    'deployutils.apps.django_deployutils.backends.auth.ProxyUserBackend',
 #    'django.contrib.auth.backends.RemoteUserBackend',
 )
 
