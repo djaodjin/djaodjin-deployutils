@@ -1,4 +1,4 @@
-# Copyright (c) 2022, DjaoDjin inc.
+# Copyright (c) 2025, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,54 @@ from importlib import import_module
 
 from django.conf import settings as django_settings
 from django.http import Http404
-from rest_framework import generics, status
+from rest_framework import generics, renderers, serializers, status
 from rest_framework.response import Response
 import jwt
 
 from .. import settings
-from ..compat import six
+from ..compat import is_authenticated, six
 from ....helpers import as_timestamp, datetime_or_now
 
 LOGGER = logging.getLogger(__name__)
+
+
+class CredentialsSerializer(serializers.Serializer):
+    """
+    All secrets can be optional during authentication such that we are able to
+    raise a `ValidationError` when the authentication should proceed through
+    a SSO provider for a particular user.
+    """
+    username = serializers.CharField(required=True,
+        help_text="Username to identify the account")
+
+    # If we define those fields in a Mixin, they don't show up
+    # in the API documentation.
+    password = serializers.CharField(required=False, write_only=True,
+        style={'input_type': 'password'},
+        help_text="Password of the user making the HTTP request")
+    otp_code = serializers.IntegerField(required=False, write_only=True,
+        style={'input_type': 'password'},
+        help_text="One-time code. This field will be checked against"\
+            " an expected code when multi-factor authentication (MFA)"\
+            " is enabled.")
+    email_code = serializers.IntegerField(required=False, write_only=True,
+        style={'input_type': 'password'},
+        help_text="Email verification code.")
+    phone_code = serializers.IntegerField(required=False, write_only=True,
+        style={'input_type': 'password'},
+        help_text="Phone verification code.")
+
+    class Meta:
+        fields = ('username', 'password', 'otp_code',
+            'email_code', 'phone_code')
+
+
+    def create(self, validated_data):
+        raise RuntimeError('`create()` should not be called.')
+
+    def update(self, instance, validated_data):
+        raise RuntimeError('`update()` should not be called.')
+
 
 
 class LoginAPIView(generics.CreateAPIView):
@@ -51,6 +90,8 @@ class LoginAPIView(generics.CreateAPIView):
     authentication.
     """
     schema = None
+    serializer_class = CredentialsSerializer
+    renderer_classes = (renderers.JSONRenderer,)
 
     def create_token(self, user_payload, expires_at=None):
         if not expires_at:
@@ -68,6 +109,12 @@ class LoginAPIView(generics.CreateAPIView):
             # PyJWT==2.0.1 already returns an oject of type `str`.
             pass
         return Response({'token': token}, status=status.HTTP_201_CREATED)
+
+    def get(self, request, *args, **kwargs):
+        if not is_authenticated(request):
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
+        user_payload = settings.MOCKUP_SESSIONS[request.user.username]
+        return self.create_token(user_payload)
 
     def post(self, request, *args, **kwargs):
         engine = import_module(django_settings.SESSION_ENGINE)
