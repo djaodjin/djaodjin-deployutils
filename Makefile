@@ -7,7 +7,7 @@ installTop    ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV),$(abspath $(srcDir))/.venv)
 binDir        ?= $(installTop)/bin
 libDir        ?= $(installTop)/lib
 CONFIG_DIR    ?= $(installTop)/etc/testsite
-RUN_DIR       ?= $(installTop)/var/run
+RUN_DIR       ?= $(abspath $(srcDir))
 
 installDirs   ?= install -d
 installFiles  ?= install -p -m 644
@@ -16,6 +16,7 @@ PYTHON        := python
 PIP           := pip
 TWINE         := twine
 
+ASSETS_DIR    ?= $(srcDir)/testsite/static
 DB_NAME       ?= $(RUN_DIR)/db.sqlite
 
 $(info Path to python executable (i.e. PYTHON) while running make: $(shell which $(PYTHON)))
@@ -27,6 +28,8 @@ MANAGE        := TESTSITE_SETTINGS_LOCATION=$(CONFIG_DIR) RUN_DIR=$(RUN_DIR) $(P
 # Implementation Note: We have to wait for the config files to be installed
 # before running the manage.py command (else missing SECRECT_KEY).
 RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(MANAGE) migrate --help 2>/dev/null)),--run-syncdb,)
+
+APP_VERSION = $(shell $(MANAGE) shell -c 'from django.conf import settings ; print(settings.APP_VERSION)' 2>/dev/null)
 
 
 install::
@@ -43,7 +46,11 @@ dist::
 	$(TWINE) upload dist/*
 
 
-build-assets: vendor-assets-prerequisites
+build-assets: $(ASSETS_DIR)/cache/app-$(APP_VERSION).js
+
+$(ASSETS_DIR)/cache/app-$(APP_VERSION).js: $(srcDir)/testsite/static/js/app.js
+	$(installDirs) $(dir $@)
+	$(installFiles) $< $@
 
 
 clean:: clean-dbs

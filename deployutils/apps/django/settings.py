@@ -45,7 +45,7 @@ _SETTINGS = {
     'APP_PREFIX': getattr(settings, 'APP_PREFIX',
         '%s/' % getattr(settings, 'APP_NAME',
         os.path.basename(settings.BASE_DIR))),
-    'ASSETS_CDN': {},
+    'ASSETS_CDN': getattr(settings, 'ASSETS_CDN'),
     'BACKEND_SESSION_STORE': None,
     'DEBUG': getattr(settings, 'DEBUG', None),
     'DEPLOYED_WEBAPP_ROOT': '/var/www',

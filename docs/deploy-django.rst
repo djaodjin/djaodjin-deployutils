@@ -83,6 +83,17 @@ Create a ``credentials`` file that contains the ``DJAODJIN_SECRET_KEY``.
      ...
      ]
 
+
+Template tags
+-------------
+
+The Django integration provides a templatetag to rewrite URLs that are
+embeded in templates to facilitate using assets in different environments
+(ex: development, production).
+
+.. autofunction:: deployutils.apps.django.templatetags.deployutils_prefixtags.asset
+
+
 Helper mixins
 -------------
 

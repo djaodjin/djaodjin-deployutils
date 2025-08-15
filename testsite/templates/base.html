@@ -4,24 +4,7 @@
 <html>
 <head>
   <title>Deployutils Testsite</title>
-  <script type="text/javascript" src="/static/vendor/jquery.js"></script>
-  {% if csrf_token %}
-  <meta name="csrf-token" content="{{csrf_token}}">
-  <script type="text/javascript">
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-    $.ajaxSetup({
-        crossDomain: false, // obviates need for sameOrigin test
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type)) {
-                xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
-            }
-        }
-    });
-  </script>
-  {% endif %}
+  <script type="text/javascript" src="{{'/static/vendor/jquery.js'|asset}}"></script>
   {% block localheader %}{% endblock %}
 </head>
 <body>
@@ -51,5 +34,7 @@
   {% block content %}{% endblock %}
   {% block footer %}{% endblock %}
 </body>
-{% block bodyscripts %}{% endblock %}
+<script type="text/javascript" src="{{'/static/cache/app.js'|asset}}"></script>
+{% block bodyscripts %}
+{% endblock %}
 </html>

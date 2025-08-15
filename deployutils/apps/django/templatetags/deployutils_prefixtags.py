@@ -29,21 +29,95 @@ from ..compat import six, urljoin
 
 register = template.Library()
 
+URL_SEP = '/'
+
 
 @register.filter()
 def asset(path):
     """
-    *Mockup*: adds the appropriate url or path prefix.
+    Static assets are often fetched from different locations in development and
+    production environments. CSS/Javascript assets also go through different
+    build workflows.
+
+    To support the various scenarios, the `asset` template tag
+    (i.e. `{{'/static/img/logo.png'|asset}}`) rewrites the path passed
+    as parameter based on the `ASSETS_CDN` settings.
+
+    As an example, we configure the project to serve all media files
+    from an asset server in a production environment, while serving
+    the media assets locally in a development environment.
+
+    .. code-block::
+
+        # templates/index.html
+        <img src="{{'/static/img/logo.png'|asset}}">
+
+    .. code-block::
+
+        # testsite/settings.py
+        ASSETS_CDN = {
+            '/static/img/': 'https://www.example.com/static/img/'
+        }
+
+    When we add a compiled application `.js` file, we will want to introduce
+    a unique versioning to bypass any caching issues when that file
+    is deployed in production.
+
+    .. code-block::
+
+        # templates/base.html
+        <script type="text/javascript" src="{{'/static/cache/app.js'|asset}}"></script>
+
+    .. code-block::
+
+        # testsite/settings.py
+        + APP_VERSION = "1.0"
+          ASSETS_CDN = {
+        +    '/static/cache/app.js': '/static/cache/app-%s.js' % APP_VERSION,
+             '/static/img/': 'https://www.djaodjin.com/static/img/'
+          }
+
+    If we intent to bypass the build workflow, and use source files directly
+    in a development environment, we would modify the template file as such:
+
+    .. code-block::
+
+        # templates/base.html
+        + {% if DEBUG %}
+        + <script type="text/javascript" src="{{'/static/js/app.js'|asset}}"></script>
+        + {% else %}
+          <script type="text/javascript" src="{{'/static/cache/app.js'|asset}}"></script>
+        + {% endif %}
     """
-    if settings.DEBUG and path in settings.ASSETS_CDN:
-        return settings.ASSETS_CDN[path]
-    return site_url(path)
+    path_parts = path.split(URL_SEP)
+    for idx in range(len(path_parts), 0, -1):
+        path_prefix = URL_SEP.join(path_parts[:idx])
+        if path_prefix in settings.ASSETS_CDN:
+            cdn_path = urljoin(settings.ASSETS_CDN[path_prefix],
+                URL_SEP.join(path_parts[idx:]))
+            return cdn_path
+        path_prefix += URL_SEP
+        if path_prefix in settings.ASSETS_CDN:
+            cdn_path = urljoin(settings.ASSETS_CDN[path_prefix],
+                URL_SEP.join(path_parts[idx:]))
+            return cdn_path
+    if settings.DEBUG and hasattr(settings, 'APP_NAME'):
+        path_prefix = '/%s' % settings.APP_NAME
+        if not path.startswith(path_prefix):
+            return urljoin(path_prefix, path)
+    return path
 
 
 @register.filter()
 def site_url(request):
     """
-    *Mockup*: adds the path prefix when required.
+    The `site_url` template tag mocks up the
+    `multitier <https://github.com/djaodjin/djaodjin-multitier>`_ when
+    sites are configured to use a path prefix.
+
+    This is especially useful in development environments, both
+    `djaoapp <https://github.com/djaodjin/djaoapp>`_ and multiple projects
+    will run on `localhost`.
     """
     if isinstance(request, six.string_types):
         path = request

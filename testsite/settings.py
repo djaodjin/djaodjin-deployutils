@@ -8,7 +8,7 @@ from random import choice
 from deployutils.apps.django.compat import reverse_lazy
 from deployutils.configs import load_config, update_settings
 
-
+APP_VERSION = "1.0"
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_NAME = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
@@ -140,8 +140,6 @@ MIDDLEWARE += (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-MIDDLEWARE_CLASSES = MIDDLEWARE
-
 ROOT_URLCONF = 'testsite.urls'
 WSGI_APPLICATION = 'testsite.wsgi.application'
 
@@ -166,6 +164,10 @@ TEMPLATES = [
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_URL = '/static/'
 
+ASSETS_CDN = {
+    '/static/cache/app.js': '/static/cache/app-%s.js' % APP_VERSION,
+    '/static/img/': 'https://www.djaodjin.com/static/img/'
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases

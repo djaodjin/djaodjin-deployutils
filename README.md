@@ -26,6 +26,9 @@ Clone the repository in a virtualenv and install the prerequisites
     $ source .venv/bin/activate
     $ pip install -r testsite/requirements.txt
 
+    # When using Django integration
+    $ make build-assets
+
 
 Create the credentials file with a ``DJAODJIN_SECRET_KEY`` and the empty db.
 
@@ -48,7 +51,7 @@ Tested with
 
 - **Python:** 3.10, **Django:** 4.2 ([LTS](https://www.djangoproject.com/download/))
 - **Python:** 3.12, **Django:** 5.1 (next)
-- **Python:** 3.7, **Django:** 3.2 (legacy)
+- **Python:** 3.9, **Django:** 3.2 (legacy)
 
 0.13.1
 

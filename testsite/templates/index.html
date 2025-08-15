@@ -4,36 +4,39 @@
 
 {% block content %}
 <div id="app">
-    <p>
+  <p>
 Welcome to the testsite for djaodjin-deployutils!
-    </p>
-    <p>
+  </p>
+  <p>
 <a id="login" href="{% url 'login' %}">Sign-in</a> to the site (login: donny, password: yoyo) and see how the HTTP cookie header is decoded into a session.
-    </p>
+  </p>
+  <div>
     <div>
-        <div>
-            <h4>SessionEngine</h4>
-            <pre><code>{{SESSION_ENGINE}}</code></pre>
-        </div>
-        <div>
-            <h4>As HTTP {% if SESSION_ENGINE == 'deployutils.apps.django.backends.jwt_session_store' %}Authorization{% else %}Cookie{% endif %} Header</h4>
-            <pre><code>{{request.session.session_key_content|wraplines}}</code></pre>
-        </div>
-        <div>
-            <h4>Session Data (From proxy)</h4>
-            <pre><code>{{request.session.session_key_data|wraplines}}</code></pre>
-        </div>
-        {% if request.session.local_data %}
-        <div>
-            <h4>Session Data (Local)</h4>
-            <pre><code>{{request.session.local_data|wraplines}}</code></pre>
-        </div>
-        {% endif %}
+      <img src="{{'/static/img/logo-djaodjin-darkmode-320.png'|asset}}" />
     </div>
     <div>
-        <p>
+      <h4>SessionEngine</h4>
+      <pre><code>{{SESSION_ENGINE}}</code></pre>
+    </div>
+    <div>
+      <h4>As HTTP {% if SESSION_ENGINE == 'deployutils.apps.django.backends.jwt_session_store' %}Authorization{% else %}Cookie{% endif %} Header</h4>
+      <pre><code>{{request.session.session_key_content|wraplines}}</code></pre>
+    </div>
+    <div>
+      <h4>Session Data (From proxy)</h4>
+      <pre><code>{{request.session.session_key_data|wraplines}}</code></pre>
+    </div>
+    {% if request.session.local_data %}
+    <div>
+      <h4>Session Data (Local)</h4>
+      <pre><code>{{request.session.local_data|wraplines}}</code></pre>
+    </div>
+    {% endif %}
+  </div>
+  <div>
+    <p>
 Clear the browser data to reset the session passed to the site.
-        </p>
-    </div>
+    </p>
+  </div>
 </div>
 {% endblock %}
