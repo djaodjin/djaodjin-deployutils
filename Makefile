@@ -6,6 +6,7 @@ srcDir        ?= .
 installTop    ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV),$(abspath $(srcDir))/.venv)
 binDir        ?= $(installTop)/bin
 libDir        ?= $(installTop)/lib
+objDir        ?= ./build
 CONFIG_DIR    ?= $(installTop)/etc/testsite
 RUN_DIR       ?= $(abspath $(srcDir))
 
@@ -29,6 +30,7 @@ MANAGE        := TESTSITE_SETTINGS_LOCATION=$(CONFIG_DIR) RUN_DIR=$(RUN_DIR) $(P
 # before running the manage.py command (else missing SECRECT_KEY).
 RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(MANAGE) migrate --help 2>/dev/null)),--run-syncdb,)
 
+APP_NAME    = testsite
 APP_VERSION = $(shell $(MANAGE) shell -c 'from django.conf import settings ; print(settings.APP_VERSION)' 2>/dev/null)
 
 
@@ -77,6 +79,16 @@ initdb: clean-dbs
 # to create the dummy db.sqilte file to package.
 package-docker: build-assets
 	cd $(srcDir) && $(DOCKER) build $(DOCKER_OPTS) .
+
+# we remove the build directory to make sure we don't have extra files remaining
+# when we excluded them in the package_theme command line. We also insures
+# we are not removing important directories in the src tree by running
+# the condition: `[ "$(abspath $(objDir))" != "$(abspath $(srcDir))" ]`.
+package-theme: build-assets
+	[ "$(abspath $(objDir))" != "$(abspath $(srcDir))" ] && rm -rf $(objDir)/$(APP_NAME)
+	cd $(srcDir) && DEBUG=0 FEATURES_REVERT_TO_DJANGO=0 \
+		$(MANAGE) package_theme \
+		--build_dir=$(objDir) --install_dir=$(srcDir)/dist
 
 
 vendor-assets-prerequisites:

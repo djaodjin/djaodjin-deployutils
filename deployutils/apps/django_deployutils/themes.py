@@ -1,4 +1,4 @@
-# Copyright (c) 2022, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,20 @@ from __future__ import unicode_literals
 import logging, os, re, shutil, subprocess, zipfile
 
 from django.conf import settings as django_settings
-from django.template.base import (Parser, NodeList, TemplateSyntaxError)
-from django.template.backends.django import DjangoTemplates
-from django.template.context import Context
+from django.template.backends.jinja2 import Jinja2 as Jinja2DjangoTemplates
 from django.utils._os import safe_join
-from django_assets.templatetags.assets import assets
 from jinja2.lexer import Lexer
-from webassets import Bundle
 
 from . import settings
-from .compat import (DebugLexer, TokenType, do_static, force_str,
-    get_html_engine, six, urlparse, urlunparse)
+from .compat import force_str, get_html_engine, six
+from .templatetags.deployutils_prefixtags import asset
 from ...copy import shell_command
 
 
 LOGGER = logging.getLogger(__name__)
 
-STATE_BLOCK_BEGIN = 1
-STATE_ASSETS_BEGIN = 2
-STATE_ASSETS_END = 3
-STATE_BLOCK_CONTENT = 4
+STATE_VARIABLE_BEGIN = 5
+
 
 class URLRewriteWrapper(object):
 
@@ -66,137 +60,6 @@ class Template(object):
 
     def __init__(self, engine):
         self.engine = engine
-
-
-class AssetsParser(Parser):
-
-    def __init__(self, tokens, dest_stream,
-                 libraries=None, builtins=None, origin=None):
-        #pylint:disable=too-many-arguments
-        super(AssetsParser, self).__init__(tokens,
-            libraries=libraries, builtins=builtins, origin=origin)
-        self.dest_stream = dest_stream
-        self.context = Context()
-        engine, _, _ = get_html_engine()
-        self.context.template = Template(engine)
-
-    def parse_through(self, parse_until=None):
-        if parse_until is None:
-            parse_until = []
-        nodelist = NodeList()
-        while self.tokens:
-            token = self.next_token()
-            if six.PY2:
-                contents = token.contents.encode('utf8')
-            else:
-                contents = token.contents
-            if token.token_type == TokenType.TEXT:
-                self.dest_stream.write(contents)
-            elif token.token_type == TokenType.VAR:
-                self.dest_stream.write("{{%s}}" % contents)
-            elif token.token_type == TokenType.BLOCK:
-                try:
-                    command = token.contents.split()[0]
-                except IndexError:
-                    self.empty_block_tag(token)
-                if command in parse_until:
-                    # put token back on token list so calling
-                    # code knows why it terminated
-                    self.prepend_token(token)
-                    return nodelist
-                if command == 'assets':
-                    try:
-                        # XXX This should work but for some reason debug does
-                        # not get propagated.
-                        # Lost in webassets.bundle.resolve_contents
-                        token.contents += ' debug=False'
-                        assets_string = str(
-                            assets(self, token).render(self.context))
-                        self.dest_stream.write(assets_string)
-                    except TemplateSyntaxError as err:
-                        if hasattr(self, 'error'):
-                            raise self.error(token, err)
-                        # Django < 1.8
-                        if not self.compile_function_error(token, err):
-                            raise
-                elif command == 'static':
-                    self.dest_stream.write(
-                        do_static(self, token).render(self.context))
-                else:
-                    self.dest_stream.write("{%% %s %%}" % contents)
-            elif token.token_type == TokenType.COMMENT:
-                pass
-
-
-def _render_assets(tokens, env):
-    #pylint:disable=too-many-locals
-    # Construct a bundle with the given options
-    output = None
-    filters = None
-    depends = None
-    bundle_kwargs = {
-        'output': output,
-        'filters': filters,
-        'debug': False,  # because of `Bundle.iterbuild`, this is useless.
-        'depends': depends,
-    }
-
-    # Resolve bundle names.
-    files = []
-    state = None
-    buffered_tokens = []
-    for token in tokens:
-        if state is None:
-            if token[1] == 'block_begin':
-                state = STATE_BLOCK_BEGIN
-        elif state == STATE_BLOCK_BEGIN:
-            if token[1] == 'name':
-                # nothing to be done?
-                pass
-            elif token[1] == 'string':
-                files = [token[2][1:-1]] # removes '"'.
-            if token[1] == 'block_end':
-                state = STATE_BLOCK_CONTENT
-        elif state == STATE_BLOCK_CONTENT:
-            if token[1] == 'block_begin':
-                state = None
-            else:
-                buffered_tokens += [token]
-
-    content = ''.join([token[2] for token in buffered_tokens]).strip()
-
-    urls = []
-    bundle_names = []
-    for fname in files:
-        try:
-            bundle = env[fname]
-            debug = bundle.config.get('debug')
-            bundle.config.update({'debug': False})
-            with bundle.bind(env):
-                urls += bundle.urls()
-            bundle.config.update({'debug': debug})
-        except KeyError:
-            bundle_names.append(fname)
-
-    if bundle_names:
-        bundle = Bundle(*bundle_names, **bundle_kwargs)
-        # Retrieve urls (this may or may not cause a build)
-        with bundle.bind(env):
-            urls += bundle.urls()
-
-    # For each url, execute the content of this template tag (represented
-    # by the macro ```caller`` given to use by Jinja2).
-    result = content
-    for url in urls:
-        look = re.match(r'(.*)({{\s*ASSET_URL.*}})(.*)', content)
-        if look:
-            parts = urlparse(url)
-            url = urlunparse((parts.scheme, parts.netloc, parts.path,
-                None, None, None))
-            result = look.group(1) + url + look.group(3)
-        else:
-            result = content
-    return result
 
 
 def get_template_search_path(app_name=None):
@@ -360,6 +223,46 @@ def _list_templates(srcroot, prefix=''):
     return results
 
 
+def _install_jinja2_template(engine, template_string, source_name, dest_name):
+    template_name = None
+    tokens = Lexer(engine.env).tokeniter(template_string,
+        template_name, filename=source_name)
+    buffered_tokens = []
+    state = None
+    with open(dest_name, 'w') as dest:
+        for token in tokens:
+            if state is None:
+                if token[1] == 'variable_begin':
+                    state = STATE_VARIABLE_BEGIN
+            elif state == STATE_VARIABLE_BEGIN:
+                if token[1] == 'variable_end':
+                    buffered_tokens += [token]
+                    state = None
+            if state is None:
+                if buffered_tokens:
+                    if len(buffered_tokens) == 5:
+                        if (buffered_tokens[0][1] == 'variable_begin' and
+                            buffered_tokens[3][1] == 'name' and
+                            buffered_tokens[3][2] == 'asset'):
+                            dest.write(asset(buffered_tokens[1][2][1:-1]))
+                            buffered_tokens = []
+                    if buffered_tokens:
+                        dest.write("%s" % ''.join([token[2]
+                            for token in buffered_tokens]))
+                    buffered_tokens = []
+                elif six.PY2:
+                    dest.write("%s" % token[2].encode('utf-8'))
+                else:
+                    dest.write("%s" % str(token[2]))
+            else:
+                buffered_tokens += [token]
+        if buffered_tokens:
+            dest.write("%s" % ''.join([
+                token[2] for token in buffered_tokens]))
+            buffered_tokens = []
+        dest.write("\n")
+
+
 def install_templates(srcroot, destroot, prefix='', excludes=None,
                       includes=None, path_prefix=None):
     #pylint:disable=too-many-arguments,too-many-statements
@@ -402,70 +305,14 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                     template_string = template_string.decode('utf-8')
             try:
                 template_string = force_str(template_string)
-                lexer = DebugLexer(template_string)
-                tokens = lexer.tokenize()
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))
-                engine, libraries, builtins = get_html_engine()
-                if isinstance(engine, DjangoTemplates):
-                    with open(dest_name, 'w') as dest:
-                        parser = AssetsParser(tokens,
-                            URLRewriteWrapper(dest, path_prefix),
-                            libraries=libraries,
-                            builtins=builtins,
-                            origin=None)
-                        parser.parse_through()
+                engine, unused_libraries, unused_builtins = get_html_engine()
+                if isinstance(engine, Jinja2DjangoTemplates):
+                    _install_jinja2_template(engine, template_string, source_name, dest_name)
                 else:
-                    template_name = None
-                    tokens = Lexer(engine.env).tokeniter(template_string,
-                        template_name, filename=source_name)
-                    buffered_tokens = []
-                    state = None
-                    with open(dest_name, 'w') as dest:
-                        for token in tokens:
-                            if state is None:
-                                if token[1] == 'block_begin':
-                                    state = STATE_BLOCK_BEGIN
-                            elif state == STATE_BLOCK_BEGIN:
-                                if token[1] == 'name':
-                                    if token[2] == 'assets':
-                                        state = STATE_ASSETS_BEGIN
-                                    else:
-                                        buffered_tokens += [token]
-                                        state = None
-                            elif state == STATE_ASSETS_BEGIN:
-                                if (token[1] == 'name'
-                                    and token[2] == 'endassets'):
-                                    state = STATE_ASSETS_END
-                            elif state == STATE_ASSETS_END:
-                                if token[1] == 'block_end':
-                                    buffered_tokens += [token]
-                                    state = None
-                            if state is None:
-                                if buffered_tokens:
-                                    for tok in buffered_tokens:
-                                        if (tok[1] == 'name' and
-                                            tok[2] == 'assets'):
-                                            dest.write(_render_assets(
-                                                buffered_tokens,
-                                                engine.env.assets_environment))
-                                            buffered_tokens = []
-                                            break
-                                    if buffered_tokens:
-                                        dest.write("%s" % ''.join([token[2]
-                                            for token in buffered_tokens]))
-                                    buffered_tokens = []
-                                elif six.PY2:
-                                    dest.write("%s" % token[2].encode('utf-8'))
-                                else:
-                                    dest.write("%s" % str(token[2]))
-                            else:
-                                buffered_tokens += [token]
-                        if buffered_tokens:
-                            dest.write("%s" % ''.join([
-                                token[2] for token in buffered_tokens]))
-                            buffered_tokens = []
-                        dest.write("\n")
+                    raise RuntimeError("no packager for template engine '%s'" %
+                        engine.__class__)
 
                 lines = None
                 cmdline = ['diff', '-u', source_name, dest_name]

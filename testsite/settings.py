@@ -18,6 +18,8 @@ DJAODJIN_SECRET_KEY = ""
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ASSETS_DEBUG = DEBUG
+FEATURES_REVERT_TO_DJANGO = False
 ALLOWED_HOSTS = []
 LOG_FILE = None
 
@@ -40,8 +42,11 @@ if not DJAODJIN_SECRET_KEY:
 # --------------
 if DEBUG:
     ENV_INSTALLED_APPS = (
-        'debug_toolbar',
         'django_extensions',
+        )
+    if FEATURES_REVERT_TO_DJANGO:
+        ENV_INSTALLED_APPS += (
+            'debug_toolbar',
         )
 else:
     ENV_INSTALLED_APPS = tuple([])
@@ -124,7 +129,7 @@ if not DEBUG and hasattr(sys.modules[__name__], 'LOG_FILE') and LOG_FILE:
 
 
 # HTTP Pipeline
-if DEBUG:
+if 'debug_toolbar' in INSTALLED_APPS:
     MIDDLEWARE = tuple([
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     ])
@@ -145,8 +150,9 @@ ROOT_URLCONF = 'testsite.urls'
 WSGI_APPLICATION = 'testsite.wsgi.application'
 
 # Templates
-TEMPLATES = [
-    {
+if FEATURES_REVERT_TO_DJANGO:
+    TEMPLATES = [{
+        'NAME': 'html',
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'testsite', 'templates')],
         'APP_DIRS': True,
@@ -157,13 +163,27 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'builtins': [
+                'deployutils.apps.django.templatetags.deployutils_prefixtags',
+                'deployutils.apps.django.templatetags.deployutils_extratags',
+            ]
         },
-    },
-]
+    }]
+else:
+    TEMPLATES = [{
+        'NAME': 'html',
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [os.path.join(BASE_DIR, 'testsite', 'templates')],
+        'OPTIONS': {
+            'environment': 'testsite.jinja2.environment'
+        }
+    }]
+
 
 # Static asset files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 
 ASSETS_CDN = {
     '/static/cache/app.js': '/static/cache/app-%s.js' % APP_VERSION,

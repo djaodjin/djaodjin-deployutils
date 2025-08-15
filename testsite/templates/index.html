@@ -1,6 +1,4 @@
 {% extends "base.html" %}
-{% load deployutils_prefixtags %}
-{% load deployutils_extratags %}
 
 {% block content %}
 <div id="app">
@@ -8,7 +6,7 @@
 Welcome to the testsite for djaodjin-deployutils!
   </p>
   <p>
-<a id="login" href="{% url 'login' %}">Sign-in</a> to the site (login: donny, password: yoyo) and see how the HTTP cookie header is decoded into a session.
+<a id="login" href="/login/">Sign-in</a> to the site (login: donny, password: yoyo) and see how the HTTP cookie header is decoded into a session.
   </p>
   <div>
     <div>

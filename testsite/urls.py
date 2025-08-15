@@ -35,12 +35,15 @@ from .views import IndexView
 if settings.DEBUG:
     #pylint:disable=ungrouped-imports
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-    import debug_toolbar
 
     urlpatterns = staticfiles_urlpatterns()
-    urlpatterns += [
-        re_path(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+
+    if 'debug_toolbar' in settings.INSTALLED_APPS:
+        import debug_toolbar
+
+        urlpatterns += [
+            re_path(r'^__debug__/', include(debug_toolbar.urls)),
+        ]
 else:
     urlpatterns = []
 
