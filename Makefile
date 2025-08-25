@@ -31,7 +31,8 @@ MANAGE        := TESTSITE_SETTINGS_LOCATION=$(CONFIG_DIR) RUN_DIR=$(RUN_DIR) $(P
 RUNSYNCDB     = $(if $(findstring --run-syncdb,$(shell cd $(srcDir) && $(MANAGE) migrate --help 2>/dev/null)),--run-syncdb,)
 
 APP_NAME    = testsite
-APP_VERSION = $(shell $(MANAGE) shell -c 'from django.conf import settings ; print(settings.APP_VERSION)' 2>/dev/null)
+NOIMPORTS   = $(if $(findstring --no-imports,$(shell $(MANAGE) shell --help 2>/dev/null)),--no-imports,)
+APP_VERSION = $(shell $(MANAGE) shell $(NOIMPORTS) -c 'from django.conf import settings ; print(settings.APP_VERSION)' 2>/dev/null)
 
 
 install::
@@ -59,6 +60,7 @@ clean:: clean-dbs
 	[ ! -f $(srcDir)/package-lock.json ] || rm $(srcDir)/package-lock.json
 	find $(srcDir) -name '__pycache__' -exec rm -rf {} +
 	find $(srcDir) -name '*~' -exec rm -rf {} +
+	rm -rf $(ASSETS_DIR)/cache
 
 clean-dbs:
 	[ ! -f $(DB_NAME) ] || rm $(DB_NAME)
