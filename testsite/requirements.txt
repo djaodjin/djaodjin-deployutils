@@ -16,7 +16,7 @@ python-dateutil==2.8.2
 pytz==2024.2              # This has been obviated by `zoneinfo' and `tzdata'
                           # since 3.9, but we still use it.
 monotonic==1.6
-cryptography==43.0.1
+cryptography==44.0.1
 
 # When DEBUG=1
 django-debug-toolbar==5.0.1 ; python_version >= "3.12"  # Currently in alpha
