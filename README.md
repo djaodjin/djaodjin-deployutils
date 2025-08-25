@@ -50,12 +50,13 @@ Release Notes
 Tested with
 
 - **Python:** 3.10, **Django:** 4.2 ([LTS](https://www.djangoproject.com/download/))
-- **Python:** 3.12, **Django:** 5.1 (next)
+- **Python:** 3.12, **Django:** 5.2 (next)
 - **Python:** 3.9, **Django:** 3.2 (legacy)
 
-0.13.1
+0.14.0
 
- * evals settings passed through environment variables
- * matches saas profile redirects
+ * uses settings.ASSETS_CDN when packaging theme templates
+ * presents manage.py commands in a separate django_deployutils section
+ * adds mockup to retrieve user profile API
 
 [previous release notes](changelog)

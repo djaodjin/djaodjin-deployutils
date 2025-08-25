@@ -1,3 +1,11 @@
+0.14.0
+
+ * uses settings.ASSETS_CDN when packaging theme templates
+ * presents manage.py commands in a separate django_deployutils section
+ * adds mockup to retrieve user profile API
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Mon, 25 Aug 2025 11:55:00 -0700
+
 0.13.1
 
  * fixes eval of settings passed through environment variables
