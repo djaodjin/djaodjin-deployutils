@@ -184,6 +184,7 @@ def package_theme(app_name, build_dir,
             and not os.path.samefile(template_dir, templates_dest)):
             install_templates(template_dir, templates_dest,
                 excludes=excludes, includes=includes, path_prefix=path_prefix)
+    django_settings.STATIC_URL = orig_static_url
 
 
 def fill_package(app_name, build_dir=None, install_dir=None):
@@ -244,7 +245,10 @@ def _install_jinja2_template(engine, template_string, source_name, dest_name):
                         if (buffered_tokens[0][1] == 'variable_begin' and
                             buffered_tokens[3][1] == 'name' and
                             buffered_tokens[3][2] == 'asset'):
-                            dest.write(asset(buffered_tokens[1][2][1:-1]))
+                            val = buffered_tokens[1][2]
+                            if val and val[0] in ('"', "'"):
+                                cached_asset = asset(val[1:-1])
+                                dest.write(cached_asset)
                             buffered_tokens = []
                     if buffered_tokens:
                         dest.write("%s" % ''.join([token[2]

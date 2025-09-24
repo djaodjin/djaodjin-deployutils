@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Djaodjin Inc.
+# Copyright (c) 2025, Djaodjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ _SETTINGS = {
     'APP_PREFIX': getattr(settings, 'APP_PREFIX',
         '%s/' % getattr(settings, 'APP_NAME',
         os.path.basename(settings.BASE_DIR))),
-    'ASSETS_CDN': getattr(settings, 'ASSETS_CDN'),
+    'ASSETS_CDN': getattr(settings, 'ASSETS_CDN', {}),
     'BACKEND_SESSION_STORE': None,
     'DEBUG': getattr(settings, 'DEBUG', None),
     'DEPLOYED_WEBAPP_ROOT': '/var/www',
