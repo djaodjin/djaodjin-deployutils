@@ -1,3 +1,9 @@
+0.14.1
+
+ * makes ASSETS_CDN optional in django settings
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Tue, 23 Sep 2025 20:55:00 -0700
+
 0.14.0
 
  * uses settings.ASSETS_CDN when packaging theme templates

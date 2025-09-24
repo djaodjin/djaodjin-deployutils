@@ -53,7 +53,7 @@ Tested with
 - **Python:** 3.12, **Django:** 5.2 (next)
 - **Python:** 3.9, **Django:** 3.2 (legacy)
 
-0.14.0
+0.14.1
 
  * uses settings.ASSETS_CDN when packaging theme templates
  * presents manage.py commands in a separate django_deployutils section
