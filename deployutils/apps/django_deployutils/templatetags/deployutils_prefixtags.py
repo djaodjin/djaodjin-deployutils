@@ -102,9 +102,9 @@ def asset(path):
                 URL_SEP.join(path_parts[idx:]))
             return cdn_path
     if settings.DEBUG and hasattr(settings, 'APP_NAME'):
-        path_prefix = '/%s' % settings.APP_NAME
+        path_prefix = '/%s/' % settings.APP_NAME
         if not path.startswith(path_prefix):
-            cdn_path = urljoin(path_prefix, path)
+            cdn_path = urljoin(path_prefix, path.lstrip('/'))
             return cdn_path
     return path
 
