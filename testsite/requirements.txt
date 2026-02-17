@@ -28,8 +28,10 @@ django-debug-toolbar==3.5.0 ; python_version < "3.10"
                                   # 2.2.1 is the last version for Django2.2
                                   # 1.11 does not support Django 2.2
 
-django-extensions==4.1            # support for py312-django5.2
-                                  # required by Django==4.0
+django-extensions==4.1      ; python_version >= "3.10"
+django-extensions==3.2.3    ; python_version < "3.10"
+                                  # 4.1 supports py312-django5.2
+                                  # 3.2.3 required by Django==4.0
 
 # So we can run pylint with no missing imports
 coverage==7.2.7
