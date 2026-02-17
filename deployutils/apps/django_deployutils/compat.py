@@ -43,16 +43,29 @@ except ImportError: # Python<3.3
 
 
 try:
-    from pip._internal.utils.misc import get_installed_distributions
-except ImportError: # pip < 10
+    from importlib.metadata import distributions
+    from collections import namedtuple
+    def get_installed_distributions(local_only=True):
+        #pylint:disable=unused-argument
+        InstalledDist = namedtuple('InstalledDist',
+            ['project_name', 'version', 'location'])
+        return [InstalledDist(dist.metadata['Name'], dist.version,
+            dist._path) for dist in distributions()]
+except ImportError: # pip < 26.0.1
     try:
-        from pip.utils import get_installed_distributions
-    except ModuleNotFoundError: # pip > 20
         import pkg_resources
         def get_installed_distributions(local_only=True):
             #pylint:disable=unused-argument
             return list(pkg_resources.working_set)
-
+    except ImportError: # pip < 20
+        try:
+            from pip.utils import get_installed_distributions
+        except ModuleNotFoundError: # pip < 20
+            try:
+                from pip._internal.utils.misc import get_installed_distributions
+            except ImportError: # pip < 10
+                raise RuntimeError(
+                    "cannot find a compatible `get_installed_distributions`")
 
 try:
     from django.template.base import DebugLexer

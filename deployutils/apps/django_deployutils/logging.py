@@ -71,6 +71,7 @@ class JSONFormatter(logging.Formatter):
             'asctime',
             'event',
             'http_user_agent',
+            'levelname',
             'log_level',
             'message',
             'http_host',

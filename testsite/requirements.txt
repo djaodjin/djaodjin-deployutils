@@ -1,9 +1,10 @@
-# Unified requirements file supporting py37-django3.2, py39-django4.2,
-# py312-django5.1.
+# Unified requirements file supporting py39-django3.2, py310-django4.2,
+# py312-django5.2, and py314-django6.0
 
-Django==3.2.25 ; python_version < "3.9"
-Django==4.2.26 ; python_version >= "3.9" and python_version < "3.12"
-Django==5.2.8  ; python_version >= "3.12"
+Django==3.2.25 ; python_version < "3.10"
+Django==4.2.28 ; python_version >= "3.10" and python_version < "3.12"
+Django==5.2.11 ; python_version >= "3.12" and python_version < "3.14"
+Django==6.0.2  ; python_version >= "3.14"
 djangorestframework==3.14.0 ; python_version < "3.9"
 djangorestframework==3.15.2 ; python_version >= "3.9" # Breaking
                                             # changes in 3.15.0 and
