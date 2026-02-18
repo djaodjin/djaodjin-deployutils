@@ -49,15 +49,14 @@ Release Notes
 
 Tested with
 
-- **Python:** 3.10, **Django:** 4.2 ([LTS](https://www.djangoproject.com/download/))
-- **Python:** 3.12, **Django:** 5.2 (next)
+- **Python:** 3.12, **Django:** 5.2 ([LTS](https://www.djangoproject.com/download/))
+- **Python:** 3.14, **Django:** 6.0 (next)
+- **Python:** 3.10, **Django:** 4.2 (legacy)
 - **Python:** 3.9, **Django:** 3.2 (legacy)
 
-0.14.2
+0.14.3
 
- * fixes path prefix in DEBUG mode
- * uses settings.ASSETS_CDN when packaging theme templates
- * presents manage.py commands in a separate django_deployutils section
- * adds mockup to retrieve user profile API
+ * supports pip 26.0.1
+ * starts testing with py314-django6.0
 
 [previous release notes](changelog)

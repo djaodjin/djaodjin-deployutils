@@ -1,3 +1,10 @@
+0.14.3
+
+ * supports pip 26.0.1
+ * starts testing with py314-django6.0
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Tue, 17 Feb 2025 18:05:00 -0700
+
 0.14.2
 
  * fixes path prefix in DEBUG mode
