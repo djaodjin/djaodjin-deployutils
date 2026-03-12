@@ -275,6 +275,16 @@ a project theme or deploy its container.
         save_config()
 
 
+def pub_settings(args, project="", base_url="", api_key=""):
+    """Prints value of a settings for a project
+    """
+    project, base_url, api_key, updated = get_project_config(
+        project=project, base_url=base_url, api_key=api_key)
+    if updated:
+        save_config()
+    sys.stdout.write(CONFIG[project].get(args[0], "") + "\n")
+
+
 def pub_tunnel(args, project="", base_url="", api_key=""):
     """SSH Reverse tunnel to a project.
     """
@@ -328,7 +338,8 @@ def main(args):
 
         options = parser.parse_args(args[1:])
         CONFIG_FILENAME = options.config
-        sys.stdout.write("read configuration from %s\n" % CONFIG_FILENAME)
+        sys.stderr.write("%s: read configuration from %s\n" % (
+            args[0], CONFIG_FILENAME))
         CONFIG.read(CONFIG_FILENAME)
         for section in CONFIG.sections():
             LOGGER.debug("[%s]", section)
