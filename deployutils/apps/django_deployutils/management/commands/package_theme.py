@@ -101,6 +101,9 @@ class Command(ResourceCommand):
         parser.add_argument('--install_dir',
             action='store', dest='install_dir', default=None,
             help='set the directory root where output files are created.')
+        parser.add_argument('-o', '--output',
+            action='store', dest='output', default=None,
+            help='output filename')
         parser.add_argument('--exclude', action='append', dest='excludes',
             default=[], help='exclude specified templates directories')
         parser.add_argument('--include', action='append', dest='includes',
@@ -121,7 +124,11 @@ class Command(ResourceCommand):
         package_assets(app_name, build_dir=build_dir,
             excludes=options['excludes'],
             includes=options['includes'])
-        zip_path = fill_package(app_name,
+        out_filename = options['output']
+        if not out_filename:
+            out_filename = '%s.zip' % app_name
+        zip_path = fill_package(out_filename,
             build_dir=build_dir,
-            install_dir=install_dir)
+            install_dir=install_dir,
+            app_name=app_name)
         self.stdout.write('package built: %s\n' % zip_path)

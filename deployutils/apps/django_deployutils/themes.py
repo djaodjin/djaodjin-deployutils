@@ -187,12 +187,12 @@ def package_theme(app_name, build_dir,
     django_settings.STATIC_URL = orig_static_url
 
 
-def fill_package(app_name, build_dir=None, install_dir=None):
+def fill_package(out_filename, build_dir=None, install_dir=None, app_name=None):
     """
     Creates the theme package (.zip) from templates and optionally
     assets installed in the ``build_dir``.
     """
-    zip_path = os.path.join(install_dir, '%s.zip' % app_name)
+    zip_path = os.path.join(install_dir, out_filename)
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
         fill_package_zip(zip_file, os.path.dirname(build_dir), prefix=app_name)
     return zip_path
