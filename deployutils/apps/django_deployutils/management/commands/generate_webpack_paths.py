@@ -31,6 +31,9 @@ class Command(BaseCommand):
                 search_path = storage.path('')
                 if not search_path in node_modules:
                     node_modules += [search_path]
+                    search_path_js = os.path.join(search_path, 'js')
+                    if os.path.isdir(search_path_js):
+                        node_modules += [search_path_js]
         venv = os.path.dirname(os.path.dirname(sys.executable))
         node_modules += [
             os.path.join(venv, 'lib', 'node_modules')

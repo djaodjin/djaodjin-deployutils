@@ -155,8 +155,8 @@ def get_html_engine():
         except InvalidTemplateEngineError:
             engine = engines['django'].engine
             return engine, engine.template_libraries, engine.template_builtins
-    except ImportError: # django < 1.8
-        return DjangoTemplate()
+    except ImportError as err: # django < 1.8
+        raise err
 
 
 try:

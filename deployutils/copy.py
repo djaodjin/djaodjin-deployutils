@@ -186,5 +186,8 @@ def upload_theme(args, base_url, api_key, prefix=None, timeout=None):
         files = {'file': (os.path.basename(zip_filename), file_obj)}
         resp = requests.post(api_themes_url, files=files, auth=(api_key, ""),
             timeout=timeout)
-    LOGGER.info("POST %s returns %d %s",
+    err = "POST %s returns %d %s" % (
         api_themes_url, resp.status_code, resp.text)
+    LOGGER.debug(err)
+    if resp.status_code < 200 or resp.status_code >= 300:
+        raise RuntimeError(err)

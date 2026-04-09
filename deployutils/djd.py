@@ -353,14 +353,14 @@ def main(args):
         func_args = filter_subcommand_args(options.func, options)
         return options.func(**func_args)
 
-    except RuntimeError as err:
+    except (RuntimeError, ValueError) as err:
         LOGGER.error(err)
         return 1
 
 
 def cli_main():
     logging.basicConfig(level='INFO')
-    main(sys.argv)
+    return main(sys.argv)
 
 
 if __name__ == '__main__':
