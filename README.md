@@ -54,9 +54,10 @@ Tested with
 - **Python:** 3.10, **Django:** 4.2 (legacy)
 - **Python:** 3.9, **Django:** 3.2 (legacy)
 
-0.14.3
+0.14.4
 
- * supports pip 26.0.1
- * starts testing with py314-django6.0
+ * exists with error code when package cannot be uploaded
+ * adds command to retrieve one settings value from a project
+ * adds `-o outfile` option to package_theme
 
 [previous release notes](changelog)

@@ -1,3 +1,11 @@
+0.14.4
+
+ * exists with error code when package cannot be uploaded
+ * adds command to retrieve one settings value from a project
+ * adds `-o outfile` option to package_theme
+
+ -- Sebastien Mirolo <smirolo@djaodjin.com>  Thu,  9 Apr 2026 15:50:00 -0700
+
 0.14.3
 
  * supports pip 26.0.1
