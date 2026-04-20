@@ -1,4 +1,4 @@
-# Copyright (c) 2023, DjaoDjin Inc.
+# Copyright (c) 2026, DjaoDjin Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -118,6 +118,7 @@ def load_config(app_name, *args, **kwargs):
     config = {}
     #pylint:disable=too-many-nested-blocks
     db_location = None
+    verbose = kwargs.get('verbose', False)
     for content in six.itervalues(
             read_config(app_name, *args, **kwargs)):
         for line in content.split('\n'):
@@ -131,8 +132,10 @@ def load_config(app_name, *args, **kwargs):
                             # Environment variables override the config file
                             varvalue = look.group(2)
                         else:
-                            sys.stderr.write(
-                                "set %s from environment variable\n" % varname)
+                            if verbose:
+                                sys.stderr.write(
+                                    "set %s from environment variable\n" %
+                                    varname)
                         # We used to parse the file line by line.
                         # Once Django 1.5 introduced ALLOWED_HOSTS
                         # (a tuple that definitely belongs to the site.conf
@@ -185,7 +188,7 @@ def load_config(app_name, *args, **kwargs):
                 db_host or config['DB_ENGINE'] == 'sqlite3') else "localhost"
             db_location += "/%s" % config['DB_NAME']
     debug = config.get('DEBUG', kwargs.get('debug'))
-    if debug and db_location:
+    if verbose and debug and db_location:
         sys.stderr.write("database connected to '%s'\n" % db_location)
     return config
 
@@ -228,11 +231,9 @@ def read_config(app_name, *args, **kwargs):
                         sys.stderr.write("config loaded from 's3://%s/%s'\n" %
                             (bucket_name, key_name))
                 except botocore.exceptions.ClientError as err:
-                    if verbose:
-                        sys.stderr.write("warning: %s\n" % str(err))
-            except ImportError as err:
-                if verbose:
                     sys.stderr.write("warning: %s\n" % str(err))
+            except ImportError as err:
+                sys.stderr.write("warning: %s\n" % str(err))
 
         # We cannot find a deployutils S3 bucket. Let's look on the filesystem.
         if not content:
@@ -253,7 +254,9 @@ def read_config(app_name, *args, **kwargs):
     return config
 
 
-def update_settings(module, config):
+def update_settings(module, config, **kwargs):
+
+    verbose = kwargs.get('verbose', False)
 
     for key, value in six.iteritems(config):
         #pylint:disable=protected-access
@@ -277,7 +280,9 @@ def update_settings(module, config):
                         os.makedirs(os.path.dirname(pathname))
                     with open(pathname, 'w') as _:
                         pass    # touch file
-                sys.stderr.write("logging app messages in '%s'\n" % pathname)
+                if verbose:
+                    sys.stderr.write("logging app messages in '%s'\n" %
+                        pathname)
             except OSError:
                 sys.stderr.write("warning: permission denied on '%s'\n" %
                     pathname)
