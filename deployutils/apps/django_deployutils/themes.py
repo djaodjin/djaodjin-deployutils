@@ -29,6 +29,7 @@ import logging, os, re, shutil, subprocess, zipfile
 
 from django.conf import settings as django_settings
 from django.template.backends.jinja2 import Jinja2 as Jinja2DjangoTemplates
+from django.template.utils import EngineHandler
 from django.utils._os import safe_join
 from jinja2.lexer import Lexer
 
@@ -312,11 +313,18 @@ def install_templates(srcroot, destroot, prefix='', excludes=None,
                 if not os.path.isdir(os.path.dirname(dest_name)):
                     os.makedirs(os.path.dirname(dest_name))
                 engine, unused_libraries, unused_builtins = get_html_engine()
-                if isinstance(engine, Jinja2DjangoTemplates):
-                    _install_jinja2_template(engine, template_string, source_name, dest_name)
-                else:
-                    raise RuntimeError("no packager for template engine '%s'" %
-                        engine.__class__)
+                if not isinstance(engine, Jinja2DjangoTemplates):
+                    LOGGER.warning("Incompatible template engine '%s'."\
+                        " uses Jinja2 defaults." % engine.__class__)
+                    engines_handler = EngineHandler(templates=[{
+                        'NAME': 'html',
+                        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+                        'DIRS': django_settings.TEMPLATES_DIRS,
+                    }])
+                    engine = engines_handler['html']
+
+                _install_jinja2_template(
+                    engine, template_string, source_name, dest_name)
 
                 lines = None
                 cmdline = ['diff', '-u', source_name, dest_name]
