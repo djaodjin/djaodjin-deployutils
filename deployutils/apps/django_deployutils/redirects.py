@@ -1,4 +1,4 @@
-# Copyright (c) 2025, DjaoDjin inc.
+# Copyright (c) 2026, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,10 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.views.generic import RedirectView
-from django.views.generic.base import ContextMixin, TemplateResponseMixin
 
 from .compat import six
 from .mixins import AccessiblesMixin
 from .templatetags.deployutils_prefixtags import site_url
-from ...helpers import update_context_urls
 
 
 def _get_accept_list(request):
@@ -77,8 +75,7 @@ def redirect_or_denied(request, inserted_url,
 
 
 
-class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
-                          RedirectView):
+class AccountRedirectView(AccessiblesMixin, RedirectView):
     """
     Find the ``Account`` associated with the request user
     and return the URL that contains the profile slug
@@ -86,7 +83,6 @@ class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
     """
 
     account_url_kwarg = 'profile'
-    template_name = 'saas/profile_redirects.html'
     permanent = False
     create_more = False
     create_on_none = True
@@ -106,42 +102,12 @@ class AccountRedirectView(AccessiblesMixin, TemplateResponseMixin, ContextMixin,
         candidates = self.get_accessible_profiles(
             request, self.get_redirect_roles(request))
         count = len(candidates)
-        if count == 0:
-            if self.create_on_none:
-                url = self.get_new_account_url(*args, **kwargs)
-                if self.permanent:
-                    return http.HttpResponsePermanentRedirect(url)
-                return http.HttpResponseRedirect(url)
-            raise http.Http404("No account")
         if count == 1 and not self.create_more:
             profile = candidates[0]
             kwargs.update({self.account_url_kwarg: profile['slug']})
             return super(AccountRedirectView, self).get(
                 request, *args, **kwargs)
-        redirects = []
-        for org in candidates:
-            kwargs.update({self.account_url_kwarg: org['slug']})
-            url = self.get_redirect_url(*args, **kwargs)
-            slug = org.get('slug', "")
-            print_name = org.get('printable_name', slug)
-            redirects += [{'profile': {
-                'slug': slug, 'printable_name': print_name},
-                'home_url': url}]
-        kwargs.update({
-            self.account_url_kwarg: 'PATTERN-%s' % self.account_url_kwarg})
-        context = self.get_context_data(**kwargs)
-        context.update({'redirects': {'results': redirects},
-            'next': self.get_redirect_url(*args, **kwargs).replace(
-                'PATTERN-%s' % self.account_url_kwarg,
-                ':%s' % self.account_url_kwarg)})
-        update_context_urls(context, {
-            'api_candidates': site_url("/api/accounts/profiles"),
-            'user': {
-                'api_accessibles':
-                  site_url("/api/users/%s/accessibles" % str(request.user)),
-                'api_profile_create':
-                  site_url("/api/users/%s/profiles" % str(request.user)),
-                'accessibles': site_url("/users/%s/roles/" % str(request.user))
-            },
-        })
-        return self.render_to_response(context)
+        url = self.get_new_account_url(*args, **kwargs)
+        if self.permanent:
+            return http.HttpResponsePermanentRedirect(url)
+        return http.HttpResponseRedirect(url)

@@ -154,7 +154,9 @@ if FEATURES_REVERT_TO_DJANGO:
     TEMPLATES = [{
         'NAME': 'html',
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'testsite', 'templates')],
+        'DIRS': (os.path.join(BASE_DIR, 'testsite', 'templates'),
+                 os.path.join(BASE_DIR,
+                    'deployutils', 'apps', 'django_deployutils', 'templates')),
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -163,6 +165,9 @@ if FEATURES_REVERT_TO_DJANGO:
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader'],
             'builtins': [
                 'deployutils.apps.django.templatetags.deployutils_prefixtags',
                 'deployutils.apps.django.templatetags.deployutils_extratags',
@@ -173,7 +178,9 @@ else:
     TEMPLATES = [{
         'NAME': 'html',
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [os.path.join(BASE_DIR, 'testsite', 'templates')],
+        'DIRS': (os.path.join(BASE_DIR, 'testsite', 'templates'),
+                 os.path.join(BASE_DIR,
+                    'deployutils', 'apps', 'django_deployutils', 'templates')),
         'OPTIONS': {
             'environment': 'testsite.jinja2.environment'
         }

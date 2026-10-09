@@ -1,4 +1,4 @@
-# Copyright (c) 2022, DjaoDjin inc.
+# Copyright (c) 2026, DjaoDjin inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,19 +30,17 @@ from django.views.generic import TemplateView
 
 from .api import LoginAPIView, ProfileDetailAPIView, TimersAPIView
 from .views import SigninView
-from ..compat import re_path
-
-
-USERNAME_PAT = r'[\w.@+-]+'
-SLUG_PAT = r'[a-zA-Z0-9_\-\+\.]+'
+from ..compat import path, re_path
 
 urlpatterns = [
-    re_path(r'^api/timer', TimersAPIView.as_view(), name='api_timer'),
-    re_path(r'^api/profile/(?P<profile>%s)' % SLUG_PAT,
+    path('api/timer', TimersAPIView.as_view(), name='api_timer'),
+    path('api/profile/<slug:profile>',
         ProfileDetailAPIView.as_view(), name='api_profile'),
-    re_path(r'^api/auth', LoginAPIView.as_view(), name='api_login'),
-    re_path(r'^users/(?P<user>%s)/' % USERNAME_PAT,
-        TemplateView.as_view(template_name='users/index.html'),
+    path('api/auth', LoginAPIView.as_view(), name='api_login'),
+    path(r'login/', SigninView.as_view(), name='login'),
+    path('users/<slug:user>/',
+        TemplateView.as_view(template_name='deployutils/redirects.html'),
         name='users_profile'),
-    re_path(r'^login/$', SigninView.as_view(), name='login'),
+    re_path('users/',
+        TemplateView.as_view(template_name='deployutils/redirects.html')),
 ]

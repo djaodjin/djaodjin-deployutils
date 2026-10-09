@@ -65,8 +65,8 @@ include = ["deployutils*"]
 
 [tool.setuptools.package-data]
 deployutils = [
-  'apps/django/templates/accounts/*.html',
-  'apps/django/templates/saas/*.html'
+  'apps/django_deployutils/templates/accounts/*.html',
+  'apps/django_deployutils/templates/deployutils/*.html'
 ]
 
 [tool.setuptools.dynamic]
